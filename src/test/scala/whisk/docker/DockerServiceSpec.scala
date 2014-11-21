@@ -3,34 +3,40 @@ package whisk.docker
 import org.scalatest._
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time._
-import scala.collection.JavaConversions._
 
-class DockerServiceSpec extends FeatureSpec with Matchers with BeforeAndAfterAll with GivenWhenThen with ScalaFutures
+import scala.collection.JavaConversions._
+import scala.concurrent.Await
+import scala.concurrent.duration._
+
+class DockerServiceSpec extends FlatSpec with Matchers with BeforeAndAfterAll with GivenWhenThen with ScalaFutures
     with DockerTestKit
     with DockerClientKit
     with PingContainerKit {
 
-  implicit val pc = PatienceConfig(Span(10, Minutes), Span(1, Minute))
+  implicit val pc = PatienceConfig(Span(20, Seconds), Span(1, Second))
 
-  feature("docker service") {
-    scenario("docker service builder created") {
-      dockerClient.infoCmd().exec().toString.contains("docker") shouldBe true
+  "docker client" should "connect to docker" in {
+    dockerClient.infoCmd().exec().toString.contains("docker") shouldBe true
+  }
 
-    }
+  "docker adapter" should "create container" in {
+    When("docker tries to get container's id")
 
-    scenario("ping container initialized and then stopped") {
-      whenReady(docker(pingContainer).id) { id =>
-        println(id)
-        dockerClient.listContainersCmd().exec().exists(_.getId == id) shouldBe true
-        whenReady(docker(pingContainer).stop()) { id2 =>
-          id2 shouldBe id
+    docker(pingContainer).id.foreach(i => println("AND EVEN IN TEST!!!!!! " + i))
 
-          dockerClient.listContainersCmd().exec().exists(_.getId == id) shouldBe false
-        }
+    val id = Await.result(docker(pingContainer).id, Duration("20 seconds"))
 
-      }
+    Then("id is in list of running containers")
+    dockerClient.listContainersCmd().exec().exists(_.getId == id) shouldBe true
 
-    }
+    When("docker is trying to stop container")
+    val id2 = docker(pingContainer).stop().futureValue
+
+    Then("id matches the created container's id")
+    id2 shouldBe id
+
+    And("There's no such id in the list of running containers")
+    dockerClient.listContainersCmd().exec().exists(_.getId == id) shouldBe false
   }
 
 }

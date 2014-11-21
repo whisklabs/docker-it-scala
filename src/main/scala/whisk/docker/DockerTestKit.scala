@@ -8,7 +8,7 @@ trait DockerTestKit extends BeforeAndAfterAll {
   self: Suite with DockerServiceSetting with DockerClientConfig =>
 
   // we need ExecutionContext in order to run docker.init() / docker.stop() there
-  implicit def executionContext: ExecutionContext = ExecutionContext.global
+  implicit def dockerExecutionContext: ExecutionContext = ExecutionContext.global
 
   override def beforeAll(): Unit = {
     super.beforeAll()
