@@ -1,27 +1,36 @@
 package whisk.docker
 
-import org.scalatest.concurrent.ScalaFutures
 import org.scalatest._
+import org.scalatest.concurrent.ScalaFutures
+import org.scalatest.time._
+import scala.collection.JavaConversions._
 
-/**
- * @author alari
- * @since 11/20/14
- */
-class DockerServiceSpec extends FeatureSpec with Matchers with BeforeAndAfterAll with GivenWhenThen
-    with ScalaFutures {
+class DockerServiceSpec extends FeatureSpec with Matchers with BeforeAndAfterAll with GivenWhenThen with ScalaFutures
+    with DockerTestKit
+    with DockerClientKit
+    with PingContainerKit {
 
-  override def beforeAll(): Unit = {
-    println("before all")
-  }
+  implicit val pc = PatienceConfig(Span(10, Minutes), Span(1, Minute))
 
   feature("docker service") {
     scenario("docker service builder created") {
-      1 shouldEqual 2
-    }
-  }
+      dockerClient.infoCmd().exec().toString.contains("docker") shouldBe true
 
-  override def afterAll(): Unit = {
-    println("after all")
+    }
+
+    scenario("ping container initialized and then stopped") {
+      whenReady(docker(pingContainer).id) { id =>
+        println(id)
+        dockerClient.listContainersCmd().exec().exists(_.getId == id) shouldBe true
+        whenReady(docker(pingContainer).stop()) { id2 =>
+          id2 shouldBe id
+
+          dockerClient.listContainersCmd().exec().exists(_.getId == id) shouldBe false
+        }
+
+      }
+
+    }
   }
 
 }
