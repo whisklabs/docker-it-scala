@@ -4,10 +4,6 @@ import org.scalatest._
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time._
 
-import scala.collection.JavaConversions._
-import scala.concurrent.Await
-import scala.concurrent.duration._
-
 class DockerServiceSpec extends FlatSpec with Matchers with BeforeAndAfterAll with GivenWhenThen with ScalaFutures
     with DockerTestKit
     with DockerClientKit
@@ -22,10 +18,11 @@ class DockerServiceSpec extends FlatSpec with Matchers with BeforeAndAfterAll wi
   "docker adapter" should "create container" in {
     When("docker tries to get container's id")
 
-    val id = Await.result(pingContainer.id, Duration("20 seconds"))
+    val id = pingContainer.id.futureValue
 
     Then("id is in list of running containers")
-    dockerClient.listContainersCmd().exec().exists(_.getId == id) shouldBe true
+
+    pingContainer.isRunning().futureValue shouldBe true
 
     When("docker is trying to stop container")
     val id2 = pingContainer.stop().futureValue
@@ -34,7 +31,7 @@ class DockerServiceSpec extends FlatSpec with Matchers with BeforeAndAfterAll wi
     id2 shouldBe id
 
     And("There's no such id in the list of running containers")
-    dockerClient.listContainersCmd().exec().exists(_.getId == id) shouldBe false
+    pingContainer.isRunning().futureValue shouldBe false
   }
 
 }

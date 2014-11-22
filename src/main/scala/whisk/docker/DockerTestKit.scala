@@ -12,16 +12,14 @@ trait DockerTestKit extends BeforeAndAfterAll {
 
   def dockerContainers: List[DockerContainer] = Nil
 
-  implicit def docker: DockerOps = DockerOps
-
   override def beforeAll(): Unit = {
     super.beforeAll()
-    docker.init(dockerContainers)
+    dockerContainers.foreach(_.init())
   }
 
   override def afterAll(): Unit = {
     super.afterAll()
-    docker.stop(dockerContainers)
+    dockerContainers.foreach(_.stop())
   }
 }
 
