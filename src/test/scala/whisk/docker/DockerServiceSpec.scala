@@ -22,15 +22,13 @@ class DockerServiceSpec extends FlatSpec with Matchers with BeforeAndAfterAll wi
   "docker adapter" should "create container" in {
     When("docker tries to get container's id")
 
-    docker(pingContainer).id.foreach(i => println("AND EVEN IN TEST!!!!!! " + i))
-
-    val id = Await.result(docker(pingContainer).id, Duration("20 seconds"))
+    val id = Await.result(pingContainer.id, Duration("20 seconds"))
 
     Then("id is in list of running containers")
     dockerClient.listContainersCmd().exec().exists(_.getId == id) shouldBe true
 
     When("docker is trying to stop container")
-    val id2 = docker(pingContainer).stop().futureValue
+    val id2 = pingContainer.stop().futureValue
 
     Then("id matches the created container's id")
     id2 shouldBe id

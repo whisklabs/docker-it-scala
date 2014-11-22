@@ -1,10 +1,11 @@
 package whisk.docker
 
-trait PingContainerKit extends DockerServiceSetting {
-  self: DockerClientConfig =>
+import org.scalatest.Suite
 
-  val pingContainer = DockerContainerDescription("debian:stable")
-    .withCommand("/bin/echo", "hello-world")
+trait PingContainerKit extends DockerTestKit {
+  self: Suite with DockerClientConfig =>
 
-  abstract override def docker = super.docker + pingContainer
+  val pingContainer = DockerContainer("dockerfile/nginx")
+
+  abstract override def dockerContainers = pingContainer :: super.dockerContainers
 }
