@@ -21,6 +21,7 @@ trait DockerContainerOps {
         }
         id
       }
+      _ <- Future(dockerClient.startContainerCmd(s).exec())
     } yield s
   }
 
