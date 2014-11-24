@@ -9,7 +9,6 @@ import scala.concurrent.duration.Duration
 import scala.concurrent.{ ExecutionContext, Future, Promise }
 
 trait DockerReadyChecker extends (DockerContainer => Future[Boolean]) {
-  def apply(container: DockerContainer): Future[Boolean]
 
   def and(other: DockerReadyChecker)(implicit ec: ExecutionContext) = {
     val s = this
@@ -77,7 +76,7 @@ trait DockerReadyChecker extends (DockerContainer => Future[Boolean]) {
 }
 
 object DockerReadyChecker {
-  // TODO: get it from config?
+  // TODO: get it from config? wrap DockerClient and its Config with a case class?
   val dockerHost = "192.168.59.103"
 
   object Always extends DockerReadyChecker {
@@ -100,4 +99,5 @@ object DockerReadyChecker {
     override def apply(container: DockerContainer): Future[Boolean] = f(container)
   }
 
+  // TODO: logs reader checker
 }

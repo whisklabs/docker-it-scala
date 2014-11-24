@@ -40,6 +40,7 @@ trait DockerContainerOps {
   def isRunning()(implicit dockerClient: DockerClient, ec: ExecutionContext) =
     getRunningContainer().map(_.isDefined)
 
+  // TODO: cache result?
   def isReady()(implicit dockerClient: DockerClient, ec: ExecutionContext) =
     (for {
       r <- isRunning() if r
