@@ -1,7 +1,7 @@
 package whisk.docker
 
 import org.scalatest.concurrent.{ PatienceConfiguration, ScalaFutures }
-import org.scalatest.time.{ Seconds, Span, Minutes }
+import org.scalatest.time.{ Seconds, Span }
 import org.scalatest.{ BeforeAndAfterAll, Suite }
 
 import scala.concurrent.{ Future, ExecutionContext }
@@ -16,8 +16,8 @@ trait DockerTestKit extends BeforeAndAfterAll with ScalaFutures {
 
   def dockerInitPatienceInterval = PatienceConfiguration.Interval(Span(10, Seconds))
 
-  private def stopRmAll(): Future[Seq[DockerContainer]] = {
-    Future.sequence(dockerContainers.map(_.stop().flatMap(_.remove())))
+  private def stopRmAll(): Seq[DockerContainer] = {
+    Future.sequence(dockerContainers.map(_.stop().flatMap(_.remove()))).futureValue(dockerInitPatienceInterval)
   }
 
   override def beforeAll(): Unit = {
