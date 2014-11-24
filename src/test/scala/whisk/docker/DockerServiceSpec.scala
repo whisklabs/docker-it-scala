@@ -41,8 +41,6 @@ class DockerServiceSpec extends FlatSpec with Matchers with BeforeAndAfterAll wi
 
     And("port 80 should have public binding")
     ports(80) should not be null
-
-    // TODO: test port availability & mark container as running only when port replies correctly (with some handle)
   }
 
 }
