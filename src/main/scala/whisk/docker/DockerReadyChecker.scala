@@ -1,50 +1,79 @@
 package whisk.docker
 
 import java.net.{ HttpURLConnection, URL }
+import java.util.{ Timer, TimerTask }
 
 import com.github.dockerjava.api.DockerClient
 
-import scala.concurrent.{ Promise, ExecutionContext, Future }
+import scala.concurrent.duration.Duration
+import scala.concurrent.{ ExecutionContext, Future, Promise }
 
 trait DockerReadyChecker extends (DockerContainer => Future[Boolean]) {
   def apply(container: DockerContainer): Future[Boolean]
 
   def and(other: DockerReadyChecker)(implicit ec: ExecutionContext) = {
     val s = this
-    new DockerReadyChecker {
-      override def apply(container: DockerContainer) = {
-        val aF = s(container)
-        val bF = other(container)
-        for {
-          a <- aF
-          b <- bF
-        } yield a && b
-      }
+    DockerReadyChecker.F { container =>
+      val aF = s(container)
+      val bF = other(container)
+      for {
+        a <- aF
+        b <- bF
+      } yield a && b
     }
   }
 
   def or(other: DockerReadyChecker)(implicit ec: ExecutionContext) = {
     val s = this
-    new DockerReadyChecker {
-      override def apply(container: DockerContainer): Future[Boolean] = {
-        val aF = s(container)
-        val bF = other(container)
-        val p = Promise[Boolean]()
-        aF.map {
-          case true => p.trySuccess(true)
-          case _ =>
-        }
-        bF.map {
-          case true => p.trySuccess(true)
-          case _ =>
-        }
-        p.future
+    DockerReadyChecker.F { container =>
+      val aF = s(container)
+      val bF = other(container)
+      val p = Promise[Boolean]()
+      aF.map {
+        case true => p.trySuccess(true)
+        case _ =>
       }
+      bF.map {
+        case true => p.trySuccess(true)
+        case _ =>
+      }
+      p.future
     }
   }
 
-  // TODO: implement looping for a ready check, for N retries, with D delta
-  def loop() = this
+  def looped(attempts: Int, delay: Duration)(implicit ec: ExecutionContext): DockerReadyChecker = {
+    val checker = this.apply _
+    DockerReadyChecker.F { container =>
+      val timer = new Timer
+
+      def makeTask[T](future: => Future[T])(schedule: TimerTask => Unit): Future[T] = {
+        val prom = Promise[T]()
+        schedule(
+          new TimerTask {
+            def run() {
+              try {
+                prom.completeWith(future)
+              } catch {
+                case ex: Throwable => prom.failure(ex)
+              }
+            }
+          }
+        )
+        prom.future
+      }
+
+      def schedule[T](delay: Long)(body: => Future[T])(implicit ctx: ExecutionContext): Future[T] = {
+        makeTask(body)(timer.schedule(_, delay))
+      }
+
+      def connectionLoop[T](f: => Future[T], attempts: Int, delay: Long): Future[T] = {
+        val future = schedule(delay)(f)
+        if (attempts <= 1) future else future.recoverWith({ case _ => connectionLoop(f, attempts - 1, delay) })
+      }
+
+      connectionLoop(checker(container), attempts, delay.toMillis)
+    }
+  }
 }
 
 object DockerReadyChecker {
@@ -70,4 +99,5 @@ object DockerReadyChecker {
   case class F(f: DockerContainer => Future[Boolean]) extends DockerReadyChecker {
     override def apply(container: DockerContainer): Future[Boolean] = f(container)
   }
+
 }

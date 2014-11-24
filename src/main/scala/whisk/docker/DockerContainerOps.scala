@@ -43,8 +43,8 @@ trait DockerContainerOps {
   def isReady()(implicit dockerClient: DockerClient, ec: ExecutionContext) =
     (for {
       r <- isRunning() if r
-      //b <- readyChecker(this)
-    } yield r) recover {
+      b <- readyChecker(this)
+    } yield b) recover {
       case e =>
         false
     }
