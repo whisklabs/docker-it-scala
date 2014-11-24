@@ -23,14 +23,20 @@ trait DockerContainerOps {
         id
       }
       _ <- Future(prepareStartCmd(dockerClient.startContainerCmd(s)).exec())
-    } yield s
+    } yield this
   }
 
   def stop()(implicit dockerClient: DockerClient, ec: ExecutionContext) =
     for {
       s <- id
       _ <- Future(dockerClient.stopContainerCmd(s).exec())
-    } yield s
+    } yield this
+
+  def remove()(implicit dockerClient: DockerClient, ec: ExecutionContext) =
+    for {
+      s <- id
+      _ <- Future(dockerClient.removeContainerCmd(s).exec())
+    } yield this
 
   def isRunning()(implicit dockerClient: DockerClient, ec: ExecutionContext) =
     getRunningContainer().map(_.isDefined)
