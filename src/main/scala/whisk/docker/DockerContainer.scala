@@ -2,7 +2,8 @@ package whisk.docker
 
 import java.util.concurrent.atomic.AtomicBoolean
 
-import com.github.dockerjava.api.command.CreateContainerCmd
+import com.github.dockerjava.api.command.{ CreateContainerCmd, StartContainerCmd }
+import com.github.dockerjava.api.model.{ ExposedPort, Ports }
 
 import scala.concurrent.Promise
 
@@ -26,7 +27,20 @@ case class DockerContainer(
     command
       .fold(cmd)(cmd.withCmd(_: _*))
       .withPortSpecs(bindPorts.map(kv => kv._2.fold("")(_.toString + ":") + kv._1).toSeq: _*)
+      .withExposedPorts(bindPorts.keys.map(ExposedPort.tcp).toSeq: _*)
       .withTty(tty)
       .withStdinOpen(stdinOpen)
 
+  private[docker] def prepareStartCmd(cmd: StartContainerCmd): StartContainerCmd =
+    cmd
+      .withPortBindings(
+        bindPorts.foldLeft(new Ports()) {
+          case (ps, (guestPort, Some(hostPort))) =>
+            ps.bind(ExposedPort.tcp(guestPort), Ports.Binding(hostPort))
+            ps
+          case (ps, (guestPort, None)) =>
+            ps.bind(ExposedPort.tcp(guestPort), new Ports.Binding())
+            ps
+        }
+      )
 }

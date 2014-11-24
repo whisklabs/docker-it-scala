@@ -5,9 +5,9 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time._
 
 class DockerServiceSpec extends FlatSpec with Matchers with BeforeAndAfterAll with GivenWhenThen with ScalaFutures
-    with DockerTestKit
-    with DockerClientKit
-    with PingContainerKit {
+with DockerTestKit
+with DockerClientKit
+with PingContainerKit {
 
   implicit val pc = PatienceConfig(Span(20, Seconds), Span(1, Second))
 
@@ -41,7 +41,7 @@ class DockerServiceSpec extends FlatSpec with Matchers with BeforeAndAfterAll wi
     Then("port 80 should be on container")
     ports.get(80) should be('nonEmpty)
 
-    And("port 80 should have public binding")
+    And("port 80 should have public binding: ")
     ports(80) should not be null
   }
 

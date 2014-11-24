@@ -22,8 +22,7 @@ trait DockerContainerOps {
         }
         id
       }
-    // TODO: handle port bindings there, otherwise it gets overriden to empty list
-      _ <- Future(dockerClient.startContainerCmd(s).exec())
+      _ <- Future(prepareStartCmd(dockerClient.startContainerCmd(s)).exec())
     } yield s
   }
 
