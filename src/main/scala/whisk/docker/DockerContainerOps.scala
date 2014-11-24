@@ -1,7 +1,6 @@
 package whisk.docker
 
 import com.github.dockerjava.api.DockerClient
-import com.github.dockerjava.api.model.PortBinding
 
 import scala.collection.JavaConversions._
 import scala.concurrent.{ ExecutionContext, Future }
@@ -32,14 +31,23 @@ trait DockerContainerOps {
       _ <- Future(dockerClient.stopContainerCmd(s).exec())
     } yield this
 
-  def remove()(implicit dockerClient: DockerClient, ec: ExecutionContext) =
+  def remove(force: Boolean = false)(implicit dockerClient: DockerClient, ec: ExecutionContext) =
     for {
       s <- id
-      _ <- Future(dockerClient.removeContainerCmd(s).exec())
+      _ <- Future(dockerClient.removeContainerCmd(s).withForce(force).exec())
     } yield this
 
   def isRunning()(implicit dockerClient: DockerClient, ec: ExecutionContext) =
     getRunningContainer().map(_.isDefined)
+
+  def isReady()(implicit dockerClient: DockerClient, ec: ExecutionContext) =
+    (for {
+      r <- isRunning() if r
+      //b <- readyChecker(this)
+    } yield r) recover {
+      case e =>
+        false
+    }
 
   def getRunningContainer()(implicit dockerClient: DockerClient, ec: ExecutionContext) =
     for {

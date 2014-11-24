@@ -12,7 +12,9 @@ case class DockerContainer(
     command: Option[Seq[String]] = None,
     bindPorts: Map[Int, Option[Int]] = Map.empty,
     tty: Boolean = true,
-    stdinOpen: Boolean = true) extends DockerContainerOps {
+    stdinOpen: Boolean = true,
+
+    readyChecker: DockerReadyChecker = DockerReadyChecker.Always) extends DockerContainerOps {
 
   private[docker] val idPromise = Promise[String]()
   private[docker] val isInitialized = new AtomicBoolean(false)
@@ -22,6 +24,8 @@ case class DockerContainer(
   def withCommand(cmd: String*) = copy(command = Some(cmd))
 
   def withPorts(ps: (Int, Option[Int])*) = copy(bindPorts = ps.toMap)
+
+  def withReadyChecker(checker: DockerReadyChecker) = copy(readyChecker = checker)
 
   private[docker] def prepareCreateCmd(cmd: CreateContainerCmd): CreateContainerCmd =
     command

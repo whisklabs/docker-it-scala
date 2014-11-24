@@ -1,7 +1,7 @@
 package whisk.docker
 
 import org.scalatest.concurrent.{ PatienceConfiguration, ScalaFutures }
-import org.scalatest.time.{ Seconds, Span }
+import org.scalatest.time._
 import org.scalatest.{ BeforeAndAfterAll, Suite }
 
 import scala.concurrent.{ Future, ExecutionContext }
@@ -17,20 +17,27 @@ trait DockerTestKit extends BeforeAndAfterAll with ScalaFutures {
   def dockerInitPatienceInterval = PatienceConfiguration.Interval(Span(10, Seconds))
 
   private def stopRmAll(): Seq[DockerContainer] = {
-    Future.sequence(dockerContainers.map(_.stop().flatMap(_.remove()))).futureValue(dockerInitPatienceInterval)
+    Future
+      .sequence(
+        dockerContainers
+          .map(_.remove(force = true))
+      ).futureValue(dockerInitPatienceInterval)
   }
 
   override def beforeAll(): Unit = {
     super.beforeAll()
 
-    val allRunning = Future.sequence(dockerContainers.map {
-      _.init().flatMap(_.isRunning()).recover {
-        case e =>
-          System.err.println(e.getMessage)
-          e.printStackTrace(System.err)
-          false
-      }
-    }).map(_.forall(_ == true)).futureValue(dockerInitPatienceInterval)
+    val allRunning = Future.sequence(
+      dockerContainers
+        .map(_.init())
+        .map(_.flatMap(_.isReady()))
+        .map(_ recover {
+          case e =>
+            System.err.println(e.getMessage)
+            e.printStackTrace(System.err)
+            false
+        })
+    ).map(_.forall(_ == true)).futureValue(dockerInitPatienceInterval)
     if (!allRunning) {
       stopRmAll()
       throw new RuntimeException("Cannot run all required containers")
