@@ -7,5 +7,7 @@ trait PingContainerKit extends DockerTestKit {
 
   val pingContainer = DockerContainer("dockerfile/nginx")
 
-  abstract override def dockerContainers = pingContainer :: super.dockerContainers
+  val pongContainer = DockerContainer("dockerfile/nginx").withPorts(80 -> None)
+
+  abstract override def dockerContainers = pingContainer :: pongContainer :: super.dockerContainers
 }

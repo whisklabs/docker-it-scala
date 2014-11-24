@@ -34,4 +34,15 @@ class DockerServiceSpec extends FlatSpec with Matchers with BeforeAndAfterAll wi
     pingContainer.isRunning().futureValue shouldBe false
   }
 
+  "docker container" should "be available from port" in {
+    When("we are building a container with bound port")
+    val ports = pongContainer.getPorts().futureValue
+
+    Then("port 80 should be on container")
+    ports.get(80) should be('nonEmpty)
+
+    And("port 80 should have public binding")
+    ports(80) should not be null
+  }
+
 }

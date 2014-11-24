@@ -1,6 +1,7 @@
 package whisk.docker
 
 import com.github.dockerjava.api.DockerClient
+import com.github.dockerjava.api.model.PortBinding
 
 import scala.collection.JavaConversions._
 import scala.concurrent.{ ExecutionContext, Future }
@@ -21,6 +22,7 @@ trait DockerContainerOps {
         }
         id
       }
+    // TODO: handle port bindings there, otherwise it gets overriden to empty list
       _ <- Future(dockerClient.startContainerCmd(s).exec())
     } yield s
   }
@@ -32,9 +34,14 @@ trait DockerContainerOps {
     } yield s
 
   def isRunning()(implicit dockerClient: DockerClient, ec: ExecutionContext) =
+    getRunningContainer().map(_.isDefined)
+
+  def getRunningContainer()(implicit dockerClient: DockerClient, ec: ExecutionContext) =
     for {
       s <- id
       resp <- Future(dockerClient.listContainersCmd().exec())
-    } yield resp.exists(_.getId == s)
+    } yield resp.find(_.getId == s)
 
+  def getPorts()(implicit dockerClient: DockerClient, ec: ExecutionContext) =
+    getRunningContainer().map(_.map(_.getPorts.toSeq.map(p => p.getPrivatePort -> p.getPublicPort).toMap).getOrElse(throw new RuntimeException(s"Container $image is not running")))
 }
