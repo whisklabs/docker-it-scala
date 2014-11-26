@@ -2,8 +2,6 @@ package whisk.docker
 
 import java.net.{ HttpURLConnection, URL }
 
-import com.github.dockerjava.api.DockerClient
-
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ TimeoutException, ExecutionContext, Future, Promise }
 
@@ -77,17 +75,15 @@ trait DockerReadyChecker extends (DockerContainer => Future[Boolean]) {
 }
 
 object DockerReadyChecker {
-  // TODO: get it from config? wrap DockerClient and its Config with a case class?
-  val dockerHost = "192.168.59.103"
 
   object Always extends DockerReadyChecker {
     override def apply(container: DockerContainer): Future[Boolean] = Future.successful(true)
   }
 
-  case class HttpResponseCode(port: Int, path: String = "/", host: String = dockerHost, code: Int = 200)(implicit dc: DockerClient, ec: ExecutionContext) extends DockerReadyChecker {
+  case class HttpResponseCode(port: Int, path: String = "/", host: Option[String] = None, code: Int = 200)(implicit docker: Docker, ec: ExecutionContext) extends DockerReadyChecker {
     override def apply(container: DockerContainer): Future[Boolean] = {
       container.getPorts().map(_(port)).flatMap { p =>
-        val url = new URL("http", host, p, path)
+        val url = new URL("http", host.getOrElse(docker.config.getUri.getHost), p, path)
         Future {
           val con = url.openConnection().asInstanceOf[HttpURLConnection]
           try {

@@ -7,14 +7,14 @@ import org.scalatest.{ BeforeAndAfterAll, Suite }
 import scala.concurrent.{ Future, ExecutionContext }
 
 trait DockerTestKit extends BeforeAndAfterAll with ScalaFutures {
-  self: Suite with DockerClientConfig =>
+  self: Suite with DockerConfig =>
 
   // we need ExecutionContext in order to run docker.init() / docker.stop() there
   implicit def dockerExecutionContext: ExecutionContext = ExecutionContext.global
 
   def dockerContainers: List[DockerContainer] = Nil
 
-  def dockerInitPatienceInterval = PatienceConfiguration.Interval(Span(10, Seconds))
+  def dockerInitPatienceInterval = PatienceConfiguration.Interval(Span(20, Seconds))
 
   private def stopRmAll(): Seq[DockerContainer] = {
     Future.traverse(dockerContainers)(_.remove(force = true)).futureValue(dockerInitPatienceInterval)

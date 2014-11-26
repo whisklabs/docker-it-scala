@@ -3,7 +3,7 @@ package whisk.docker
 import org.scalatest.Suite
 
 trait PingContainerKit extends DockerTestKit {
-  self: Suite with DockerClientConfig =>
+  self: Suite with DockerConfig =>
 
   val pingContainer = DockerContainer("dockerfile/nginx")
 

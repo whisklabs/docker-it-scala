@@ -6,13 +6,13 @@ import org.scalatest.time._
 
 class DockerServiceSpec extends FlatSpec with Matchers with BeforeAndAfterAll with GivenWhenThen with ScalaFutures
     with DockerTestKit
-    with DockerClientConfig
+    with DockerConfig
     with PingContainerKit {
 
   implicit val pc = PatienceConfig(Span(20, Seconds), Span(1, Second))
 
   "docker client" should "connect to docker" in {
-    dockerClient.infoCmd().exec().toString.contains("docker") shouldBe true
+    docker.client.infoCmd().exec().toString.contains("docker") shouldBe true
   }
 
   "docker adapter" should "create container" in {

@@ -6,7 +6,7 @@ import org.scalatest.time._
 
 class Neo4jServiceSpec extends FlatSpec with Matchers with BeforeAndAfterAll with GivenWhenThen with ScalaFutures
     with DockerTestKit
-    with DockerClientConfig
+    with DockerConfig
     with DockerNeo4jService {
 
   implicit val pc = PatienceConfig(Span(20, Seconds), Span(1, Second))
