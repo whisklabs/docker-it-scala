@@ -17,11 +17,7 @@ trait DockerTestKit extends BeforeAndAfterAll with ScalaFutures {
   def dockerInitPatienceInterval = PatienceConfiguration.Interval(Span(10, Seconds))
 
   private def stopRmAll(): Seq[DockerContainer] = {
-    Future
-      .sequence(
-        dockerContainers
-          .map(_.remove(force = true))
-      ).futureValue(dockerInitPatienceInterval)
+    Future.traverse(dockerContainers)(_.remove(force = true)).futureValue(dockerInitPatienceInterval)
   }
 
   override def beforeAll(): Unit = {
@@ -37,7 +33,7 @@ trait DockerTestKit extends BeforeAndAfterAll with ScalaFutures {
             e.printStackTrace(System.err)
             false
         })
-    ).map(_.forall(_ == true)).futureValue(dockerInitPatienceInterval)
+    ).map(_.forall(identity)).futureValue(dockerInitPatienceInterval)
     if (!allRunning) {
       stopRmAll()
       throw new RuntimeException("Cannot run all required containers")

@@ -5,7 +5,7 @@ import java.util.{ Timer, TimerTask }
 
 import com.github.dockerjava.api.DockerClient
 
-import scala.concurrent.duration.Duration
+import scala.concurrent.duration.{ FiniteDuration, Duration }
 import scala.concurrent.{ ExecutionContext, Future, Promise }
 
 trait DockerReadyChecker extends (DockerContainer => Future[Boolean]) {
@@ -40,37 +40,31 @@ trait DockerReadyChecker extends (DockerContainer => Future[Boolean]) {
     }
   }
 
-  def looped(attempts: Int, delay: Duration)(implicit ec: ExecutionContext): DockerReadyChecker = {
+  def within(duration: FiniteDuration)(implicit ec: ExecutionContext): DockerReadyChecker = {
     val checker = this.apply _
     DockerReadyChecker.F { container =>
-      val timer = new Timer
+      import undelay._
 
-      def makeTask[T](future: => Future[T])(schedule: TimerTask => Unit): Future[T] = {
-        val prom = Promise[T]()
-        schedule(
-          new TimerTask {
-            def run() {
-              try {
-                prom.completeWith(future)
-              } catch {
-                case ex: Throwable => prom.failure(ex)
-              }
-            }
-          }
-        )
-        prom.future
+      checker(container).within(duration)
+    }
+  }
+
+  def looped(attempts: Int, delay: FiniteDuration)(implicit ec: ExecutionContext): DockerReadyChecker = {
+    val checker = this.apply _
+    DockerReadyChecker.F { container =>
+
+      val p = Promise[Boolean]()
+
+      def attempt(rest: Int): Unit = rest match {
+        case 0 =>
+          p tryCompleteWith checker(container)
+        case n =>
+          p tryCompleteWith checker(container)
+          odelay.Delay(delay)(attempt(rest - 1))
       }
+      attempt(attempts)
 
-      def schedule[T](delay: Long)(body: => Future[T])(implicit ctx: ExecutionContext): Future[T] = {
-        makeTask(body)(timer.schedule(_, delay))
-      }
-
-      def connectionLoop[T](f: => Future[T], attempts: Int, delay: Long): Future[T] = {
-        val future = schedule(delay)(f)
-        if (attempts <= 1) future else future.recoverWith({ case _ => connectionLoop(f, attempts - 1, delay) })
-      }
-
-      connectionLoop(checker(container), attempts, delay.toMillis)
+      p.future
     }
   }
 }
@@ -88,7 +82,10 @@ object DockerReadyChecker {
       container.getPorts().map(_(port)).flatMap { p =>
         val url = new URL("http", host, p, path)
         Future {
+          println("trying to connect to " + url)
           val con = url.openConnection().asInstanceOf[HttpURLConnection]
+          println("con = " + con)
+          println("respcode = " + con.getResponseCode)
           con.getResponseCode == code
         }
       }

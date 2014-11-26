@@ -57,5 +57,5 @@ trait DockerContainerOps {
     } yield resp.find(_.getId == s)
 
   def getPorts()(implicit dockerClient: DockerClient, ec: ExecutionContext) =
-    getRunningContainer().map(_.map(_.getPorts.toSeq.map(p => p.getPrivatePort -> p.getPublicPort).toMap).getOrElse(throw new RuntimeException(s"Container $image is not running")))
+    getRunningContainer().map(_.map(_.getPorts.toSeq.filter(_.getPublicPort != null).map(p => p.getPrivatePort.toInt -> p.getPublicPort.toInt).toMap).getOrElse(throw new RuntimeException(s"Container $image is not running")))
 }

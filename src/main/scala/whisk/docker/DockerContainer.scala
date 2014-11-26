@@ -11,8 +11,8 @@ case class DockerContainer(
     image: String,
     command: Option[Seq[String]] = None,
     bindPorts: Map[Int, Option[Int]] = Map.empty,
-    tty: Boolean = true,
-    stdinOpen: Boolean = true,
+    tty: Boolean = false,
+    stdinOpen: Boolean = false,
 
     readyChecker: DockerReadyChecker = DockerReadyChecker.Always) extends DockerContainerOps {
 

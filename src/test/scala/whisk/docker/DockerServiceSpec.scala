@@ -38,9 +38,6 @@ class DockerServiceSpec extends FlatSpec with Matchers with BeforeAndAfterAll wi
 
     Then("port 80 should be on container")
     ports.get(80) should be('nonEmpty)
-
-    And("port 80 should have public binding")
-    ports(80) should not be null
   }
 
 }
