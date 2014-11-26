@@ -8,7 +8,7 @@ trait DockerNeo4jService extends DockerTestKit {
 
   val neo4jContainer = DockerContainer("tpires/neo4j")
     .withPorts(7474 -> None)
-    .withReadyChecker(DockerReadyChecker.HttpResponseCode(7474, "/db/data/").looped(10, 100 millis))
+    .withReadyChecker(DockerReadyChecker.HttpResponseCode(7474, "/db/data/").within(100 millis).looped(10, 950 millis))
 
   abstract override def dockerContainers: List[DockerContainer] = neo4jContainer :: super.dockerContainers
 }

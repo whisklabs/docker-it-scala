@@ -1,11 +1,7 @@
 package whisk.docker
 
-import java.util.concurrent.atomic.AtomicBoolean
-
 import com.github.dockerjava.api.command.{ CreateContainerCmd, StartContainerCmd }
 import com.github.dockerjava.api.model.{ ExposedPort, Ports }
-
-import scala.concurrent.Promise
 
 case class DockerContainer(
     image: String,
@@ -15,11 +11,6 @@ case class DockerContainer(
     stdinOpen: Boolean = false,
 
     readyChecker: DockerReadyChecker = DockerReadyChecker.Always) extends DockerContainerOps {
-
-  private[docker] val idPromise = Promise[String]()
-  private[docker] val isInitialized = new AtomicBoolean(false)
-
-  def id = idPromise.future
 
   def withCommand(cmd: String*) = copy(command = Some(cmd))
 

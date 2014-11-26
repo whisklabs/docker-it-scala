@@ -1,12 +1,11 @@
 package whisk.docker
 
 import java.net.{ HttpURLConnection, URL }
-import java.util.{ Timer, TimerTask }
 
 import com.github.dockerjava.api.DockerClient
 
-import scala.concurrent.duration.{ FiniteDuration, Duration }
-import scala.concurrent.{ ExecutionContext, Future, Promise }
+import scala.concurrent.duration.FiniteDuration
+import scala.concurrent.{ TimeoutException, ExecutionContext, Future, Promise }
 
 trait DockerReadyChecker extends (DockerContainer => Future[Boolean]) {
 
@@ -45,7 +44,10 @@ trait DockerReadyChecker extends (DockerContainer => Future[Boolean]) {
     DockerReadyChecker.F { container =>
       import undelay._
 
-      checker(container).within(duration)
+      checker(container).within(duration).recover {
+        case _: TimeoutException =>
+          false
+      }
     }
   }
 
@@ -55,14 +57,19 @@ trait DockerReadyChecker extends (DockerContainer => Future[Boolean]) {
 
       val p = Promise[Boolean]()
 
-      def attempt(rest: Int): Unit = rest match {
-        case 0 =>
-          p tryCompleteWith checker(container)
-        case n =>
-          p tryCompleteWith checker(container)
-          odelay.Delay(delay)(attempt(rest - 1))
+      def attempt(rest: Int): Future[Boolean] = {
+        checker(container).filter(identity).recoverWith {
+          case _ =>
+            rest match {
+              case 0 =>
+                Future.successful(false)
+              case n =>
+                odelay.Delay(delay)(attempt(n - 1)).future.flatMap(identity)
+            }
+        }
       }
-      attempt(attempts)
+
+      p.completeWith(attempt(attempts))
 
       p.future
     }
@@ -82,11 +89,13 @@ object DockerReadyChecker {
       container.getPorts().map(_(port)).flatMap { p =>
         val url = new URL("http", host, p, path)
         Future {
-          println("trying to connect to " + url)
           val con = url.openConnection().asInstanceOf[HttpURLConnection]
-          println("con = " + con)
-          println("respcode = " + con.getResponseCode)
-          con.getResponseCode == code
+          try {
+            con.getResponseCode == code
+          } catch {
+            case e: java.net.ConnectException =>
+              false
+          }
         }
       }
     }
