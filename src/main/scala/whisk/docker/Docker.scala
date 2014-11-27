@@ -4,4 +4,6 @@ import com.github.dockerjava.core.{ DockerClientBuilder, DockerClientConfig => D
 
 class Docker(val config: DCC) {
   lazy val client = DockerClientBuilder.getInstance(config).build()
+
+  lazy val host = config.getUri.getHost
 }
