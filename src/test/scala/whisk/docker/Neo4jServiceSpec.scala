@@ -16,4 +16,29 @@ class Neo4jServiceSpec extends FlatSpec with Matchers with BeforeAndAfterAll wit
     neo4jContainer.isReady().futureValue shouldBe true
   }
 
+  "neo4j container" should "show its logs" in {
+    val is = docker.client.logContainerCmd(neo4jContainer.id.futureValue).withStdOut().exec()
+
+    def pullLines(it: Iterator[String], num: Int): List[String] = num match {
+      case 0 => Nil
+      case _ if !it.hasNext => Nil
+      case n =>
+        it.next() :: pullLines(it, n - 1)
+    }
+
+    val src = scala.io.Source.fromInputStream(is)
+
+    val lns = pullLines(src.getLines(), 10)
+
+    println(lns)
+
+    lns.size shouldBe 10
+  }
+
+  "neo4j container" should "pass ready checker with logs" in {
+    val c = DockerReadyChecker.LogLine(_.contains("Starting HTTP on port :7474"))
+
+    c(neo4jContainer).futureValue shouldBe true
+  }
+
 }

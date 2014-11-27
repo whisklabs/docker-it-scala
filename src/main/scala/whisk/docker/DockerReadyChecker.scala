@@ -2,6 +2,7 @@ package whisk.docker
 
 import java.net.{ HttpURLConnection, URL }
 
+import scala.annotation.tailrec
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ TimeoutException, ExecutionContext, Future, Promise }
 
@@ -97,9 +98,27 @@ object DockerReadyChecker {
     }
   }
 
+  case class LogLine(check: String => Boolean)(implicit docker: Docker, ec: ExecutionContext) extends DockerReadyChecker {
+    override def apply(container: DockerContainer) = {
+      @tailrec
+      def pullAndCheck(it: Iterator[String]): Boolean = it.hasNext match {
+        case true =>
+          val s = it.next()
+          if (check(s)) true
+          else pullAndCheck(it)
+        case false =>
+          false
+      }
+
+      for {
+        id <- container.id
+        is <- Future(docker.client.logContainerCmd(id).withStdOut().exec())
+        it = scala.io.Source.fromInputStream(is)
+      } yield pullAndCheck(it.getLines())
+    }
+  }
+
   case class F(f: DockerContainer => Future[Boolean]) extends DockerReadyChecker {
     override def apply(container: DockerContainer): Future[Boolean] = f(container)
   }
-
-  // TODO: logs reader checker
 }
