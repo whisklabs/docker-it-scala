@@ -5,6 +5,7 @@ import java.net.{ HttpURLConnection, URL }
 import scala.annotation.tailrec
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ TimeoutException, ExecutionContext, Future, Promise }
+import scala.io.Codec
 
 trait DockerReadyChecker extends (DockerContainer => Future[Boolean]) {
 
@@ -112,8 +113,8 @@ object DockerReadyChecker {
 
       for {
         id <- container.id
-        is <- Future(docker.client.logContainerCmd(id).withStdOut().exec())
-        it = scala.io.Source.fromInputStream(is)
+        is <- Future(docker.client.logContainerCmd(id).withStdOut().withFollowStream().exec())
+        it = scala.io.Source.fromInputStream(is)(Codec.ISO8859)
       } yield pullAndCheck(it.getLines())
     }
   }
