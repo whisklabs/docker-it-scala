@@ -55,23 +55,19 @@ trait DockerReadyChecker extends (DockerContainer => Future[Boolean]) {
     val checker = this.apply _
     DockerReadyChecker.F { container =>
 
-      val p = Promise[Boolean]()
-
       def attempt(rest: Int): Future[Boolean] = {
         checker(container).filter(identity).recoverWith {
-          case _ =>
+          case e =>
             rest match {
               case 0 =>
-                Future.successful(false)
+                Future.failed(e)
               case n =>
                 odelay.Delay(delay)(attempt(n - 1)).future.flatMap(identity)
             }
         }
       }
 
-      p.completeWith(attempt(attempts))
-
-      p.future
+      attempt(attempts)
     }
   }
 }

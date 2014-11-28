@@ -5,11 +5,13 @@ import scala.concurrent.duration._
 trait DockerNeo4jService extends DockerKit {
   self: DockerConfig =>
 
+  val DefaultNeo4jHttpPort = 7474
+
   val neo4jContainer = DockerContainer("tpires/neo4j")
-    .withPorts(7474 -> None)
+    .withPorts(DefaultNeo4jHttpPort -> None)
     .withReadyChecker(
       DockerReadyChecker
-        .HttpResponseCode(7474, "/db/data/")
+        .HttpResponseCode(DefaultNeo4jHttpPort, "/db/data/")
         .within(100 millis)
         .looped(12, 1250 millis)
     )
