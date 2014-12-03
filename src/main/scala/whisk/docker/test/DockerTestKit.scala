@@ -11,7 +11,7 @@ trait DockerTestKit extends BeforeAndAfterAll with ScalaFutures with DockerKit {
 
   private lazy val log = LoggerFactory.getLogger(this.getClass)
 
-  def dockerInitPatienceInterval = PatienceConfiguration.Interval(Span(20, Seconds))
+  def dockerInitPatienceInterval = PatienceConfig(scaled(Span(20, Seconds)), scaled(Span(10, Millis)))
 
   override def beforeAll(): Unit = {
     super.beforeAll()
