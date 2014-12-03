@@ -13,7 +13,7 @@ trait DockerNeo4jService extends DockerKit {
       DockerReadyChecker
         .HttpResponseCode(DefaultNeo4jHttpPort, "/db/data/")
         .within(100 millis)
-        .looped(12, 1250 millis)
+        .looped(20, 1250 millis)
     )
 
   abstract override def dockerContainers: List[DockerContainer] = neo4jContainer :: super.dockerContainers
