@@ -2,10 +2,12 @@ package whisk.docker
 
 import java.net.{ HttpURLConnection, URL }
 
+import com.spotify.docker.client.DockerClient.LogsParameter
+import com.spotify.docker.client.LogStream
+
 import scala.annotation.tailrec
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ TimeoutException, ExecutionContext, Future, Promise }
-import scala.io.Codec
 
 trait DockerReadyChecker extends (DockerContainer => Future[Boolean]) {
 
@@ -81,7 +83,7 @@ object DockerReadyChecker {
   case class HttpResponseCode(port: Int, path: String = "/", host: Option[String] = None, code: Int = 200)(implicit docker: Docker, ec: ExecutionContext) extends DockerReadyChecker {
     override def apply(container: DockerContainer): Future[Boolean] = {
       container.getPorts().map(_(port)).flatMap { p =>
-        val url = new URL("http", host.getOrElse(docker.config.getUri.getHost), p, path)
+        val url = new URL("http", host.getOrElse(docker.host), p, path)
         Future {
           val con = url.openConnection().asInstanceOf[HttpURLConnection]
           try {
@@ -98,10 +100,10 @@ object DockerReadyChecker {
   case class LogLine(check: String => Boolean)(implicit docker: Docker, ec: ExecutionContext) extends DockerReadyChecker {
     override def apply(container: DockerContainer) = {
       @tailrec
-      def pullAndCheck(it: Iterator[String]): Boolean = it.hasNext match {
+      def pullAndCheck(it: LogStream): Boolean = it.hasNext match {
         case true =>
           val s = it.next()
-          if (check(s)) true
+          if (check(io.Source.fromBytes(s.content().array())(io.Codec.ISO8859).mkString)) true
           else pullAndCheck(it)
         case false =>
           false
@@ -109,9 +111,9 @@ object DockerReadyChecker {
 
       for {
         id <- container.id
-        is <- Future(docker.client.logContainerCmd(id).withStdOut().withFollowStream().exec())
-        it = scala.io.Source.fromInputStream(is)(Codec.ISO8859)
-      } yield pullAndCheck(it.getLines())
+        is <- Future(docker.client.logs(id, LogsParameter.FOLLOW, LogsParameter.STDOUT))
+      } yield pullAndCheck(is)
+
     }
   }
 

@@ -3,7 +3,6 @@ package whisk.docker
 import scala.concurrent.duration._
 
 trait DockerNeo4jService extends DockerKit {
-  self: DockerConfig =>
 
   val DefaultNeo4jHttpPort = 7474
 

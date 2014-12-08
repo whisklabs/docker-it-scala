@@ -1,7 +1,6 @@
 package whisk.docker
 
 trait DockerCassandraService extends DockerKit {
-  self: DockerConfig =>
 
   val DefaultCqlPort = 9042
 

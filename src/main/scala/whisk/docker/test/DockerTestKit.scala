@@ -3,16 +3,17 @@ package whisk.docker.test
 import java.io.ByteArrayInputStream
 import java.util.logging.LogManager
 
+import com.spotify.docker.client.DockerClient.LogsParameter
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time._
 import org.scalatest.{ BeforeAndAfterAll, Suite }
 import org.slf4j.LoggerFactory
-import whisk.docker.{ DockerKit, DockerConfig }
+import whisk.docker.DockerKit
 
 import scala.concurrent.Future
 
 trait DockerTestKit extends BeforeAndAfterAll with ScalaFutures with DockerKit {
-  self: Suite with DockerConfig =>
+  self: Suite =>
 
   private lazy val log = LoggerFactory.getLogger(this.getClass)
 
@@ -42,17 +43,18 @@ trait DockerTestKit extends BeforeAndAfterAll with ScalaFutures with DockerKit {
           case (container, false) =>
             for {
               id <- container.id
-              is <- Future(docker.client.logContainerCmd(id).withStdOut().withStdErr().withFollowStream().exec())
-              it = scala.io.Source.fromInputStream(is)(scala.io.Codec.ISO8859)
+              is <- Future(docker.client.logs(id, LogsParameter.FOLLOW, LogsParameter.STDERR, LogsParameter.FOLLOW))
             } {
-              System.err.print(it.mkString)
+              log.error(is.readFully())
             }
+            log.error(s"Failed to run: ${container.image}")
             false
           case (_, true) => true
         }
           .forall(identity)
       }.recover {
         case e =>
+          e.printStackTrace()
           log.error("Cannot run docker containers", e)
           false
       }

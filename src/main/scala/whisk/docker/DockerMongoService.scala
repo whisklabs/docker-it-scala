@@ -1,7 +1,6 @@
 package whisk.docker
 
 trait DockerMongoService extends DockerKit {
-  self: DockerConfig =>
 
   val DefaultMongoClientPort = 27017
 

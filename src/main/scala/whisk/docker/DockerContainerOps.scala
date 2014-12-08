@@ -2,7 +2,7 @@ package whisk.docker
 
 import java.util.concurrent.atomic.AtomicBoolean
 
-import com.github.dockerjava.api.model.Container
+import com.spotify.docker.client.messages.ContainerInfo
 
 import scala.collection.JavaConversions._
 import scala.concurrent.{ ExecutionContext, Future, Promise }
@@ -35,30 +35,33 @@ trait DockerContainerOps {
 
   def init()(implicit docker: Docker, ec: ExecutionContext): Future[this.type] =
     for {
-      s <- _id.init(Future(prepareCreateCmd(docker.client.createContainerCmd(image)).exec()).map { resp =>
-        if (resp.getId != null && resp.getId != "") {
-          resp.getId
+      s <- _id.init(Future(docker.client.createContainer(prepareCreateCmd().build())).map { resp =>
+        if (resp.id() != null && resp.id() != "") {
+          resp.id()
         } else {
           throw new RuntimeException(s"Cannot run container $image: ${resp.getWarnings.mkString(", ")}")
         }
       })
-      _ <- Future(prepareStartCmd(docker.client.startContainerCmd(s)).exec())
-    } yield this
+      _ <- Future(docker.client.startContainer(s, prepareHostConfig().build()))
+    } yield {
+      this
+    }
 
   def stop()(implicit docker: Docker, ec: ExecutionContext): Future[this.type] =
     for {
       s <- id
-      _ <- Future(docker.client.stopContainerCmd(s).exec())
+      _ <- Future(docker.client.stopContainer(s, 1))
     } yield this
 
   def remove(force: Boolean = false)(implicit docker: Docker, ec: ExecutionContext): Future[this.type] =
     for {
       s <- id
-      _ <- Future(docker.client.removeContainerCmd(s).withForce(force).exec())
+      _ <- Future(docker.client.stopContainer(s, 1))
+      _ <- Future(docker.client.removeContainer(s))
     } yield this
 
   def isRunning()(implicit docker: Docker, ec: ExecutionContext): Future[Boolean] =
-    getRunningContainer().map(_.isDefined)
+    getRunningContainer().map(_.state().running())
 
   private val _isReady = SinglePromise[Boolean]
 
@@ -75,18 +78,26 @@ trait DockerContainerOps {
       }
     )
 
-  protected def getRunningContainer()(implicit docker: Docker, ec: ExecutionContext): Future[Option[Container]] =
+  protected def getRunningContainer()(implicit docker: Docker, ec: ExecutionContext): Future[ContainerInfo] =
     for {
       s <- id
-      resp <- Future(docker.client.listContainersCmd().exec())
-    } yield resp.find(_.getId == s)
+      resp <- Future(docker.client.inspectContainer(s))
+    } yield resp
 
   private val _ports = SinglePromise[Map[Int, Int]]
 
   def getPorts()(implicit docker: Docker, ec: ExecutionContext): Future[Map[Int, Int]] =
     _ports.init(
-      getRunningContainer()
-        .map(_.map(_.getPorts.toSeq.filter(_.getPublicPort != null).map(p => p.getPrivatePort.toInt -> p.getPublicPort.toInt).toMap)
-          .getOrElse(throw new RuntimeException(s"Container $image is not running")))
+      getRunningContainer().map { n =>
+        Option(n.networkSettings().ports())
+      }.collect {
+        case Some(portMappings) =>
+          portMappings.filter(_._2 != null).filter(_._2.nonEmpty).mapValues(_.head.hostPort().toInt).map {
+            case (k, v) if k.endsWith("/tcp") || k.endsWith("/udp") => k.substring(0, -4).toInt -> v
+            case (k, v) => k.toInt -> v
+          }.toMap
+        case None =>
+          Map.empty
+      }
     )
 }

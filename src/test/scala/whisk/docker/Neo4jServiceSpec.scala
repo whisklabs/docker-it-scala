@@ -1,5 +1,7 @@
 package whisk.docker
 
+import com.spotify.docker.client.DockerClient.LogsParameter
+import com.spotify.docker.client.LogStream
 import org.scalatest._
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time._
@@ -7,7 +9,6 @@ import whisk.docker.test.DockerTestKit
 
 class Neo4jServiceSpec extends FlatSpec with Matchers with BeforeAndAfterAll with GivenWhenThen with ScalaFutures
     with DockerTestKit
-    with DockerConfig
     with DockerNeo4jService {
 
   implicit val pc = PatienceConfig(Span(20, Seconds), Span(1, Second))
@@ -17,18 +18,16 @@ class Neo4jServiceSpec extends FlatSpec with Matchers with BeforeAndAfterAll wit
   }
 
   "neo4j container" should "show its logs" in {
-    val is = docker.client.logContainerCmd(neo4jContainer.id.futureValue).withStdOut().exec()
+    val is = docker.client.logs(neo4jContainer.id.futureValue, LogsParameter.STDOUT)
 
-    def pullLines(it: Iterator[String], num: Int): List[String] = num match {
+    def pullLines(it: LogStream, num: Int): List[String] = num match {
       case 0 => Nil
       case _ if !it.hasNext => Nil
       case n =>
-        it.next() :: pullLines(it, n - 1)
+        io.Source.fromBytes(it.next().content().array()).mkString :: pullLines(it, n - 1)
     }
 
-    val src = scala.io.Source.fromInputStream(is)
-
-    val lns = pullLines(src.getLines(), 10)
+    val lns = pullLines(is, 10)
 
     println(lns)
 

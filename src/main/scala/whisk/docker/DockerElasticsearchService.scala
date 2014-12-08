@@ -3,7 +3,6 @@ package whisk.docker
 import scala.concurrent.duration._
 
 trait DockerElasticsearchService extends DockerKit {
-  self: DockerConfig =>
 
   val DefaultElasticsearchHttpPort = 9200
   val DefaultElasticsearchClientPort = 9300

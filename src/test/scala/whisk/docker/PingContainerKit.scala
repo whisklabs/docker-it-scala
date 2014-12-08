@@ -4,13 +4,13 @@ import org.scalatest.Suite
 import whisk.docker.test.DockerTestKit
 
 trait PingContainerKit extends DockerTestKit {
-  self: Suite with DockerConfig =>
+  self: Suite =>
 
-  val pingContainer = DockerContainer("dockerfile/nginx")
+  val pingContainer = DockerContainer("dockerfile/nginx").withPorts(80 -> None)
 
   val pongContainer = DockerContainer("dockerfile/nginx")
     .withPorts(80 -> None)
     .withReadyChecker(DockerReadyChecker.HttpResponseCode(port = 80))
 
-  abstract override def dockerContainers = pingContainer :: pongContainer :: super.dockerContainers
+  abstract override def dockerContainers = pongContainer :: pingContainer :: super.dockerContainers
 }

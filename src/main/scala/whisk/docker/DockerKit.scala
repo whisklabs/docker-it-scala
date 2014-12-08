@@ -3,7 +3,7 @@ package whisk.docker
 import scala.concurrent.{ Future, ExecutionContext }
 
 trait DockerKit {
-  self: DockerConfig =>
+  implicit lazy val docker: Docker = new Docker()
 
   // we need ExecutionContext in order to run docker.init() / docker.stop() there
   implicit def dockerExecutionContext: ExecutionContext = ExecutionContext.global
