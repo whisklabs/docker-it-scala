@@ -2,7 +2,8 @@ package whisk.docker
 
 import java.util.concurrent.atomic.AtomicBoolean
 
-import com.spotify.docker.client.messages.ContainerInfo
+import com.github.dockerjava.api.NotModifiedException
+import com.github.dockerjava.api.model.Container
 
 import scala.collection.JavaConversions._
 import scala.concurrent.{ ExecutionContext, Future, Promise }
@@ -35,33 +36,37 @@ trait DockerContainerOps {
 
   def init()(implicit docker: Docker, ec: ExecutionContext): Future[this.type] =
     for {
-      s <- _id.init(Future(docker.client.createContainer(prepareCreateCmd().build())).map { resp =>
-        if (resp.id() != null && resp.id() != "") {
-          resp.id()
+      s <- _id.init(Future(prepareCreateCmd(docker.client.createContainerCmd(image)).exec()).map { resp =>
+        if (resp.getId != null && resp.getId != "") {
+          resp.getId
         } else {
           throw new RuntimeException(s"Cannot run container $image: ${resp.getWarnings.mkString(", ")}")
         }
       })
-      _ <- Future(docker.client.startContainer(s, prepareHostConfig().build()))
-    } yield {
-      this
-    }
+      _ <- Future(prepareStartCmd(docker.client.startContainerCmd(s)).exec())
+    } yield this
 
   def stop()(implicit docker: Docker, ec: ExecutionContext): Future[this.type] =
     for {
       s <- id
-      _ <- Future(docker.client.stopContainer(s, 1))
+      _ <- Future(docker.client.stopContainerCmd(s).exec()) recover {
+        case _: NotModifiedException =>
+          true
+      }
     } yield this
 
   def remove(force: Boolean = false)(implicit docker: Docker, ec: ExecutionContext): Future[this.type] =
     for {
       s <- id
-      _ <- Future(docker.client.stopContainer(s, 1))
-      _ <- Future(docker.client.removeContainer(s))
+      _ <- Future(docker.client.stopContainerCmd(s).exec()) recover {
+        case _: NotModifiedException =>
+          true
+      }
+      _ <- Future(docker.client.removeContainerCmd(s).withForce(force).exec())
     } yield this
 
   def isRunning()(implicit docker: Docker, ec: ExecutionContext): Future[Boolean] =
-    getRunningContainer().map(_.state().running())
+    getRunningContainer().map(_.isDefined)
 
   private val _isReady = SinglePromise[Boolean]
 
@@ -69,35 +74,40 @@ trait DockerContainerOps {
     _isReady.init(
       (for {
         r <- isRunning() if r
-        b <- readyChecker(this)
-      } yield b) recover {
+        b <- readyChecker(this) if b
+      } yield b) recoverWith {
+        case _: NoSuchElementException =>
+          System.err.println("Not ready: " + image)
+          getLogs(withErr = true).map {
+            _.mkString("\n")
+          }.map(System.err.println).map(_ => false)
         case e =>
           System.err.println(e.getMessage)
           e.printStackTrace(System.err)
-          false
+          Future.successful(false)
       }
     )
 
-  protected def getRunningContainer()(implicit docker: Docker, ec: ExecutionContext): Future[ContainerInfo] =
+  def getLogs(withErr: Boolean = false)(implicit docker: Docker, ec: ExecutionContext): Future[Iterator[String]] =
     for {
       s <- id
-      resp <- Future(docker.client.inspectContainer(s))
-    } yield resp
+      cmd = docker.client.logContainerCmd(s).withStdOut().withFollowStream()
+      is <- Future((if (withErr) cmd.withStdErr() else cmd).exec())
+      it = scala.io.Source.fromInputStream(is)(scala.io.Codec.ISO8859)
+    } yield it.getLines()
+
+  protected def getRunningContainer()(implicit docker: Docker, ec: ExecutionContext): Future[Option[Container]] =
+    for {
+      s <- id
+      resp <- Future(docker.client.listContainersCmd().exec())
+    } yield resp.find(_.getId == s)
 
   private val _ports = SinglePromise[Map[Int, Int]]
 
   def getPorts()(implicit docker: Docker, ec: ExecutionContext): Future[Map[Int, Int]] =
     _ports.init(
-      getRunningContainer().map { n =>
-        Option(n.networkSettings().ports())
-      }.collect {
-        case Some(portMappings) =>
-          portMappings.filter(_._2 != null).filter(_._2.nonEmpty).mapValues(_.head.hostPort().toInt).map {
-            case (k, v) if k.endsWith("/tcp") || k.endsWith("/udp") => k.substring(0, -4).toInt -> v
-            case (k, v) => k.toInt -> v
-          }.toMap
-        case None =>
-          Map.empty
-      }
+      getRunningContainer()
+        .map(_.map(_.getPorts.toSeq.filter(_.getPublicPort != null).map(p => p.getPrivatePort.toInt -> p.getPublicPort.toInt).toMap)
+          .getOrElse(throw new RuntimeException(s"Container $image is not running")))
     )
 }

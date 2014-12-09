@@ -1,11 +1,9 @@
 package whisk.docker
 
-import com.spotify.docker.client.DefaultDockerClient
+import com.github.dockerjava.core.{ DockerClientBuilder, DockerClientConfig }
 
-class Docker {
-  val builder = DefaultDockerClient.fromEnv()
+class Docker(val config: DockerClientConfig) {
+  val client = DockerClientBuilder.getInstance(config).build()
 
-  val client = builder.build()
-
-  val host = builder.uri().getHost
+  val host = config.getUri.getHost
 }

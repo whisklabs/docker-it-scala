@@ -6,9 +6,7 @@ import org.scalatest.{ GivenWhenThen, BeforeAndAfterAll, Matchers, FlatSpec }
 import whisk.docker.test.DockerTestKit
 
 class AllAtOnceSpec extends FlatSpec with Matchers with BeforeAndAfterAll with GivenWhenThen with ScalaFutures
-    with DockerTestKit
-    with DockerCassandraService with DockerMongoService with DockerNeo4jService with DockerElasticsearchService
-    {
+    with DockerElasticsearchService with DockerCassandraService with DockerNeo4jService with DockerMongoService with PingContainerKit {
 
   implicit val pc = PatienceConfig(Span(20, Seconds), Span(1, Second))
 

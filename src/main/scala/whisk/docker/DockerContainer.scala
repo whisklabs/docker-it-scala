@@ -1,13 +1,12 @@
 package whisk.docker
 
-import com.google.common.collect.Lists
-import com.spotify.docker.client.messages.{ PortBinding, HostConfig, ContainerConfig }
+import com.github.dockerjava.api.command.{ CreateContainerCmd, StartContainerCmd }
+import com.github.dockerjava.api.model.{ ExposedPort, Ports }
 
 case class DockerContainer(
     image: String,
     command: Option[Seq[String]] = None,
     bindPorts: Map[Int, Option[Int]] = Map.empty,
-
     tty: Boolean = false,
     stdinOpen: Boolean = false,
 
@@ -19,18 +18,24 @@ case class DockerContainer(
 
   def withReadyChecker(checker: DockerReadyChecker) = copy(readyChecker = checker)
 
-  private[docker] def prepareCreateCmd(builder: ContainerConfig.Builder = ContainerConfig.builder()): ContainerConfig.Builder =
+  private[docker] def prepareCreateCmd(cmd: CreateContainerCmd): CreateContainerCmd =
     command
-      .fold(builder)(builder.cmd(_: _*))
-      .portSpecs(bindPorts.map(kv => kv._2.fold("")(_.toString + ":") + kv._1).toSeq: _*)
-      .exposedPorts(bindPorts.keys.toSeq.map(_.toString): _*)
-      .tty(tty)
-      .attachStdin(stdinOpen)
-      .image(image)
+      .fold(cmd)(cmd.withCmd(_: _*))
+      .withPortSpecs(bindPorts.map(kv => kv._2.fold("")(_.toString + ":") + kv._1).toSeq: _*)
+      .withExposedPorts(bindPorts.keys.map(ExposedPort.tcp).toSeq: _*)
+      .withTty(tty)
+      .withStdinOpen(stdinOpen)
 
-  private[docker] def prepareHostConfig(builder: HostConfig.Builder = HostConfig.builder()): HostConfig.Builder =
-    {
-      import collection.JavaConversions._
-      builder.portBindings(mapAsJavaMap(bindPorts.map(kv => kv._1.toString -> Lists.newArrayList(PortBinding.of("", kv._2.fold("")(_.toString))))))
-    }
+  private[docker] def prepareStartCmd(cmd: StartContainerCmd): StartContainerCmd =
+    cmd
+      .withPortBindings(
+        bindPorts.foldLeft(new Ports()) {
+          case (ps, (guestPort, Some(hostPort))) =>
+            ps.bind(ExposedPort.tcp(guestPort), Ports.Binding(hostPort))
+            ps
+          case (ps, (guestPort, None)) =>
+            ps.bind(ExposedPort.tcp(guestPort), new Ports.Binding())
+            ps
+        }
+      )
 }

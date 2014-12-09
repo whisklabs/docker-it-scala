@@ -1,9 +1,25 @@
 package whisk.docker
 
+import org.scalatest.Suite
+import whisk.docker.test.DockerTestKit
+
 import scala.concurrent.{ Future, ExecutionContext }
+import com.github.dockerjava.core.DockerClientConfig
 
 trait DockerKit {
-  implicit lazy val docker: Docker = new Docker()
+  implicit val docker: Docker = new Docker(DockerClientConfig.createDefaultConfigBuilder().build())
+
+  {
+    this match {
+      case _: Suite =>
+        this match {
+          case _: DockerTestKit =>
+          case _ =>
+            System.err.println("!!!\n You're using DockerKit inside scalatest, but forgot to mix in DockerTestKit. Please do it to avoid strangeness. \n !!!")
+        }
+      case _ =>
+    }
+  }
 
   // we need ExecutionContext in order to run docker.init() / docker.stop() there
   implicit def dockerExecutionContext: ExecutionContext = ExecutionContext.global
@@ -20,4 +36,9 @@ trait DockerKit {
         e.printStackTrace(System.err)
         c -> false
     }))
+
+  protected def logException(e: Throwable): Unit = {
+    System.err.println(e)
+    e.printStackTrace(System.err)
+  }
 }

@@ -2,12 +2,10 @@ package whisk.docker
 
 import java.net.{ HttpURLConnection, URL }
 
-import com.spotify.docker.client.DockerClient.LogsParameter
-import com.spotify.docker.client.LogStream
-
 import scala.annotation.tailrec
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ TimeoutException, ExecutionContext, Future, Promise }
+import scala.io.Codec
 
 trait DockerReadyChecker extends (DockerContainer => Future[Boolean]) {
 
@@ -62,7 +60,11 @@ trait DockerReadyChecker extends (DockerContainer => Future[Boolean]) {
           case e =>
             rest match {
               case 0 =>
-                Future.failed(e)
+                Future.failed(e match {
+                  case _: NoSuchElementException =>
+                    new NoSuchElementException(s"Ready checker returned false after $attempts attempts, delayed $delay each")
+                  case _ => e
+                })
               case n =>
                 odelay.Delay(delay)(attempt(n - 1)).future.flatMap(identity)
             }
@@ -100,20 +102,16 @@ object DockerReadyChecker {
   case class LogLine(check: String => Boolean)(implicit docker: Docker, ec: ExecutionContext) extends DockerReadyChecker {
     override def apply(container: DockerContainer) = {
       @tailrec
-      def pullAndCheck(it: LogStream): Boolean = it.hasNext match {
+      def pullAndCheck(it: Iterator[String]): Boolean = it.hasNext match {
         case true =>
           val s = it.next()
-          if (check(io.Source.fromBytes(s.content().array())(io.Codec.ISO8859).mkString)) true
+          if (check(s)) true
           else pullAndCheck(it)
         case false =>
           false
       }
 
-      for {
-        id <- container.id
-        is <- Future(docker.client.logs(id, LogsParameter.FOLLOW, LogsParameter.STDOUT))
-      } yield pullAndCheck(is)
-
+      container.getLogs().map(pullAndCheck)
     }
   }
 

@@ -3,14 +3,11 @@ package whisk.docker.test
 import java.io.ByteArrayInputStream
 import java.util.logging.LogManager
 
-import com.spotify.docker.client.DockerClient.LogsParameter
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time._
 import org.scalatest.{ BeforeAndAfterAll, Suite }
 import org.slf4j.LoggerFactory
 import whisk.docker.DockerKit
-
-import scala.concurrent.Future
 
 trait DockerTestKit extends BeforeAndAfterAll with ScalaFutures with DockerKit {
   self: Suite =>
@@ -18,14 +15,15 @@ trait DockerTestKit extends BeforeAndAfterAll with ScalaFutures with DockerKit {
   private lazy val log = LoggerFactory.getLogger(this.getClass)
 
   {
+    // TODO: logging is required: there could be strange behaviours related to docker init/stop process, several containers interfering each other, etc.
     val lm = LogManager.getLogManager
     lm.reset()
     val lmConfig =
       """handlers = java.util.logging.ConsoleHandler
-      |.level = OFF
-      |java.util.logging.ConsoleHandler.level = OFF
-      |java.util.logging.ConsoleHandler.formatter = java.util.logging.SimpleFormatter
-      |"""
+        |.level = OFF
+        |java.util.logging.ConsoleHandler.level = OFF
+        |java.util.logging.ConsoleHandler.formatter = java.util.logging.SimpleFormatter
+        | """
         .stripMargin
 
     lm.readConfiguration(new ByteArrayInputStream(lmConfig.getBytes))
@@ -36,29 +34,24 @@ trait DockerTestKit extends BeforeAndAfterAll with ScalaFutures with DockerKit {
   override def beforeAll(): Unit = {
     super.beforeAll()
 
-    val allRunning = super
-      .initReadyAll()
-      .map {
-        _.map {
-          case (container, false) =>
-            for {
-              id <- container.id
-              is <- Future(docker.client.logs(id, LogsParameter.FOLLOW, LogsParameter.STDERR, LogsParameter.FOLLOW))
-            } {
-              log.error(is.readFully())
-            }
-            log.error(s"Failed to run: ${container.image}")
-            false
-          case (_, true) => true
-        }
-          .forall(identity)
-      }.recover {
-        case e =>
-          e.printStackTrace()
-          log.error("Cannot run docker containers", e)
-          false
-      }
-      .futureValue(dockerInitPatienceInterval)
+    val allRunning = try {
+      super
+        .initReadyAll()
+        .map(
+          _.map(_._2)
+            .forall(identity)
+        ).recover {
+            case e =>
+              logException(e)
+              log.error("Cannot run docker containers", e)
+              false
+          }
+        .futureValue(dockerInitPatienceInterval)
+    } catch {
+      case e: Exception =>
+        logException(e)
+        false
+    }
 
     if (!allRunning) {
       stopRmAll().futureValue(dockerInitPatienceInterval)
@@ -67,8 +60,19 @@ trait DockerTestKit extends BeforeAndAfterAll with ScalaFutures with DockerKit {
   }
 
   override def afterAll(): Unit = {
-    stopRmAll()
+    try {
+      // We should wait, and we should catch.
+      // Otherwise there's a lot of java-style strangeness when you run several tests with a lot of containers (not with sbt test-only, but with sbt test) or when an exception is thrown
+      // Anyway with current PatienceConfig it's fast
+      stopRmAll().futureValue(dockerInitPatienceInterval)
+    } catch {
+      case e: Throwable =>
+        logException(e)
+        throw e
+    }
+
     super.afterAll()
+
   }
 }
 

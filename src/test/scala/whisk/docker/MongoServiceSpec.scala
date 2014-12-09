@@ -6,8 +6,7 @@ import org.scalatest.time._
 import whisk.docker.test.DockerTestKit
 
 class MongoServiceSpec extends FlatSpec with Matchers with BeforeAndAfterAll with GivenWhenThen with ScalaFutures
-    with DockerTestKit
-    with DockerMongoService {
+    with DockerMongoService with DockerTestKit {
 
   implicit val pc = PatienceConfig(Span(20, Seconds), Span(1, Second))
 
