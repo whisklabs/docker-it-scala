@@ -52,7 +52,7 @@ trait DockerTestKit extends BeforeAndAfterAll with ScalaFutures with DockerKit {
   }
 
   override def afterAll(): Unit = {
-    stopRmAll()
+    stopRmAll().futureValue(dockerInitPatienceInterval)
     super.afterAll()
   }
 }
