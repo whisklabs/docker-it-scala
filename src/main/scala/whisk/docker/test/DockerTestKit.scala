@@ -19,10 +19,10 @@ trait DockerTestKit extends BeforeAndAfterAll with ScalaFutures with DockerKit {
     lm.reset()
     val lmConfig =
       """handlers = java.util.logging.ConsoleHandler
-      |.level = OFF
-      |java.util.logging.ConsoleHandler.level = OFF
-      |java.util.logging.ConsoleHandler.formatter = java.util.logging.SimpleFormatter
-      |"""
+        |.level = OFF
+        |java.util.logging.ConsoleHandler.level = OFF
+        |java.util.logging.ConsoleHandler.formatter = java.util.logging.SimpleFormatter
+        |"""
         .stripMargin
 
     lm.readConfiguration(new ByteArrayInputStream(lmConfig.getBytes))
