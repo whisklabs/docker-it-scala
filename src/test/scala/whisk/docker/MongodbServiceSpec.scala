@@ -7,7 +7,6 @@ import whisk.docker.test.DockerTestKit
 
 class MongodbServiceSpec extends FlatSpec with Matchers with BeforeAndAfterAll with ScalaFutures
     with DockerTestKit
-    with DockerConfig
     with DockerMongodbService {
 
   implicit val pc = PatienceConfig(Span(20, Seconds), Span(1, Second))

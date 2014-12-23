@@ -1,7 +1,6 @@
 package whisk.docker
 
 trait DockerMongodbService extends DockerKit {
-  self: DockerConfig =>
 
   val DefaultMongodbPort = 27017
 
