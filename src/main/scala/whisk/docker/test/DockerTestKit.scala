@@ -12,8 +12,6 @@ import whisk.docker.DockerKit
 trait DockerTestKit extends BeforeAndAfterAll with ScalaFutures with DockerKit {
   self: Suite =>
 
-  println("docker host = " + docker.host)
-
   private lazy val log = LoggerFactory.getLogger(this.getClass)
 
   {
