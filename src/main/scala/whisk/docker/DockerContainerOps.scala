@@ -1,15 +1,33 @@
 package whisk.docker
 
+import java.io.ByteArrayInputStream
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.logging.LogManager
 
 import com.github.dockerjava.api.NotModifiedException
 import com.github.dockerjava.api.model.Container
+import org.slf4j.LoggerFactory
 
 import scala.collection.JavaConversions._
 import scala.concurrent.{ ExecutionContext, Future, Promise }
 
 trait DockerContainerOps {
   self: DockerContainer =>
+
+  private lazy val log = LoggerFactory.getLogger(this.getClass)
+
+  {
+    val lm = LogManager.getLogManager
+    lm.reset()
+    val lmConfig =
+      """handlers = java.util.logging.ConsoleHandler
+        |.level = INFO
+        |java.util.logging.ConsoleHandler.level = INFO
+        |java.util.logging.ConsoleHandler.formatter = java.util.logging.SimpleFormatter
+        |""".stripMargin
+
+    lm.readConfiguration(new ByteArrayInputStream(lmConfig.getBytes))
+  }
 
   class SinglePromise[T] {
     val promise = Promise[T]()
@@ -84,13 +102,12 @@ trait DockerContainerOps {
         b <- readyChecker(this) if b
       } yield b) recoverWith {
         case _: NoSuchElementException =>
-          System.err.println("Not ready: " + image)
+          log.error("Not ready: " + image)
           getLogs(withErr = true).map {
             _.mkString("\n")
-          }.map(System.err.println).map(_ => false)
+          }.map(log.error).map(_ => false)
         case e =>
-          System.err.println(e.getMessage)
-          e.printStackTrace(System.err)
+          log.error(e.getMessage, e)
           Future.successful(false)
       }
     )

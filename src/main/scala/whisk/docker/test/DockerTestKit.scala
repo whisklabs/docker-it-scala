@@ -15,13 +15,12 @@ trait DockerTestKit extends BeforeAndAfterAll with ScalaFutures with DockerKit {
   private lazy val log = LoggerFactory.getLogger(this.getClass)
 
   {
-    // TODO: logging is required: there could be strange behaviours related to docker init/stop process, several containers interfering each other, etc.
     val lm = LogManager.getLogManager
     lm.reset()
     val lmConfig =
       """handlers = java.util.logging.ConsoleHandler
-        |.level = ALL
-        |java.util.logging.ConsoleHandler.level = ALL
+        |.level = INFO
+        |java.util.logging.ConsoleHandler.level = INFO
         |java.util.logging.ConsoleHandler.formatter = java.util.logging.SimpleFormatter
         |""".stripMargin
 
@@ -45,14 +44,13 @@ trait DockerTestKit extends BeforeAndAfterAll with ScalaFutures with DockerKit {
             .forall(identity)
         ).recover {
             case e =>
-              logException(e)
               log.error("Cannot run docker containers", e)
               false
           }
         .futureValue(dockerInitPatienceInterval)
     } catch {
       case e: Exception =>
-        logException(e)
+        log.error("Exception during container initialization", e)
         false
     }
 
@@ -70,7 +68,7 @@ trait DockerTestKit extends BeforeAndAfterAll with ScalaFutures with DockerKit {
       stopRmAll().futureValue(dockerInitPatienceInterval)
     } catch {
       case e: Throwable =>
-        logException(e)
+        log.error(e.getMessage, e)
         throw e
     }
 
