@@ -36,9 +36,13 @@ trait DockerContainerOps {
 
   private val _image = SinglePromise[List[String]]
 
+  def pull()(implicit docker: Docker, ec: ExecutionContext): Future[this.type] =
+    for {
+      _ <- _image.init(Future(scala.io.Source.fromInputStream(docker.client.pullImageCmd(image).exec())(scala.io.Codec.ISO8859).getLines().toList))
+    } yield this
+
   def init()(implicit docker: Docker, ec: ExecutionContext): Future[this.type] =
     for {
-      img <- _image.init(Future(scala.io.Source.fromInputStream(docker.client.pullImageCmd(image).exec())(scala.io.Codec.ISO8859).getLines().toList))
       s <- _id.init(Future(prepareCreateCmd(docker.client.createContainerCmd(image)).exec()).map { resp =>
         if (resp.getId != null && resp.getId != "") {
           resp.getId

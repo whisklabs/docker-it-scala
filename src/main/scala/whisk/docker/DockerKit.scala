@@ -17,7 +17,6 @@ trait DockerKit {
           case _ =>
             System.err.println("!!!\n You're using DockerKit inside scalatest, but forgot to mix in DockerTestKit. Please do it to avoid strangeness. \n !!!")
         }
-      case _ =>
     }
   }
 
@@ -28,6 +27,9 @@ trait DockerKit {
 
   def stopRmAll(): Future[Seq[DockerContainer]] =
     Future.traverse(dockerContainers)(_.remove(force = true))
+
+  def pullImages(): Future[Seq[DockerContainer]] =
+    Future.traverse(dockerContainers)(_.pull())
 
   def initReadyAll(): Future[Seq[(DockerContainer, Boolean)]] =
     Future.traverse(dockerContainers)(_.init()).flatMap(Future.traverse(_)(c => c.isReady().map(c -> _).recover {

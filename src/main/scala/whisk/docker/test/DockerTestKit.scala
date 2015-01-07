@@ -20,8 +20,8 @@ trait DockerTestKit extends BeforeAndAfterAll with ScalaFutures with DockerKit {
     lm.reset()
     val lmConfig =
       """handlers = java.util.logging.ConsoleHandler
-        |.level = OFF
-        |java.util.logging.ConsoleHandler.level = OFF
+        |.level = ALL
+        |java.util.logging.ConsoleHandler.level = ALL
         |java.util.logging.ConsoleHandler.formatter = java.util.logging.SimpleFormatter
         |""".stripMargin
 
@@ -30,8 +30,12 @@ trait DockerTestKit extends BeforeAndAfterAll with ScalaFutures with DockerKit {
 
   def dockerInitPatienceInterval = PatienceConfig(scaled(Span(20, Seconds)), scaled(Span(10, Millis)))
 
+  def dockerPullImagesPatienceInterval = PatienceConfig(scaled(Span(1200, Seconds)), scaled(Span(250, Millis)))
+
   override def beforeAll(): Unit = {
     super.beforeAll()
+
+    super.pullImages().futureValue(dockerPullImagesPatienceInterval)
 
     val allRunning = try {
       super
