@@ -21,8 +21,8 @@ trait DockerContainerOps {
     lm.reset()
     val lmConfig =
       """handlers = java.util.logging.ConsoleHandler
-        |.level = INFO
-        |java.util.logging.ConsoleHandler.level = INFO
+        |.level = SEVERE
+        |java.util.logging.ConsoleHandler.level = SEVERE
         |java.util.logging.ConsoleHandler.formatter = java.util.logging.SimpleFormatter
         |""".stripMargin
 
