@@ -80,14 +80,14 @@ trait DockerContainerOps {
       }
     } yield this
 
-  def remove(force: Boolean = false)(implicit docker: Docker, ec: ExecutionContext): Future[this.type] =
+  def remove(force: Boolean = false, removeVolumes: Boolean = true)(implicit docker: Docker, ec: ExecutionContext): Future[this.type] =
     for {
       s <- id
       _ <- Future(docker.client.stopContainerCmd(s).exec()) recover {
         case _: NotModifiedException =>
           true
       }
-      _ <- Future(docker.client.removeContainerCmd(s).withForce(force).exec())
+      _ <- Future(docker.client.removeContainerCmd(s).withForce(force).withRemoveVolumes(removeVolumes).exec())
     } yield this
 
   def isRunning()(implicit docker: Docker, ec: ExecutionContext): Future[Boolean] =
