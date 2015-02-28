@@ -24,7 +24,7 @@ class Neo4jServiceSpec extends FlatSpec with Matchers with BeforeAndAfterAll wit
         it.next() :: pullLines(it, n - 1)
     }
 
-    val src = scala.io.Source.fromInputStream(is)
+    val src = scala.io.Source.fromInputStream(is)(scala.io.Codec.ISO8859)
 
     val lns = pullLines(src.getLines(), 10)
 
