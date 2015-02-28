@@ -5,7 +5,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.logging.LogManager
 
 import com.github.dockerjava.api.NotModifiedException
-import com.github.dockerjava.api.model.Container
+import com.github.dockerjava.api.model.{ Link, Container }
 import org.slf4j.LoggerFactory
 
 import scala.collection.JavaConversions._
@@ -59,7 +59,19 @@ trait DockerContainerOps {
       _ <- _image.init(Future(scala.io.Source.fromInputStream(docker.client.pullImageCmd(image).exec())(scala.io.Codec.ISO8859).getLines().toList))
     } yield this
 
-  def init()(implicit docker: Docker, ec: ExecutionContext): Future[this.type] =
+  def init()(implicit docker: Docker, ec: ExecutionContext): Future[this.type] = {
+    val linksF = Future.traverse(links) {
+      case (container, alias) =>
+        for {
+          _ <- container.isReady()
+          c <- container.getRunningContainer()
+        } yield {
+          val linkedContainerName =
+            c.flatMap(_.getNames.headOption).getOrElse(
+              throw new RuntimeException(s"Cannot find linked container $alias"))
+          new Link(linkedContainerName, alias)
+        }
+    }
     for {
       s <- _id.init(Future(prepareCreateCmd(docker.client.createContainerCmd(image)).exec()).map { resp =>
         if (resp.getId != null && resp.getId != "") {
@@ -68,8 +80,13 @@ trait DockerContainerOps {
           throw new RuntimeException(s"Cannot run container $image: ${resp.getWarnings.mkString(", ")}")
         }
       })
-      _ <- Future(prepareStartCmd(docker.client.startContainerCmd(s)).exec())
-    } yield this
+      links <- linksF
+      _ <- Future(prepareStartCmd(docker.client.startContainerCmd(s), links.toSeq).exec())
+    } yield {
+      runReadyCheck
+      this
+    }
+  }
 
   def stop()(implicit docker: Docker, ec: ExecutionContext): Future[this.type] =
     for {
@@ -91,7 +108,9 @@ trait DockerContainerOps {
 
   private val _isReady = SinglePromise[Boolean]
 
-  def isReady()(implicit docker: Docker, ec: ExecutionContext): Future[Boolean] =
+  def isReady(): Future[Boolean] = _isReady.future
+
+  private def runReadyCheck()(implicit docker: Docker, ec: ExecutionContext): Future[Boolean] =
     _isReady.init(
       (for {
         r <- isRunning() if r
