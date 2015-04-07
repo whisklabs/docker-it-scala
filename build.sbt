@@ -16,5 +16,5 @@ libraryDependencies ++= Seq(
   "com.github.docker-java" % "docker-java" % "0.10.4",
   "me.lessis" %% "odelay-core" % "0.1.0",
   "me.lessis" %% "undelay" % "0.1.0",
-  "org.scalatest" %% "scalatest" % "2.2.3",
+  "org.scalatest" %% "scalatest" % "2.2.4",
   "ch.qos.logback" % "logback-classic" % "1.1.2" % "test")

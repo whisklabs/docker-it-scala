@@ -6,9 +6,9 @@ import whisk.docker.test.DockerTestKit
 trait PingContainerKit extends DockerTestKit {
   self: Suite =>
 
-  val pingContainer = DockerContainer("dockerfile/nginx")
+  val pingContainer = DockerContainer("nginx:1.7.11")
 
-  val pongContainer = DockerContainer("dockerfile/nginx")
+  val pongContainer = DockerContainer("nginx:1.7.11")
     .withPorts(80 -> None)
     .withReadyChecker(DockerReadyChecker.HttpResponseCode(port = 80))
 
