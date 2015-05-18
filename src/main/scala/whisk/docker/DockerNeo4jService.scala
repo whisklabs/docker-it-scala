@@ -6,7 +6,7 @@ trait DockerNeo4jService extends DockerKit {
 
   val DefaultNeo4jHttpPort = 7474
 
-  val neo4jContainer = DockerContainer("tpires/neo4j")
+  val neo4jContainer = DockerContainer("whisk/neo4j:2.2.1")
     .withPorts(DefaultNeo4jHttpPort -> None)
     .withReadyChecker(
       DockerReadyChecker
