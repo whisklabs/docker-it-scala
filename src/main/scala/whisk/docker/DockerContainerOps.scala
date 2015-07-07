@@ -1,6 +1,6 @@
 package whisk.docker
 
-import java.io.ByteArrayInputStream
+import java.io.{ InputStream, ByteArrayInputStream }
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.logging.LogManager
 
@@ -73,15 +73,15 @@ trait DockerContainerOps {
         }
     }
     for {
-      s <- _id.init(Future(prepareCreateCmd(docker.client.createContainerCmd(image)).exec()).map { resp =>
+      links <- linksF
+      s <- _id.init(Future(prepareCreateCmd(docker.client.createContainerCmd(image), links.toSeq).exec()).map { resp =>
         if (resp.getId != null && resp.getId != "") {
           resp.getId
         } else {
           throw new RuntimeException(s"Cannot run container $image: ${resp.getWarnings.mkString(", ")}")
         }
       })
-      links <- linksF
-      _ <- Future(prepareStartCmd(docker.client.startContainerCmd(s), links.toSeq).exec())
+      _ <- Future(docker.client.startContainerCmd(s).exec())
     } yield {
       runReadyCheck
       this
@@ -100,7 +100,7 @@ trait DockerContainerOps {
   def remove(force: Boolean = true, removeVolumes: Boolean = true)(implicit docker: Docker, ec: ExecutionContext): Future[this.type] =
     for {
       s <- id
-      _ <- Future(docker.client.removeContainerCmd(s).withForce(force).withRemoveVolumes(removeVolumes).exec())
+      _ <- Future(docker.client.removeContainerCmd(s).withForce(force).withRemoveVolumes(true).exec())
     } yield this
 
   def isRunning()(implicit docker: Docker, ec: ExecutionContext): Future[Boolean] =
@@ -118,22 +118,37 @@ trait DockerContainerOps {
       } yield b) recoverWith {
         case _: NoSuchElementException =>
           log.error("Not ready: " + image)
-          getLogs(withErr = true).map {
-            _.mkString("\n")
-          }.map(log.error).map(_ => false)
+          withLogStreamLines(withErr = true) { lines =>
+            log.error(lines.mkString("\n"))
+            false
+          }
         case e =>
           log.error(e.getMessage, e)
           Future.successful(false)
       }
     )
 
-  def getLogs(withErr: Boolean = false)(implicit docker: Docker, ec: ExecutionContext): Future[Iterator[String]] =
+  def withLogStreamLines[T](withErr: Boolean)(f: Iterator[String] => T)(implicit docker: Docker, ec: ExecutionContext): Future[T] = {
+    logsStream(withErr).map { is =>
+      val result = f(linesFromIS(is))
+      is.close()
+      result
+    }
+  }
+
+  def logsStream(withErr: Boolean = false)(implicit docker: Docker, ec: ExecutionContext): Future[InputStream] = {
     for {
       s <- id
       cmd = docker.client.logContainerCmd(s).withStdOut().withFollowStream()
       is <- Future((if (withErr) cmd.withStdErr() else cmd).exec())
-      it = scala.io.Source.fromInputStream(is)(scala.io.Codec.ISO8859)
-    } yield it.getLines()
+    } yield {
+      is
+    }
+  }
+
+  private def linesFromIS(is: InputStream): Iterator[String] = {
+    scala.io.Source.fromInputStream(is)(scala.io.Codec.ISO8859).getLines()
+  }
 
   protected def getRunningContainer()(implicit docker: Docker, ec: ExecutionContext): Future[Option[Container]] =
     for {

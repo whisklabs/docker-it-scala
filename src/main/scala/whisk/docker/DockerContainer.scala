@@ -23,7 +23,7 @@ case class DockerContainer(
 
   def withEnv(env: String*) = copy(env = env)
 
-  private[docker] def prepareCreateCmd(cmd: CreateContainerCmd): CreateContainerCmd =
+  private[docker] def prepareCreateCmd(cmd: CreateContainerCmd, links: Seq[Link]): CreateContainerCmd =
     command
       .fold(cmd)(cmd.withCmd(_: _*))
       .withPortSpecs(bindPorts.map(kv => kv._2.fold("")(_.toString + ":") + kv._1).toSeq: _*)
@@ -31,9 +31,6 @@ case class DockerContainer(
       .withTty(tty)
       .withStdinOpen(stdinOpen)
       .withEnv(env: _*)
-
-  private[docker] def prepareStartCmd(cmd: StartContainerCmd, links: Seq[Link]): StartContainerCmd =
-    cmd
       .withLinks(links: _*)
       .withPortBindings(
         bindPorts.foldLeft(new Ports()) {
@@ -45,4 +42,5 @@ case class DockerContainer(
             ps
         }
       )
+
 }

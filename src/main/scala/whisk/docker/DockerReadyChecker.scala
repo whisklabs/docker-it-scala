@@ -110,8 +110,7 @@ object DockerReadyChecker {
         case false =>
           false
       }
-
-      container.getLogs().map(pullAndCheck)
+      container.withLogStreamLines(withErr = false)(pullAndCheck)
     }
   }
 
