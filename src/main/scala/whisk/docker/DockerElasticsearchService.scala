@@ -7,7 +7,7 @@ trait DockerElasticsearchService extends DockerKit {
   val DefaultElasticsearchHttpPort = 9200
   val DefaultElasticsearchClientPort = 9300
 
-  val elasticsearchContainer = DockerContainer("elasticsearch:1.4.4")
+  val elasticsearchContainer = DockerContainer("elasticsearch:1.7.1")
     .withPorts(DefaultElasticsearchHttpPort -> None, DefaultElasticsearchClientPort -> None)
     .withReadyChecker(
       DockerReadyChecker
