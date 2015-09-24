@@ -25,4 +25,5 @@ libraryDependencies ++= Seq(
   "me.lessis" %% "odelay-core" % "0.1.0",
   "me.lessis" %% "undelay" % "0.1.0",
   "org.scalatest" %% "scalatest" % "2.2.4",
+  "org.specs2" %% "specs2-core" % "3.6.4",
   "ch.qos.logback" % "logback-classic" % "1.1.2" % "test")
