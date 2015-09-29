@@ -2,9 +2,8 @@ package whisk.docker
 
 trait DockerZookeeperService extends DockerKit {
 
-  val zookeeperContainer = DockerContainer("jplock/zookeeper:3.4.6")
-    .withPorts(2181 -> None)
-    .withReadyChecker(DockerReadyChecker.LogLine(_.contains("binding to port")))
+  val zookeeperContainer = configureDockerContainer("docker.zookeeper")
 
-  abstract override def dockerContainers: List[DockerContainer] = zookeeperContainer :: super.dockerContainers
+  abstract override def dockerContainers: List[DockerContainer] =
+    zookeeperContainer :: super.dockerContainers
 }
