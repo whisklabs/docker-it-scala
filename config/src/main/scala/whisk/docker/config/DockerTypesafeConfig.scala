@@ -1,9 +1,11 @@
-package whisk.docker
+package whisk.docker.config
 
 import net.ceedubs.ficus.readers.ValueReader
 import net.ceedubs.ficus.readers.ArbitraryTypeReader._
 import net.ceedubs.ficus.Ficus._
 import scala.concurrent.duration._
+
+import whisk.docker.{ DockerContainer, DockerKit, DockerReadyChecker }
 
 object DockerTypesafeConfig extends DockerKit {
   val EmptyPortBindings: Map[Int, Option[Int]] = Map.empty

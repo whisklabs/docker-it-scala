@@ -82,7 +82,7 @@ object DockerReadyChecker {
     override def apply(container: DockerContainer): Future[Boolean] = Future.successful(true)
   }
 
-  case class HttpResponseCode(port: Int, path: String, host: Option[String], code: Int)(implicit docker: Docker, ec: ExecutionContext) extends DockerReadyChecker {
+  case class HttpResponseCode(port: Int, path: String = "/", host: Option[String] = None, code: Int = 200)(implicit docker: Docker, ec: ExecutionContext) extends DockerReadyChecker {
     override def apply(container: DockerContainer): Future[Boolean] = {
       container.getPorts().map(_(port)).flatMap { p =>
         val url = new URL("http", host.getOrElse(docker.host), p, path)

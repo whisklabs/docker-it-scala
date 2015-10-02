@@ -24,7 +24,7 @@ lazy val root =
     .settings(
       publish := {},
       publishLocal := {})
-    .aggregate(core, scalatest, specs2)
+    .aggregate(core, config, scalatest, specs2)
 
 lazy val core =
   project
@@ -34,7 +34,6 @@ lazy val core =
     resolvers += "softprops-maven" at "http://dl.bintray.com/content/softprops/maven",
     libraryDependencies ++=
       Seq(
-        "net.ceedubs" %% "ficus" % "1.1.2",
         "me.lessis" %% "undelay" % "0.1.0",
         "me.lessis" %% "odelay-core" % "0.1.0",
         "com.github.docker-java" % "docker-java" % "1.4.0"))
@@ -48,7 +47,7 @@ lazy val scalatest =
         Seq(
           "org.scalatest" %% "scalatest" % "2.2.4",
           "ch.qos.logback" % "logback-classic" % "1.1.2" % "test"))
-    .dependsOn(core % "compile->compile;test->test")
+    .dependsOn(core, config % "test->test")
 
 lazy val specs2 =
   project
@@ -59,4 +58,14 @@ lazy val specs2 =
         Seq(
           "org.specs2" %% "specs2-core" % "3.6.4",
           "ch.qos.logback" % "logback-classic" % "1.1.2" % "test"))
-    .dependsOn(core % "compile->compile;test->test")
+    .dependsOn(core, config % "test->test")
+
+lazy val config =
+  project
+    .settings(commonSettings: _*)
+    .settings(
+    name := "docker-testkit-config",
+      libraryDependencies ++=
+        Seq(
+          "net.ceedubs" %% "ficus" % "1.1.2"))
+    .dependsOn(core)

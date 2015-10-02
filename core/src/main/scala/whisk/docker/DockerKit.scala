@@ -1,8 +1,5 @@
 package whisk.docker
 
-import com.typesafe.config.ConfigFactory
-import net.ceedubs.ficus.readers.ArbitraryTypeReader._
-import net.ceedubs.ficus.Ficus._
 import java.io.ByteArrayInputStream
 import java.util.logging.LogManager
 
@@ -10,7 +7,6 @@ import org.slf4j.LoggerFactory
 
 import scala.concurrent.{ Future, ExecutionContext }
 import com.github.dockerjava.core.DockerClientConfig
-import DockerTypesafeConfig._
 
 trait DockerKit {
   implicit val docker: Docker = new Docker(DockerClientConfig.createDefaultConfigBuilder().build())
@@ -34,11 +30,6 @@ trait DockerKit {
   implicit def dockerExecutionContext: ExecutionContext = ExecutionContext.global
 
   def dockerContainers: List[DockerContainer] = Nil
-
-  def dockerConfig = ConfigFactory.load()
-  def configureDockerContainer(configurationName: String): DockerContainer = {
-    dockerConfig.as[DockerConfig](configurationName).toDockerContainer
-  }
 
   def listImages(): Future[Set[String]] = {
     import scala.collection.JavaConverters._
