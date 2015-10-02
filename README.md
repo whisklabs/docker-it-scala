@@ -7,6 +7,8 @@ You can read about reasoning behind it on http://finelydistributed.io/integratio
 
 ## Dependency
 
+Artifacts are available for Scala 2.10 and 2.11
+
     resolvers += "Whisk" at "https://dl.bintray.com/whisk/maven"
 
     libraryDependencies += "com.whisk" %% "docker-it-scala" % "0.2.0"
