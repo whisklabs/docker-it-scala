@@ -1,22 +1,15 @@
 
-lazy val commonSettings = Seq (
+lazy val commonSettings = Seq(
   organization := "com.whisk",
-  version := "0.2.0",
+  version := "0.2.1",
   scalaVersion := "2.11.7",
   crossScalaVersions := Seq("2.11.7", "2.10.5"),
   scalacOptions ++= Seq("-feature", "-deprecation"),
-  fork in Test := true
+  fork in Test := true,
+  bintrayOrganization := Some("whisk"),
+  licenses += ("MIT", url("http://opensource.org/licenses/MIT")),
+  bintrayRepository := "maven"
 )
-
-bintrayOrganization := Some("whisk")
-
-licenses += ("MIT", url("http://opensource.org/licenses/MIT"))
-
-bintrayRepository := "maven"
-
-scalariformSettings
-val gitHeadCommitSha = settingKey[String]("current git commit SHA")
-gitHeadCommitSha in ThisBuild := Process("git rev-parse --short HEAD").lines.head
 
 lazy val root =
   project.in(file("."))
