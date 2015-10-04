@@ -16,17 +16,17 @@ You'll need to add a resolver
 Include a dependency on one of the testkits of your choice to get started.
 
 ```scala
-libraryDependencies += "com.whisk" %% "docker-testkit-specs2" % "0.2.1"
+libraryDependencies += "com.whisk" %% "docker-testkit-specs2" % "0.3.0"
 ```
 
 ```scala
-libraryDependencies += "com.whisk" %% "docker-testkit-scalatest" % "0.2.1"
+libraryDependencies += "com.whisk" %% "docker-testkit-scalatest" % "0.3.0"
 ```
 
 If you want to configure via typesafe config, also include
 
 ```scala
-libraryDependencies += "com.whisk" %% "docker-testkit-config" % "0.2.1"
+libraryDependencies += "com.whisk" %% "docker-testkit-config" % "0.3.0"
 ```
 
 # Available Services
