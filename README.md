@@ -79,10 +79,10 @@ docker {
 ```
 
 See
-[application.conf](https://github.com/AdAgility/docker-it-scala/blob/docker-test-kit/config/src/test/resources/application.conf)
+[application.conf](https://github.com/whisklabs/docker-it-scala/blob/master/config/src/test/resources/application.conf)
 for more examples.
 
-See [this folder](https://github.com/AdAgility/docker-it-scala/tree/docker-test-kit/config/src/main/scala/whisk/docker/config) for more services with config examples.
+See [this folder](https://github.com/whisklabs/docker-it-scala/tree/master/config/src/main/scala/com/whisk/docker/config) for more services with config examples.
 
 ### Container Paths
 
