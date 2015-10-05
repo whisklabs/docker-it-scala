@@ -1,8 +1,5 @@
 package com.whisk.docker.scalatest
 
-import java.io.ByteArrayInputStream
-import java.util.logging.LogManager
-
 import com.whisk.docker.DockerKit
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time._
@@ -13,19 +10,6 @@ trait DockerTestKit extends BeforeAndAfterAll with ScalaFutures with DockerKit {
   self: Suite =>
 
   private lazy val log = LoggerFactory.getLogger(this.getClass)
-
-  {
-    val lm = LogManager.getLogManager
-    lm.reset()
-    val lmConfig =
-      """handlers = java.util.logging.ConsoleHandler
-        |.level = SEVERE
-        |java.util.logging.ConsoleHandler.level = SEVERE
-        |java.util.logging.ConsoleHandler.formatter = java.util.logging.SimpleFormatter
-        |""".stripMargin
-
-    lm.readConfiguration(new ByteArrayInputStream(lmConfig.getBytes))
-  }
 
   def dockerInitPatienceInterval = PatienceConfig(scaled(Span(20, Seconds)), scaled(Span(10, Millis)))
 

@@ -1,8 +1,5 @@
 package com.whisk.docker.specs2
 
-import java.io.ByteArrayInputStream
-import java.util.logging.LogManager
-
 import com.whisk.docker.DockerKit
 import org.slf4j.LoggerFactory
 
@@ -11,19 +8,6 @@ import scala.concurrent.duration._
 
 trait DockerTestKit extends BeforeAfterAllStopOnError with DockerKit {
   private lazy val log = LoggerFactory.getLogger(this.getClass)
-
-  {
-    val lm = LogManager.getLogManager
-    lm.reset()
-    val lmConfig =
-      """handlers = java.util.logging.ConsoleHandler
-        |.level = SEVERE
-        |java.util.logging.ConsoleHandler.level = SEVERE
-        |java.util.logging.ConsoleHandler.formatter = java.util.logging.SimpleFormatter
-        |""".stripMargin
-
-    lm.readConfiguration(new ByteArrayInputStream(lmConfig.getBytes))
-  }
 
   def beforeAll() = {
     Await.result(pullImages(), 1200.seconds)

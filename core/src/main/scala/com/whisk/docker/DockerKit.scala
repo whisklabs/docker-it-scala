@@ -1,30 +1,14 @@
 package com.whisk.docker
 
-import java.io.ByteArrayInputStream
-import java.util.logging.LogManager
-
+import com.github.dockerjava.core.DockerClientConfig
 import org.slf4j.LoggerFactory
 
-import scala.concurrent.{ Future, ExecutionContext }
-import com.github.dockerjava.core.DockerClientConfig
+import scala.concurrent.{ExecutionContext, Future}
 
 trait DockerKit {
   implicit val docker: Docker = new Docker(DockerClientConfig.createDefaultConfigBuilder().build())
 
   private lazy val log = LoggerFactory.getLogger(this.getClass)
-
-  {
-    val lm = LogManager.getLogManager
-    lm.reset()
-    val lmConfig =
-      """handlers = java.util.logging.ConsoleHandler
-        |.level = SEVERE
-        |java.util.logging.ConsoleHandler.level = SEVERE
-        |java.util.logging.ConsoleHandler.formatter = java.util.logging.SimpleFormatter
-        |""".stripMargin
-
-    lm.readConfiguration(new ByteArrayInputStream(lmConfig.getBytes))
-  }
 
   // we need ExecutionContext in order to run docker.init() / docker.stop() there
   implicit def dockerExecutionContext: ExecutionContext = ExecutionContext.global
