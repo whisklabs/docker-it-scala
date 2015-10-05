@@ -17,45 +17,11 @@ trait DockerTestKit extends BeforeAndAfterAll with ScalaFutures with DockerKit {
 
   override def beforeAll(): Unit = {
     super.beforeAll()
-
-    super.pullImages().futureValue(dockerPullImagesPatienceInterval)
-
-    val allRunning = try {
-      super
-        .initReadyAll()
-        .map(
-          _.map(_._2)
-            .forall(identity)
-        ).recover {
-            case e =>
-              log.error("Cannot run docker containers", e)
-              false
-          }
-        .futureValue(dockerInitPatienceInterval)
-    } catch {
-      case e: Exception =>
-        log.error("Exception during container initialization", e)
-        false
-    }
-
-    if (!allRunning) {
-      stopRmAll().futureValue(dockerInitPatienceInterval)
-      throw new RuntimeException("Cannot run all required containers")
-    }
+    startAllOrFail()
   }
 
   override def afterAll(): Unit = {
-    try {
-      // We should wait, and we should catch.
-      // Otherwise there's a lot of java-style strangeness when you run several tests with a lot of containers (not with sbt test-only, but with sbt test) or when an exception is thrown
-      // Anyway with current PatienceConfig it's fast
-      stopRmAll().futureValue(dockerInitPatienceInterval)
-    } catch {
-      case e: Throwable =>
-        log.error(e.getMessage, e)
-        throw e
-    }
-
+    stopAllQuietly()
     super.afterAll()
 
   }
