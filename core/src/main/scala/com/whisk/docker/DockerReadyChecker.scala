@@ -7,9 +7,11 @@ import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ TimeoutException, ExecutionContext, Future, Promise }
 import scala.io.Codec
 
-trait DockerReadyChecker extends (DockerContainer => Future[Boolean]) {
+trait DockerReadyChecker {
 
-  def and(other: DockerReadyChecker)(implicit ec: ExecutionContext) = {
+  def apply(container: DockerContainer)(implicit docker: Docker, ec: ExecutionContext): Future[Boolean]
+
+  def and(other: DockerReadyChecker)(implicit docker: Docker, ec: ExecutionContext) = {
     val s = this
     DockerReadyChecker.F { container =>
       val aF = s(container)
@@ -21,7 +23,7 @@ trait DockerReadyChecker extends (DockerContainer => Future[Boolean]) {
     }
   }
 
-  def or(other: DockerReadyChecker)(implicit ec: ExecutionContext) = {
+  def or(other: DockerReadyChecker)(implicit docker: Docker, ec: ExecutionContext) = {
     val s = this
     DockerReadyChecker.F { container =>
       val aF = s(container)
@@ -39,7 +41,7 @@ trait DockerReadyChecker extends (DockerContainer => Future[Boolean]) {
     }
   }
 
-  def within(duration: FiniteDuration)(implicit ec: ExecutionContext): DockerReadyChecker = {
+  def within(duration: FiniteDuration)(implicit docker: Docker, ec: ExecutionContext): DockerReadyChecker = {
     val checker = this.apply _
     DockerReadyChecker.F { container =>
       import undelay._
@@ -51,7 +53,7 @@ trait DockerReadyChecker extends (DockerContainer => Future[Boolean]) {
     }
   }
 
-  def looped(attempts: Int, delay: FiniteDuration)(implicit ec: ExecutionContext): DockerReadyChecker = {
+  def looped(attempts: Int, delay: FiniteDuration)(implicit docker: Docker, ec: ExecutionContext): DockerReadyChecker = {
     val checker = this.apply _
     DockerReadyChecker.F { container =>
 
@@ -79,11 +81,12 @@ trait DockerReadyChecker extends (DockerContainer => Future[Boolean]) {
 object DockerReadyChecker {
 
   object Always extends DockerReadyChecker {
-    override def apply(container: DockerContainer): Future[Boolean] = Future.successful(true)
+    override def apply(container: DockerContainer)(implicit docker: Docker, ec: ExecutionContext): Future[Boolean] =
+      Future.successful(true)
   }
 
-  case class HttpResponseCode(port: Int, path: String = "/", host: Option[String] = None, code: Int = 200)(implicit docker: Docker, ec: ExecutionContext) extends DockerReadyChecker {
-    override def apply(container: DockerContainer): Future[Boolean] = {
+  case class HttpResponseCode(port: Int, path: String = "/", host: Option[String] = None, code: Int = 200) extends DockerReadyChecker {
+    override def apply(container: DockerContainer)(implicit docker: Docker, ec: ExecutionContext): Future[Boolean] = {
       container.getPorts().map(_(port)).flatMap { p =>
         val url = new URL("http", host.getOrElse(docker.host), p, path)
         Future {
@@ -99,14 +102,13 @@ object DockerReadyChecker {
     }
   }
 
-  case class LogLine(check: String => Boolean)(implicit docker: Docker, ec: ExecutionContext) extends DockerReadyChecker {
-    override def apply(container: DockerContainer) = {
+  case class LogLineContains(str: String) extends DockerReadyChecker {
+    override def apply(container: DockerContainer)(implicit docker: Docker, ec: ExecutionContext) = {
       @tailrec
       def pullAndCheck(it: Iterator[String]): Boolean = it.hasNext match {
         case true =>
           val s = it.next()
-          if (check(s)) true
-          else pullAndCheck(it)
+          s.contains(str) || pullAndCheck(it)
         case false =>
           false
       }
@@ -115,6 +117,7 @@ object DockerReadyChecker {
   }
 
   case class F(f: DockerContainer => Future[Boolean]) extends DockerReadyChecker {
-    override def apply(container: DockerContainer): Future[Boolean] = f(container)
+    override def apply(container: DockerContainer)(implicit docker: Docker, ec: ExecutionContext): Future[Boolean] =
+      f(container)
   }
 }

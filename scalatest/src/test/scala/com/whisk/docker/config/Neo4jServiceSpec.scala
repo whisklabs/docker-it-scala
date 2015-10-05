@@ -35,7 +35,7 @@ class Neo4jServiceSpec extends FlatSpec with Matchers with BeforeAndAfterAll wit
   }
 
   "neo4j container" should "pass ready checker with logs" in {
-    val c = DockerReadyChecker.LogLine(_.contains("Starting HTTP on port :7474"))
+    val c = DockerReadyChecker.LogLineContains("Starting HTTP on port :7474")
 
     c(neo4jContainer).futureValue shouldBe true
   }

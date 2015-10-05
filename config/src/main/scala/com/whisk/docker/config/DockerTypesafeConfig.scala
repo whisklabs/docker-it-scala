@@ -35,7 +35,7 @@ object DockerTypesafeConfig extends DockerKit {
       (`log-line`, `http-response-code`) match {
         case (None, None) => DockerReadyChecker.Always
         case (None, Some(rr)) => httpResponseCodeReadyChecker(rr)
-        case (Some(ll), _) => DockerReadyChecker.LogLine(_.contains(ll))
+        case (Some(ll), _) => DockerReadyChecker.LogLineContains(ll)
       }
     }
   }

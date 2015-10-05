@@ -45,7 +45,7 @@ class Neo4jServiceSpec(env: Env) extends Specification
   }
 
   def x3 = {
-    val c = DockerReadyChecker.LogLine(_.contains("Starting HTTP on port :7474"))
+    val c = DockerReadyChecker.LogLineContains("Starting HTTP on port :7474")
     c(neo4jContainer) must beTrue.await
   }
 }

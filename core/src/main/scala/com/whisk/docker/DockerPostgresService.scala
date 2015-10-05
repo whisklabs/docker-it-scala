@@ -11,7 +11,7 @@ trait DockerPostgresService extends DockerKit {
     .withEnv(s"POSTGRES_USER=$PostgresUser", s"POSTGRES_PASSWORD=$PostgresPassword")
     .withReadyChecker(
       DockerReadyChecker
-        .LogLine(_.contains("database system is ready to accept connections"))
+        .LogLineContains("database system is ready to accept connections")
     )
 
   abstract override def dockerContainers: List[DockerContainer] =
