@@ -1,0 +1,1 @@
+[docker-it-scala](https://github.com/whisklabs/docker-it-scala) is a set of utility classes to simplify integration testing with dockerized services in Scala.
