@@ -14,7 +14,8 @@ initialisation with default settings.
 import com.github.dockerjava.core.DockerClientConfig
 
 trait DockerKit {
-  implicit val docker: Docker = new Docker(DockerClientConfig.createDefaultConfigBuilder().build())
+  implicit val docker: Docker =
+    new Docker(DockerClientConfig.createDefaultConfigBuilder().build())
 
   ...
 }
