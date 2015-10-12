@@ -1,0 +1,6 @@
+#scala #docker #integration-testing
+
+* All containers definitions don't require implicit `Docker` instance
+* Make possible to check containers definition equality
+* Make scalatest and specs2 module independent from `config`
+* Clean duplicate tests
