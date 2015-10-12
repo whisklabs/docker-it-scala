@@ -88,7 +88,7 @@ trait DockerMongodbService extends DockerKit {
 
   val mongodbContainer = DockerContainer("mongo:3.0.6")
     .withPorts(DefaultMongodbPort -> None)
-    .withReadyChecker(DockerReadyChecker.LogLine(_.contains("waiting for connections on port")))
+    .withReadyChecker(DockerReadyChecker.LogLineContains("waiting for connections on port"))
     .withCommand("mongod", "--nojournal", "--smallfiles", "--syncdelay", "0")
 
   abstract override def dockerContainers: List[DockerContainer] = mongodbContainer :: super.dockerContainers
@@ -190,4 +190,4 @@ class AllAtOnceSpec extends FlatSpec with Matchers with BeforeAndAfterAll with G
 ## Using in Specs2
 
 Examples can be found in
-[the specs2 module's tests](https://github.com/AdAgility/docker-it-scala/blob/docker-test-kit/specs2/src/test/)
+[the specs2 module's tests](https://github.com/whisklabs/docker-it-scala/tree/master/specs2/src/test/scala/com/whisk/docker)
