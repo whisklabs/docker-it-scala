@@ -5,7 +5,6 @@ import java.net.{ HttpURLConnection, URL }
 import scala.annotation.tailrec
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ TimeoutException, ExecutionContext, Future, Promise }
-import scala.io.Codec
 
 trait DockerReadyChecker {
 
@@ -42,39 +41,11 @@ trait DockerReadyChecker {
   }
 
   def within(duration: FiniteDuration)(implicit docker: Docker, ec: ExecutionContext): DockerReadyChecker = {
-    val checker = this.apply _
-    DockerReadyChecker.F { container =>
-      import undelay._
-
-      checker(container).within(duration).recover {
-        case _: TimeoutException =>
-          false
-      }
-    }
+    DockerReadyChecker.TimeLimited(this, duration)
   }
 
   def looped(attempts: Int, delay: FiniteDuration)(implicit docker: Docker, ec: ExecutionContext): DockerReadyChecker = {
-    val checker = this.apply _
-    DockerReadyChecker.F { container =>
-
-      def attempt(rest: Int): Future[Boolean] = {
-        checker(container).filter(identity).recoverWith {
-          case e =>
-            rest match {
-              case 0 =>
-                Future.failed(e match {
-                  case _: NoSuchElementException =>
-                    new NoSuchElementException(s"Ready checker returned false after $attempts attempts, delayed $delay each")
-                  case _ => e
-                })
-              case n =>
-                odelay.Delay(delay)(attempt(n - 1)).future.flatMap(identity)
-            }
-        }
-      }
-
-      attempt(attempts)
-    }
+    DockerReadyChecker.Looped(this, attempts, delay)
   }
 }
 
@@ -113,6 +84,40 @@ object DockerReadyChecker {
           false
       }
       container.withLogStreamLines(withErr = false)(pullAndCheck)
+    }
+  }
+
+  private[docker] case class TimeLimited(underlying: DockerReadyChecker, duration: FiniteDuration) extends DockerReadyChecker {
+    import undelay._
+
+    override def apply(container: DockerContainer)(implicit docker: Docker, ec: ExecutionContext): Future[Boolean] = {
+      underlying(container).within(duration).recover {
+        case _: TimeoutException =>
+          false
+      }
+    }
+  }
+
+  private[docker] case class Looped(underlying: DockerReadyChecker, attempts: Int, delay: FiniteDuration) extends DockerReadyChecker {
+
+    override def apply(container: DockerContainer)(implicit docker: Docker, ec: ExecutionContext): Future[Boolean] = {
+      def attempt(rest: Int): Future[Boolean] = {
+        underlying(container).filter(identity).recoverWith {
+          case e =>
+            rest match {
+              case 0 =>
+                Future.failed(e match {
+                  case _: NoSuchElementException =>
+                    new NoSuchElementException(s"Ready checker returned false after $attempts attempts, delayed $delay each")
+                  case _ => e
+                })
+              case n =>
+                odelay.Delay(delay)(attempt(n - 1)).future.flatMap(identity)
+            }
+        }
+      }
+
+      attempt(attempts)
     }
   }
 

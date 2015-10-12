@@ -113,7 +113,18 @@ See
 [application.conf](https://github.com/whisklabs/docker-it-scala/blob/master/config/src/test/resources/application.conf)
 for more examples.
 
-See [this folder](https://github.com/whisklabs/docker-it-scala/tree/master/config/src/main/scala/com/whisk/docker/config) for more services with config examples.
+Usage in code
+
+```scala
+trait DockerMongodbService extends DockerKitConfig {
+
+  val mongodbContainer = configureDockerContainer("docker.mongodb")
+
+  abstract override def dockerContainers: List[DockerContainer] =
+    mongodbContainer :: super.dockerContainers
+}
+
+```
 
 ### Container Paths
 

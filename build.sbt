@@ -38,9 +38,9 @@ lazy val scalatest =
     name := "docker-testkit-scalatest",
       libraryDependencies ++=
         Seq(
-          "org.scalatest" %% "scalatest" % "2.2.4",
+          "org.scalatest" %% "scalatest" % "2.2.5",
           "ch.qos.logback" % "logback-classic" % "1.1.2" % "test"))
-    .dependsOn(core, config % "test->test")
+    .dependsOn(core)
 
 lazy val specs2 =
   project
@@ -51,7 +51,7 @@ lazy val specs2 =
         Seq(
           "org.specs2" %% "specs2-core" % "3.6.4",
           "ch.qos.logback" % "logback-classic" % "1.1.2" % "test"))
-    .dependsOn(core, config % "test->test")
+    .dependsOn(core)
 
 lazy val config =
   project
@@ -60,5 +60,6 @@ lazy val config =
     name := "docker-testkit-config",
       libraryDependencies ++=
         Seq(
-          "net.ceedubs" %% "ficus" % "1.1.2"))
+          "net.ceedubs" %% "ficus" % "1.1.2",
+          "org.scalatest" %% "scalatest" % "2.2.5" % "test"))
     .dependsOn(core)
