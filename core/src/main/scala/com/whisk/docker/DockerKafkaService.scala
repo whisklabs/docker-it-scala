@@ -1,14 +1,14 @@
 package com.whisk.docker
 
-trait DockerKafkaService extends DockerKit with DockerZookeeperService {
+trait DockerKafkaService extends DockerKit {
 
   def KafkaAdvertisedPort = 9092
+  val ZookeeperDefaultPort = 2181
 
-  val kafkaContainer = DockerContainer("wurstmeister/kafka:0.8.2.1")
-    .withPorts(9092 -> Some(KafkaAdvertisedPort))
-    .withEnv(s"KAFKA_ADVERTISED_PORT=$KafkaAdvertisedPort", s"KAFKA_ADVERTISED_HOST_NAME=${docker.host}")
-    .withReadyChecker(DockerReadyChecker.LogLineContains("started (kafka.server.KafkaServer)"))
-    .withLinks(zookeeperContainer -> "zk")
+  lazy val kafkaContainer = DockerContainer("spotify/kafka")
+    .withPorts(KafkaAdvertisedPort -> Some(KafkaAdvertisedPort), ZookeeperDefaultPort -> None)
+    .withEnv(s"ADVERTISED_PORT=$KafkaAdvertisedPort", s"ADVERTISED_HOST=${docker.host}")
+    .withReadyChecker(DockerReadyChecker.LogLineContains("kafka entered RUNNING state"))
 
   abstract override def dockerContainers: List[DockerContainer] =
     kafkaContainer :: super.dockerContainers
