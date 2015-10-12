@@ -5,6 +5,37 @@ Set of utility classes to make integration testing with dockerised services in S
 
 You can read about reasoning behind it on http://finelydistributed.io/integration-tests-with-docker/
 
+## Setup
+
+docker-it-scala utilises [docker-java](https://github.com/docker-java/docker-java)'s way of configuration in perform
+initialisation with default settings.
+
+```scala
+import com.github.dockerjava.core.DockerClientConfig
+
+trait DockerKit {
+  implicit val docker: Docker = new Docker(DockerClientConfig.createDefaultConfigBuilder().build())
+
+  ...
+}
+```
+
+That makes it possible to configure it through enviroment variables
+
+Boot2docker setup
+
+```
+export DOCKER_HOST=tcp://192.168.59.103:2376
+export DOCKER_CERT_PATH=/Users/<username>/.boot2docker/certs/boot2docker-vm
+export DOCKER_TLS_VERIFY=1
+```
+
+Setup without SSL
+
+```
+export DOCKER_HOST=tcp://127.0.0.1:2375
+```
+
 ## Dependency
 
 Artifacts are available for Scala 2.10 and 2.11

@@ -1,0 +1,6 @@
+#scala #docker #integration-testing
+
+* [Specs2](https://etorreborre.github.io/specs2/) support (in addition to [Scalatest](http://scalatest.org/)) ([@jacobono](https://github.com/jacobono))
+* [Typesafe Config](https://github.com/typesafehub/config)-based containers definition ([@jacobono](https://github.com/jacobono))
+* publishing to Bintray
+* minor improvements
