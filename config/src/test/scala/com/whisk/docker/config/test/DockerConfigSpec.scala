@@ -34,6 +34,21 @@ class DockerConfigSpec extends FlatSpec with Matchers with DockerKitConfig {
 
     configureDockerContainer("docker.mongodb") shouldBe mongodbExpected
 
+    val redisExpected =
+      DockerContainer("redis:3.0.5")
+        .withPorts(6379 -> None)
+        .withReadyChecker(DockerReadyChecker.LogLineContains("Server started"))
+
+    configureDockerContainer("docker.redis") shouldBe redisExpected
+
+    val redisSentinelExpected =
+      DockerContainer("joshula/redis-sentinel")
+        .withPorts(26379 -> None)
+        .withReadyChecker(DockerReadyChecker.LogLineContains("monitor master mymaster"))
+        .withCommand("--sentinel announce-ip localhost", "--sentinel announce-port 26379")
+
+    configureDockerContainer("docker.redis-sentinel") shouldBe redisSentinelExpected
+
     val elasticExpected =
       DockerContainer("elasticsearch:1.7.1")
         .withPorts(9200 -> None, 9300 -> None)

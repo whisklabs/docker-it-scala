@@ -69,6 +69,7 @@ libraryDependencies += "com.whisk" %% "docker-testkit-config" % "0.4.0"
 - Mongodb
 - Neo4j
 - Postgres
+- Redis
 
 Additional contributions are welcome, and since these are just traits,
 you can always roll your own!
@@ -135,6 +136,8 @@ trait DockerMongodbService extends DockerKitConfig {
 - Mongodb => `docker.mongo`
 - Neo4j => `docker.neo4j`
 - Postgres => `docker.postgres`
+- Redis => `docker.redis`
+- Redis-Sentinel => `docker.redis-sentinel`
 
 ### Fields
 
