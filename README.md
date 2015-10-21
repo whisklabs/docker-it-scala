@@ -70,9 +70,6 @@ libraryDependencies += "com.whisk" %% "docker-testkit-config" % "0.4.0"
 - Neo4j
 - Postgres
 
-Additional contributions are welcome, and since these are just traits,
-you can always roll your own!
-
 # Defining Containers
 
 There are two ways to define a docker container.
