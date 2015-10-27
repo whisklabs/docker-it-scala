@@ -71,6 +71,7 @@ libraryDependencies += "com.whisk" %% "docker-testkit-config" % "0.4.0"
 - Postgres
 - S3
 - Git
+- DynamoDb
 
 # Defining Containers
 
@@ -136,6 +137,7 @@ trait DockerMongodbService extends DockerKitConfig {
 - Postgres => `docker.postgres`
 - S3 => `66pix/s3ninja`
 - Git => `bankiru/git-daemon`
+- DynamoDb => `abcum/dynamodb`
 
 ### Fields
 
