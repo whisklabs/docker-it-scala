@@ -10,7 +10,7 @@ class DynamoDbServiceSpec extends FlatSpec with Matchers with BeforeAndAfterAll 
 
   implicit val pc = PatienceConfig(Span(20, Seconds), Span(1, Second))
 
-  "s3search container" should "be ready" in {
+  "dynamo container" should "be ready" in {
     dynamoContainer.isReady().futureValue shouldBe true
   }
 }

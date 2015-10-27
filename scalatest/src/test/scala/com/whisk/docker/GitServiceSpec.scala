@@ -10,7 +10,7 @@ class GitServiceSpec extends FlatSpec with Matchers with BeforeAndAfterAll with 
 
   implicit val pc = PatienceConfig(Span(20, Seconds), Span(1, Second))
 
-  "s3search container" should "be ready" in {
+  "git container" should "be ready" in {
     gitContainer.isReady().futureValue shouldBe true
   }
 }

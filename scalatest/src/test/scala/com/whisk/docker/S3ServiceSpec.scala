@@ -10,7 +10,7 @@ class S3ServiceSpec extends FlatSpec with Matchers with BeforeAndAfterAll with G
 
   implicit val pc = PatienceConfig(Span(20, Seconds), Span(1, Second))
 
-  "s3search container" should "be ready" in {
+  "s3 container" should "be ready" in {
     s3Container.isReady().futureValue shouldBe true
   }
 }
