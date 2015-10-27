@@ -73,7 +73,7 @@ object DockerReadyChecker {
     }
   }
 
-  case class LogLineContains(str: String) extends DockerReadyChecker {
+  case class LogLineContains(str: String, withErr: Boolean = false) extends DockerReadyChecker {
     override def apply(container: DockerContainer)(implicit docker: Docker, ec: ExecutionContext) = {
       @tailrec
       def pullAndCheck(it: Iterator[String]): Boolean = it.hasNext match {
@@ -83,7 +83,7 @@ object DockerReadyChecker {
         case false =>
           false
       }
-      container.withLogStreamLines(withErr = false)(pullAndCheck)
+      container.withLogStreamLines(withErr)(pullAndCheck)
     }
   }
 

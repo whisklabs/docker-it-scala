@@ -70,6 +70,7 @@ libraryDependencies += "com.whisk" %% "docker-testkit-config" % "0.4.0"
 - Neo4j
 - Postgres
 - S3
+- Git
 
 # Defining Containers
 
@@ -134,6 +135,7 @@ trait DockerMongodbService extends DockerKitConfig {
 - Neo4j => `docker.neo4j`
 - Postgres => `docker.postgres`
 - S3 => `66pix/s3ninja`
+- Git => `bankiru/git-daemon`
 
 ### Fields
 
