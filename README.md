@@ -148,7 +148,7 @@ trait DockerMongodbService extends DockerKitConfig {
 - Neo4j => `docker.neo4j`
 - Postgres => `docker.postgres`
 - S3 => `66pix/s3ninja`
-- Git => `bankiru/git-daemon`
+- Git => `bankiru/git-daemon` *(this is the default container but you can specify a local image if you wish)*
 - DynamoDb => `abcum/dynamodb`
 
 ### Fields

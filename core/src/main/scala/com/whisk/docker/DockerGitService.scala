@@ -4,9 +4,11 @@ import scala.concurrent.duration._
 
 trait DockerGitService extends DockerKit {
 
+  def useDockerImage: String = "bankiru/git-daemon"
+
   val DefaultGitPort = 9418
 
-  val gitContainer = DockerContainer("bankiru/git-daemon")
+  val gitContainer = DockerContainer( useDockerImage )
     .withPorts(DefaultGitPort -> Some(DefaultGitPort))
     .withReadyChecker(
       DockerReadyChecker
