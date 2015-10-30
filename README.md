@@ -37,6 +37,18 @@ Setup without SSL
 export DOCKER_HOST=tcp://127.0.0.1:2375
 ```
 
+Local Docker Setup
+
+You will need to run Docker attached to a port (instead of a socket as is the default setup). 
+To do this you need stop any running instance of Docker and then run
+
+    sudo docker daemon -H 0.0.0.0:2375
+    
+In addition to the above you also need to add the following environment vars to your ~.bashrc file:
+
+    export DOCKER_HOST=tcp://0.0.0.0:2375
+    export DOCKER_TLS_VERIFY=0
+
 ## Dependency
 
 Artifacts are available for Scala 2.10 and 2.11
@@ -69,6 +81,9 @@ libraryDependencies += "com.whisk" %% "docker-testkit-config" % "0.4.0"
 - Mongodb
 - Neo4j
 - Postgres
+- S3
+- Git
+- DynamoDb
 
 # Defining Containers
 
@@ -132,6 +147,9 @@ trait DockerMongodbService extends DockerKitConfig {
 - Mongodb => `docker.mongo`
 - Neo4j => `docker.neo4j`
 - Postgres => `docker.postgres`
+- S3 => `66pix/s3ninja`
+- Git => `bankiru/git-daemon` *(this is the default container but you can specify a local image if you wish)*
+- DynamoDb => `abcum/dynamodb`
 
 ### Fields
 
