@@ -29,7 +29,7 @@ lazy val core =
       Seq(
         "me.lessis" %% "undelay" % "0.1.0",
         "me.lessis" %% "odelay-core" % "0.1.0",
-        "com.github.docker-java" % "docker-java" % "1.4.0"))
+        "com.github.docker-java" % "docker-java" % "2.1.4"))
 
 lazy val scalatest =
   project

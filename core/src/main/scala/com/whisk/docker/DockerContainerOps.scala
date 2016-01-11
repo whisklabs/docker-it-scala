@@ -4,7 +4,8 @@ import java.io.InputStream
 import java.util.concurrent.atomic.AtomicBoolean
 
 import com.github.dockerjava.api.NotModifiedException
-import com.github.dockerjava.api.model.{Container, Link}
+import com.github.dockerjava.api.model.{Frame, Container, Link}
+import com.github.dockerjava.core.command.{LogContainerResultCallback, PullImageResultCallback}
 import org.slf4j.LoggerFactory
 
 import scala.collection.JavaConversions._
@@ -38,11 +39,11 @@ trait DockerContainerOps {
 
   def id: Future[String] = _id.future
 
-  private val _image = SinglePromise[List[String]]
+  private val _image = SinglePromise[Unit]
 
   def pull()(implicit docker: Docker, ec: ExecutionContext): Future[this.type] =
     for {
-      _ <- _image.init(Future(scala.io.Source.fromInputStream(docker.client.pullImageCmd(image).exec())(scala.io.Codec.ISO8859).getLines().toList))
+      _ <- _image.init(Future(docker.client.pullImageCmd(image).exec(new PullImageResultCallback()).awaitSuccess()))
     } yield this
 
   def init()(implicit docker: Docker, ec: ExecutionContext): Future[this.type] = {
@@ -104,31 +105,32 @@ trait DockerContainerOps {
       } yield b) recoverWith {
         case _: NoSuchElementException =>
           log.error("Not ready: " + image)
-          withLogStreamLines(withErr = true) { lines =>
-            log.error(lines.mkString("\n"))
-            false
-          }
+          Future.successful(false)
         case e =>
           log.error(e.getMessage, e)
           Future.successful(false)
       }
     )
 
-  def withLogStreamLines[T](withErr: Boolean)(f: Iterator[String] => T)(implicit docker: Docker, ec: ExecutionContext): Future[T] = {
-    logsStream(withErr).map { is =>
-      val result = f(linesFromIS(is))
-      is.close()
-      result
-    }
-  }
-
-  def logsStream(withErr: Boolean = false)(implicit docker: Docker, ec: ExecutionContext): Future[InputStream] = {
+  def withLogStreamLines[T](withErr: Boolean)(f: PartialFunction[Frame, T])(implicit docker: Docker, ec: ExecutionContext): Future[T] = {
     for {
       s <- id
-      cmd = docker.client.logContainerCmd(s).withStdOut().withFollowStream()
-      is <- Future((if (withErr) cmd.withStdErr() else cmd).exec())
+      baseCmd = docker.client.logContainerCmd(s).withStdOut().withFollowStream()
+      cmd = if (withErr) baseCmd.withStdErr() else baseCmd
+      res <- {
+        val p = Promise[T]()
+        cmd.exec(new LogContainerResultCallback {
+          override def onNext(item: Frame): Unit = {
+            super.onNext(item)
+            if(f.isDefinedAt(item)) {
+              p.trySuccess(f.apply(item))
+            }
+          }
+        })
+        p.future
+      }
     } yield {
-      is
+      res
     }
   }
 

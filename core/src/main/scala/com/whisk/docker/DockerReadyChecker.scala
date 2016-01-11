@@ -2,7 +2,6 @@ package com.whisk.docker
 
 import java.net.{ HttpURLConnection, URL }
 
-import scala.annotation.tailrec
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ TimeoutException, ExecutionContext, Future, Promise }
 
@@ -75,15 +74,7 @@ object DockerReadyChecker {
 
   case class LogLineContains(str: String) extends DockerReadyChecker {
     override def apply(container: DockerContainer)(implicit docker: Docker, ec: ExecutionContext) = {
-      @tailrec
-      def pullAndCheck(it: Iterator[String]): Boolean = it.hasNext match {
-        case true =>
-          val s = it.next()
-          s.contains(str) || pullAndCheck(it)
-        case false =>
-          false
-      }
-      container.withLogStreamLines(withErr = false)(pullAndCheck)
+      container.withLogStreamLines(withErr = true) { case frame if frame.toString.contains(str) => true }
     }
   }
 
