@@ -1,9 +1,11 @@
 package com.whisk.docker
 
 import java.net.{ HttpURLConnection, URL }
+import java.util.{TimerTask, Timer}
 
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ TimeoutException, ExecutionContext, Future, Promise }
+import scala.util.Try
 
 trait DockerReadyChecker {
 
@@ -91,6 +93,18 @@ object DockerReadyChecker {
 
   private[docker] case class Looped(underlying: DockerReadyChecker, attempts: Int, delay: FiniteDuration) extends DockerReadyChecker {
 
+    private lazy val timer = new Timer()
+
+    private def withDelay[T](delay: Long)(f: => Future[T]): Future[T] = {
+      val promise = Promise[T]()
+      timer.schedule(new TimerTask {
+        override def run(): Unit = {
+          promise.completeWith(f)
+        }
+      }, delay)
+      promise.future
+    }
+
     override def apply(container: DockerContainer)(implicit docker: Docker, ec: ExecutionContext): Future[Boolean] = {
       def attempt(rest: Int): Future[Boolean] = {
         underlying(container).filter(identity).recoverWith {
@@ -103,7 +117,7 @@ object DockerReadyChecker {
                   case _ => e
                 })
               case n =>
-                odelay.Delay(delay)(attempt(n - 1)).future.flatMap(identity)
+                withDelay(delay.toMillis)(attempt(n - 1))
             }
         }
       }
