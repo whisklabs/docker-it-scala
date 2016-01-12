@@ -3,12 +3,13 @@ package com.whisk.docker
 import java.io.InputStream
 import java.util.concurrent.atomic.AtomicBoolean
 
-import com.github.dockerjava.api.NotModifiedException
-import com.github.dockerjava.api.model.{Frame, Container, Link}
+import com.github.dockerjava.api.command.InspectContainerResponse
+import com.github.dockerjava.api.model.{Frame, Link}
+import com.github.dockerjava.api.{NotFoundException, NotModifiedException}
 import com.github.dockerjava.core.command.{LogContainerResultCallback, PullImageResultCallback}
 import org.slf4j.LoggerFactory
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 import scala.concurrent.{ExecutionContext, Future, Promise}
 
 trait DockerContainerOps {
@@ -54,8 +55,7 @@ trait DockerContainerOps {
           c <- container.getRunningContainer()
         } yield {
           val linkedContainerName =
-            c.flatMap(_.getNames.headOption).getOrElse(
-              throw new RuntimeException(s"Cannot find linked container $alias"))
+            c.map(_.getName).getOrElse(throw new RuntimeException(s"Cannot find linked container $alias"))
           new Link(linkedContainerName, alias)
         }
     }
@@ -139,18 +139,25 @@ trait DockerContainerOps {
     scala.io.Source.fromInputStream(is)(scala.io.Codec.ISO8859).getLines()
   }
 
-  protected def getRunningContainer()(implicit docker: Docker, ec: ExecutionContext): Future[Option[Container]] =
+  protected def getRunningContainer()(implicit docker: Docker, ec: ExecutionContext): Future[Option[InspectContainerResponse]] =
     for {
       s <- id
-      resp <- Future(docker.client.listContainersCmd().exec())
-    } yield resp.find(_.getId == s)
+      c <- Future(Some(docker.client.inspectContainerCmd(s).exec())).recover {
+        case x: NotFoundException => None
+      }
+    } yield c
 
   private val _ports = SinglePromise[Map[Int, Int]]
 
-  def getPorts()(implicit docker: Docker, ec: ExecutionContext): Future[Map[Int, Int]] =
-    _ports.init(
-      getRunningContainer()
-        .map(_.map(_.getPorts.toSeq.filter(_.getPublicPort != null).map(p => p.getPrivatePort.toInt -> p.getPublicPort.toInt).toMap)
-          .getOrElse(throw new RuntimeException(s"Container $image is not running")))
-    )
+  def getPorts()(implicit docker: Docker, ec: ExecutionContext): Future[Map[Int, Int]] = {
+    def portsFuture: Future[Map[Int, Int]] = getRunningContainer().flatMap {
+      case None => Future.failed(new RuntimeException(s"Container $image is not running"))
+      case Some(c) =>
+        val ports: Map[Int, Int] = c.getNetworkSettings.getPorts.getBindings.asScala.toMap.collect { case (exposedPort, Array(binding, _*)) =>
+          exposedPort.getPort -> binding.getHostPort.toInt
+        }
+        Future.successful(ports)
+    }
+    _ports.init(portsFuture)
+  }
 }
