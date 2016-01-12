@@ -124,6 +124,7 @@ trait DockerContainerOps {
             super.onNext(item)
             if(f.isDefinedAt(item)) {
               p.trySuccess(f.apply(item))
+              onComplete()
             }
           }
         })
