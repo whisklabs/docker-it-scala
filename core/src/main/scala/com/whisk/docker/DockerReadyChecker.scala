@@ -52,6 +52,24 @@ trait DockerReadyChecker {
 
 object DockerReadyChecker {
 
+  private def withDelay[T](delay: Long)(f: => Future[T]): Future[T] = {
+    val timer = new Timer()
+    val promise = Promise[T]()
+    timer.schedule(new TimerTask {
+      override def run(): Unit = {
+        promise.completeWith(f)
+        timer.cancel()
+      }
+    }, delay)
+    promise.future
+  }
+
+  private def runWithin[T](future: => Future[T], deadline: FiniteDuration)(implicit ec: ExecutionContext): Future[T] = {
+    val bail = Promise[T]()
+    withDelay(deadline.toMillis)(bail.tryCompleteWith(Future.failed(new TimeoutException(s"timed out after $deadline"))).future)
+    Future.firstCompletedOf(future :: bail.future :: Nil)
+  }
+
   object Always extends DockerReadyChecker {
     override def apply(container: DockerContainer)(implicit docker: Docker, ec: ExecutionContext): Future[Boolean] =
       Future.successful(true)
@@ -81,10 +99,9 @@ object DockerReadyChecker {
   }
 
   private[docker] case class TimeLimited(underlying: DockerReadyChecker, duration: FiniteDuration) extends DockerReadyChecker {
-    import undelay._
 
     override def apply(container: DockerContainer)(implicit docker: Docker, ec: ExecutionContext): Future[Boolean] = {
-      underlying(container).within(duration).recover {
+      runWithin(underlying(container), duration).recover {
         case _: TimeoutException =>
           false
       }
@@ -92,18 +109,6 @@ object DockerReadyChecker {
   }
 
   private[docker] case class Looped(underlying: DockerReadyChecker, attempts: Int, delay: FiniteDuration) extends DockerReadyChecker {
-
-    private lazy val timer = new Timer()
-
-    private def withDelay[T](delay: Long)(f: => Future[T]): Future[T] = {
-      val promise = Promise[T]()
-      timer.schedule(new TimerTask {
-        override def run(): Unit = {
-          promise.completeWith(f)
-        }
-      }, delay)
-      promise.future
-    }
 
     override def apply(container: DockerContainer)(implicit docker: Docker, ec: ExecutionContext): Future[Boolean] = {
       def attempt(rest: Int): Future[Boolean] = {
