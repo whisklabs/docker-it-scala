@@ -6,9 +6,28 @@ lazy val commonSettings = Seq(
   crossScalaVersions := Seq("2.11.7", "2.10.5"),
   scalacOptions ++= Seq("-feature", "-deprecation"),
   fork in Test := true,
-  bintrayOrganization := Some("whisk"),
   licenses += ("MIT", url("http://opensource.org/licenses/MIT")),
-  bintrayRepository := "maven"
+  sonatypeProfileName := "com.whisk",
+  pomExtra in Global := {
+    <url>https://github.com/whisklabs/docker-it-scala</url>
+    <scm>
+      <connection>scm:git:github.com/whisklabs/docker-it-scala.git</connection>
+      <developerConnection>scm:git:git@github.com:whisklabs/docker-it-scala.git</developerConnection>
+      <url>github.com/whisklabs/docker-it-scala.git</url>
+    </scm>
+    <developers>
+      <developer>
+        <id>viktortnk</id>
+        <name>Viktor Taranenko</name>
+        <url>https://github.com/viktortnk</url>
+      </developer>
+      <developer>
+        <id>alari</id>
+        <name>Dmitry Kurinskiy</name>
+        <url>https://github.com/alari</url>
+      </developer>
+    </developers>
+  }
 )
 
 lazy val root =
@@ -16,7 +35,8 @@ lazy val root =
     .settings(commonSettings: _*)
     .settings(
       publish := {},
-      publishLocal := {})
+      publishLocal := {},
+      packagedArtifacts := Map.empty)
     .aggregate(core, config, scalatest, specs2)
 
 lazy val core =
@@ -53,9 +73,14 @@ lazy val config =
   project
     .settings(commonSettings: _*)
     .settings(
-    name := "docker-testkit-config",
+      name := "docker-testkit-config",
       libraryDependencies ++=
         Seq(
           "net.ceedubs" %% "ficus" % "1.1.2",
-          "org.scalatest" %% "scalatest" % "2.2.5" % "test"))
+          "org.scalatest" %% "scalatest" % "2.2.5" % "test"),
+      publish := scalaVersion map {
+        case x if x.startsWith("2.10") => {}
+        case _ => publish.value
+      }
+    )
     .dependsOn(core)
