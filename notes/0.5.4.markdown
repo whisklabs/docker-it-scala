@@ -1,0 +1,8 @@
+#scala #docker #integration-testing
+
+* `DockerKafkaService` to use spotify/docker container with embedded Zookeeper
+* upgrade [docker-java](https://github.com/docker-java/docker-java) dependency to 2.1.4
+* removed dependency from `undelay` and `odelay-core` to avoid requirement on external resolver
+* clean duplicate tests
+* use docker inspect command to make getting container info more efficient
+* releasing to Maven Central
