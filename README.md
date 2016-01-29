@@ -43,24 +43,20 @@ export DOCKER_HOST=tcp://127.0.0.1:2375
 
 Artifacts are available for Scala 2.10 and 2.11
 
-You'll need to add a resolver
-
-    resolvers += "Whisk" at "https://dl.bintray.com/whisk/maven"
-
 Include a dependency on one of the testkits of your choice to get started.
 
 ```scala
-libraryDependencies += "com.whisk" %% "docker-testkit-specs2" % "0.4.0"
+libraryDependencies += "com.whisk" %% "docker-testkit-specs2" % "0.5.4"
 ```
 
 ```scala
-libraryDependencies += "com.whisk" %% "docker-testkit-scalatest" % "0.4.0"
+libraryDependencies += "com.whisk" %% "docker-testkit-scalatest" % "0.5.4"
 ```
 
 If you want to configure via typesafe config, also include
 
 ```scala
-libraryDependencies += "com.whisk" %% "docker-testkit-config" % "0.4.0"
+libraryDependencies += "com.whisk" %% "docker-testkit-config" % "0.5.4"
 ```
 
 # Available Services
