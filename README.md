@@ -9,7 +9,7 @@ You can read about reasoning behind it on http://finelydistributed.io/integratio
 
 ## Setup
 
-docker-it-scala utilises [docker-java](https://github.com/docker-java/docker-java)'s way of configuration in perform
+docker-it-scala utilises [docker-java](https://github.com/docker-java/docker-java)'s way of configuration in performing
 initialisation with default settings.
 
 ```scala
@@ -25,7 +25,18 @@ trait DockerKit {
 
 That makes it possible to configure it through enviroment variables
 
-Boot2docker setup
+### docker-machine setup
+
+Docker Toolbox 1.9 (maybe also before, came some time in 2015) contains the [`docker-machine`](https://docs.docker.com/machine/) command. With it, you get going simply by:
+
+```
+docker-machine start default
+eval $(docker-machine env default)
+```
+
+<!-- I like having '$' in shell commands shown in documentation. However, left them out here for consistency with the rest of the README. AKa010216 -->
+
+### Boot2docker setup
 
 ```
 export DOCKER_HOST=tcp://192.168.59.103:2376
@@ -33,7 +44,7 @@ export DOCKER_CERT_PATH=/Users/<username>/.boot2docker/certs/boot2docker-vm
 export DOCKER_TLS_VERIFY=1
 ```
 
-Setup without SSL
+### Setup without SSL
 
 ```
 export DOCKER_HOST=tcp://127.0.0.1:2375
