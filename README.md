@@ -46,17 +46,17 @@ Artifacts are available for Scala 2.10 and 2.11
 Include a dependency on one of the testkits of your choice to get started.
 
 ```scala
-libraryDependencies += "com.whisk" %% "docker-testkit-specs2" % "0.5.4"
+libraryDependencies += "com.whisk" %% "docker-testkit-specs2" % "0.5.4" % "test"
 ```
 
 ```scala
-libraryDependencies += "com.whisk" %% "docker-testkit-scalatest" % "0.5.4"
+libraryDependencies += "com.whisk" %% "docker-testkit-scalatest" % "0.5.4" % "test"
 ```
 
 If you want to configure via typesafe config, also include
 
 ```scala
-libraryDependencies += "com.whisk" %% "docker-testkit-config" % "0.5.4"
+libraryDependencies += "com.whisk" %% "docker-testkit-config" % "0.5.4" % "test"
 ```
 
 # Available Services
