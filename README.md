@@ -155,10 +155,10 @@ trait DockerMongodbService extends DockerKitConfig {
 	- `looped` optional structure
       - `attempts` required (Int)
       - `delay` required (Int)
-  - `port-maps` optional structure (list of structures)
-    - `SOME_MAPPING_NAME`
-      - `internal` required (Int)
-      - `external` optional (Int)
+- `port-maps` optional structure (list of structures)
+  - `SOME_MAPPING_NAME`
+    - `internal` required (Int)
+    - `external` optional (Int)
 
 # Testkit
 
