@@ -51,10 +51,7 @@ lazy val samples =
   project
     .settings(commonSettings: _*)
     .settings(
-      name := "docker-testkit-samples",
-      publish := {},
-      publishLocal := {},
-      packagedArtifacts := Map.empty)
+      name := "docker-testkit-samples")
     .dependsOn(core)
 
 lazy val scalatest =
