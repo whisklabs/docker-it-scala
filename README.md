@@ -5,7 +5,7 @@ docker-it-scala
 
 Set of utility classes to make integration testing with dockerised services in Scala easy.
 
-You can read about reasoning behind it on http://finelydistributed.io/integration-tests-with-docker/
+You can read about reasoning behind it at [Finely Distributed](https://finelydistributed.io/integration-testing-with-docker-and-scala-85659d037740#.8mbrg311p).
 
 ## Setup
 
