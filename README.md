@@ -103,7 +103,7 @@ trait DockerMongodbService extends DockerKit {
 
 ## Typesafe Configuration
 
-`docker-testkit-config` enables you to use a typsesafe config to
+`docker-testkit-config` enables you to use a typesafe config to
 define your docker containers. Just put an `application.conf` file in
 your classpath.
 
