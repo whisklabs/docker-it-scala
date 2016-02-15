@@ -70,7 +70,7 @@ If you want to configure via typesafe config, also include
 libraryDependencies += "com.whisk" %% "docker-testkit-config" % "0.5.4" % "test"
 ```
 
-# Available Services
+# Sample Services
 
 - Cassandra
 - Elasticsearch
