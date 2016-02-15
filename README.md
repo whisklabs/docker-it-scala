@@ -72,12 +72,12 @@ libraryDependencies += "com.whisk" %% "docker-testkit-config" % "0.5.4" % "test"
 
 # Sample Services
 
-- Cassandra
-- Elasticsearch
-- Kafka
-- Mongodb
-- Neo4j
-- Postgres
+- [Cassandra](https://github.com/whisklabs/docker-it-scala/blob/master/samples/src/main/scala/com/whisk/docker/DockerCassandraService.scala)
+- [Elasticsearch](https://github.com/whisklabs/docker-it-scala/blob/master/samples/src/main/scala/com/whisk/docker/DockerElasticsearchService.scala)
+- [Kafka](https://github.com/whisklabs/docker-it-scala/blob/master/samples/src/main/scala/com/whisk/docker/DockerKafkaService.scala)
+- [Mongodb](https://github.com/whisklabs/docker-it-scala/blob/master/samples/src/main/scala/com/whisk/docker/DockerMongodbService.scala)
+- [Neo4j](https://github.com/whisklabs/docker-it-scala/blob/master/samples/src/main/scala/com/whisk/docker/DockerNeo4jService.scala)
+- [Postgres](https://github.com/whisklabs/docker-it-scala/blob/master/samples/src/main/scala/com/whisk/docker/DockerPostgresService.scala)
 
 # Defining Containers
 
