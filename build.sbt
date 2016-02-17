@@ -45,7 +45,8 @@ lazy val core =
     .settings(
       name := "docker-testkit-core",
       libraryDependencies ++=
-        Seq("com.github.docker-java" % "docker-java" % "2.1.4"))
+        Seq("com.github.docker-java" % "docker-java" % "3.0.0-RC1",
+          "com.google.code.findbugs" % "jsr305" % "3.0.1"))
 
 lazy val samples =
   project
@@ -61,8 +62,8 @@ lazy val scalatest =
       name := "docker-testkit-scalatest",
       libraryDependencies ++=
         Seq(
-          "org.scalatest" %% "scalatest" % "2.2.5",
-          "ch.qos.logback" % "logback-classic" % "1.1.2" % "test"))
+          "org.scalatest" %% "scalatest" % "2.2.6",
+          "ch.qos.logback" % "logback-classic" % "1.1.5" % "test"))
     .dependsOn(core, samples % "test")
 
 lazy val specs2 =
@@ -73,7 +74,7 @@ lazy val specs2 =
       libraryDependencies ++=
         Seq(
           "org.specs2" %% "specs2-core" % "3.6.4",
-          "ch.qos.logback" % "logback-classic" % "1.1.2" % "test"))
+          "ch.qos.logback" % "logback-classic" % "1.1.5" % "test"))
     .dependsOn(core, samples % "test")
 
 lazy val config =
@@ -84,7 +85,7 @@ lazy val config =
       libraryDependencies ++=
         Seq(
           "net.ceedubs" %% "ficus" % "1.1.2",
-          "org.scalatest" %% "scalatest" % "2.2.5" % "test"),
+          "org.scalatest" %% "scalatest" % "2.2.6" % "test"),
       publish := scalaVersion map {
         case x if x.startsWith("2.10") => {}
         case _ => publish.value

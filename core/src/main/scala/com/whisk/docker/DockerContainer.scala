@@ -35,7 +35,7 @@ case class DockerContainer(
       .withPortBindings(
         bindPorts.foldLeft(new Ports()) {
           case (ps, (guestPort, Some(hostPort))) =>
-            ps.bind(ExposedPort.tcp(guestPort), Ports.Binding(hostPort))
+            ps.bind(ExposedPort.tcp(guestPort), Ports.binding(hostPort))
             ps
           case (ps, (guestPort, None)) =>
             ps.bind(ExposedPort.tcp(guestPort), new Ports.Binding())
