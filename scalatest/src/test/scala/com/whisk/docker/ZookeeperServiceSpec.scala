@@ -11,7 +11,7 @@ class ZookeeperServiceSpec extends FlatSpec with Matchers with BeforeAndAfterAll
   implicit val pc = PatienceConfig(Span(20, Seconds), Span(1, Second))
 
   "zookeeper container" should "be ready" in {
-    zookeeperContainer.isReady.futureValue shouldBe true
+    whenReady(zookeeperContainer.isReady) { _ shouldBe true }
   }
 
 }

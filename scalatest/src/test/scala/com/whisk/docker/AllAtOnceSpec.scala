@@ -11,19 +11,18 @@ class AllAtOnceSpec extends FlatSpec with Matchers with BeforeAndAfterAll with G
 
   implicit val pc = PatienceConfig(Span(20, Seconds), Span(1, Second))
 
-  "all containers" should "be ready at the same time" in {
+  "all containers" should "be ready" in {
     dockerContainers.map(_.image).foreach(println)
+    dockerContainers.forall(_.isReady.futureValue) shouldBe true
 
-    // Merge the separate futures to one, ready when all the components are
-    //
-    // Note: This is slightly different than the preceding code, which would fail immediately,
-    //      if some container's '.isReady' gives false. Here, all the futures are waited for,
-    //      before making the check. Likely doesn't matter in practise. AKa180216
-    //
-    val allFut: Future[Seq[Boolean]] = Future.sequence( dockerContainers.map(_.isReady) )
-
-    whenReady(allFut) { xs =>
+    /*
+    * Note: Above could be forged into a single 'Future[Seq[Boolean]]' but in that case,
+    *       a failing future would not terminate the test immediately, as it probably does
+    *       above. So here, '.futureValue' is probably the right way to go? AKa180216
+    *
+    whenReady( Future.sequence( dockerContainers.map(_.isReady) ) ) { xs =>
       every (xs) shouldBe true
     }
+    */
   }
 }
