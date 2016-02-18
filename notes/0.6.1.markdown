@@ -1,0 +1,4 @@
+#scala #docker #integration-testing
+
+* moving containers definitions outside `core` module
+* rename `core` module published artifact
