@@ -12,6 +12,6 @@ class PostgresServiceSpec extends FlatSpec with Matchers with BeforeAndAfterAll 
   implicit val pc = PatienceConfig(Span(20, Seconds), Span(1, Second))
 
   "postgres node" should "be ready with log line checker" in {
-    postgresContainer.isReady().futureValue shouldBe true
+    postgresContainer.isReady.futureValue shouldBe true
   }
 }

@@ -11,7 +11,7 @@ class Neo4jServiceSpec extends FlatSpec with Matchers with BeforeAndAfterAll wit
   implicit val pc = PatienceConfig(Span(20, Seconds), Span(1, Second))
 
   "neo4j container" should "be ready" in {
-    neo4jContainer.isReady().futureValue shouldBe true
+    neo4jContainer.isReady.futureValue shouldBe true
   }
 
   "neo4j container" should "pass ready checker with logs" in {

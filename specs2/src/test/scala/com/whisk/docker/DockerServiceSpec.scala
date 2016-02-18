@@ -20,9 +20,9 @@ class DockerServiceSpec(env: Env) extends Specification
   def x1 = docker.client.infoCmd().exec().toString.contains("docker") must beTrue
   def x2 = {
     pingContainer.id must not be empty.await
-    pingContainer.isRunning() must beTrue.await
+    pingContainer.isRunning must beTrue.await
     Await.result(pingContainer.stop(), 1.seconds)
-    pingContainer.isRunning() must beFalse.await
+    pingContainer.isRunning must beFalse.await
   }
-  def x3 = pongContainer.getPorts() must be have key(80).await
+  def x3 = pongContainer.getPorts must be have key(80).await
 }

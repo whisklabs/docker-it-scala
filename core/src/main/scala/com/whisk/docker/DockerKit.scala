@@ -39,7 +39,7 @@ trait DockerKit {
   }
 
   def initReadyAll(): Future[Seq[(DockerContainer, Boolean)]] =
-    Future.traverse(dockerContainers)(_.init()).flatMap(Future.traverse(_)(c => c.isReady().map(c -> _).recover {
+    Future.traverse(dockerContainers)(_.init()).flatMap(Future.traverse(_)(c => c.isReady.map(c -> _).recover {
       case e =>
         log.error(e.getMessage, e)
         c -> false

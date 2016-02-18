@@ -14,5 +14,5 @@ class CassandraServiceSpec(env: Env) extends Specification
   The cassandra node should be ready with log line checker $x1
                                                            """
 
-  def x1 = cassandraContainer.isReady() must beTrue.await
+  def x1 = cassandraContainer.isReady must beTrue.await
 }
