@@ -5,7 +5,7 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{ Second, Seconds, Span }
 import org.scalatest.{ BeforeAndAfterAll, FlatSpec, Matchers }
 
-class PostgresServiceSpec extends FlatSpec with Matchers with BeforeAndAfterAll with ScalaFutures
+class PostgresServiceSpec extends FlatSpec with Matchers
     with DockerTestKit
     with DockerPostgresService {
 
