@@ -14,5 +14,5 @@ class KafkaServiceSpec(env: Env) extends Specification
   The Kafka container should be ready $x1
                                       """
 
-  def x1 = kafkaContainer.isReady() must beTrue.await
+  def x1 = kafkaContainer.isReady must beTrue.await
 }

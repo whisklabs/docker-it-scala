@@ -11,6 +11,7 @@ class CassandraServiceSpec extends FlatSpec with Matchers with BeforeAndAfterAll
   implicit val pc = PatienceConfig(Span(20, Seconds), Span(1, Second))
 
   "cassandra node" should "be ready with log line checker" in {
-    cassandraContainer.isReady().futureValue shouldBe true
+
+    whenReady(cassandraContainer.isReady) { _ shouldBe true }
   }
 }

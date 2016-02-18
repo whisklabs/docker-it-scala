@@ -16,26 +16,33 @@ class DockerServiceSpec extends FlatSpec with Matchers with BeforeAndAfterAll wi
   "docker adapter" should "create container" in {
     When("docker tries to get container's id")
 
-    val id = pingContainer.id.futureValue
-    id should not be null
+    whenReady(pingContainer.id) { id =>
+      id should not be null
 
-    Then("id is in list of running containers")
+      Then("id is in list of running containers")
 
-    pingContainer.isRunning().futureValue shouldBe true
+      whenReady(pingContainer.isRunning) { b =>
+        b shouldBe true
 
-    When("docker is trying to stop container")
-    pingContainer.stop().futureValue
+        When("docker is trying to stop container")
+        whenReady(pingContainer.stop()) { _ =>
 
-    Then("There's no such id in the list of running containers")
-    pingContainer.isRunning().futureValue shouldBe false
+          Then("There's no such id in the list of running containers")
+          whenReady(pingContainer.isRunning) { bb =>
+            bb shouldBe false
+          }
+        }
+      }
+    }
   }
 
   "docker container" should "be available from port" in {
     When("we are building a container with bound port")
-    val ports = pongContainer.getPorts().futureValue
+    whenReady(pongContainer.getPorts) { ports =>
 
-    Then("port 80 should be on container")
-    ports.get(80) should be('nonEmpty)
+      Then("port 80 should be on container")
+      ports should contain key 80
+    }
   }
 
 }

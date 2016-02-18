@@ -51,8 +51,8 @@ trait DockerContainerOps {
     val linksF = Future.traverse(links) {
       case (container, alias) =>
         for {
-          _ <- container.isReady()
-          c <- container.getRunningContainer()
+          _ <- container.isReady
+          c <- container.getRunningContainer
         } yield {
           val linkedContainerName =
             c.map(_.getName).getOrElse(throw new RuntimeException(s"Cannot find linked container $alias"))
@@ -90,17 +90,17 @@ trait DockerContainerOps {
       _ <- Future(docker.client.removeContainerCmd(s).withForce(force).withRemoveVolumes(true).exec())
     } yield this
 
-  def isRunning()(implicit docker: Docker, ec: ExecutionContext): Future[Boolean] =
-    getRunningContainer().map(_.isDefined)
+  def isRunning(implicit docker: Docker, ec: ExecutionContext): Future[Boolean] =
+    getRunningContainer.map(_.isDefined)
 
   private val _isReady = SinglePromise[Boolean]
 
-  def isReady(): Future[Boolean] = _isReady.future
+  def isReady: Future[Boolean] = _isReady.future
 
-  private def runReadyCheck()(implicit docker: Docker, ec: ExecutionContext): Future[Boolean] =
+  private def runReadyCheck(implicit docker: Docker, ec: ExecutionContext): Future[Boolean] =
     _isReady.init(
       (for {
-        r <- isRunning() if r
+        r <- isRunning if r
         b <- readyChecker(this) if b
       } yield b) recoverWith {
         case _: NoSuchElementException =>
@@ -136,10 +136,10 @@ trait DockerContainerOps {
   }
 
   private def linesFromIS(is: InputStream): Iterator[String] = {
-    scala.io.Source.fromInputStream(is)(scala.io.Codec.ISO8859).getLines()
+    scala.io.Source.fromInputStream(is)(scala.io.Codec.ISO8859).getLines
   }
 
-  protected def getRunningContainer()(implicit docker: Docker, ec: ExecutionContext): Future[Option[InspectContainerResponse]] =
+  protected def getRunningContainer(implicit docker: Docker, ec: ExecutionContext): Future[Option[InspectContainerResponse]] =
     for {
       s <- id
       c <- Future(Some(docker.client.inspectContainerCmd(s).exec())).recover {
@@ -149,8 +149,8 @@ trait DockerContainerOps {
 
   private val _ports = SinglePromise[Map[Int, Int]]
 
-  def getPorts()(implicit docker: Docker, ec: ExecutionContext): Future[Map[Int, Int]] = {
-    def portsFuture: Future[Map[Int, Int]] = getRunningContainer().flatMap {
+  def getPorts(implicit docker: Docker, ec: ExecutionContext): Future[Map[Int, Int]] = {
+    def portsFuture: Future[Map[Int, Int]] = getRunningContainer.flatMap {
       case None => Future.failed(new RuntimeException(s"Container $image is not running"))
       case Some(c) =>
         val ports: Map[Int, Int] = c.getNetworkSettings.getPorts.getBindings.asScala.toMap.collect { case (exposedPort, Array(binding, _*)) =>

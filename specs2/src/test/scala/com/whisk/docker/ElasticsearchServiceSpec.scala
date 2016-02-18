@@ -15,5 +15,5 @@ class ElasticsearchServiceSpec(env: Env) extends Specification
   The elasticsearch container should be ready $x1
                                               """
 
-  def x1 = elasticsearchContainer.isReady() must beTrue.await
+  def x1 = elasticsearchContainer.isReady must beTrue.await
 }

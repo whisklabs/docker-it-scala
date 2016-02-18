@@ -20,6 +20,6 @@ class AllAtOnceSpec(env: Env) extends Specification
                                                       """
   def x1 = {
     dockerContainers.map(_.image).foreach(println)
-    Future.sequence(dockerContainers.map(_.isReady())) must contain(beTrue).forall.await
+    Future.sequence(dockerContainers.map(_.isReady)) must contain(beTrue).forall.await
   }
 }

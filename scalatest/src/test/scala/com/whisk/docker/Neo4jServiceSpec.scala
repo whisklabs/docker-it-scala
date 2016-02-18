@@ -11,13 +11,13 @@ class Neo4jServiceSpec extends FlatSpec with Matchers with BeforeAndAfterAll wit
   implicit val pc = PatienceConfig(Span(20, Seconds), Span(1, Second))
 
   "neo4j container" should "be ready" in {
-    neo4jContainer.isReady().futureValue shouldBe true
+    whenReady(neo4jContainer.isReady) { _ shouldBe true }
   }
 
   "neo4j container" should "pass ready checker with logs" in {
     val c = DockerReadyChecker.LogLineContains("Starting HTTP on port :7474")
 
-    c(neo4jContainer).futureValue shouldBe true
+    whenReady(c(neo4jContainer)) { _ shouldBe true }
   }
 
 }
