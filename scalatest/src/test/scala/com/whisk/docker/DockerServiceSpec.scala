@@ -4,7 +4,7 @@ import org.scalatest._
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time._
 
-class DockerServiceSpec extends FlatSpec with Matchers with BeforeAndAfterAll with GivenWhenThen with ScalaFutures
+class DockerServiceSpec extends FlatSpec with Matchers with GivenWhenThen
     with PingContainerKit {
 
   implicit val pc = PatienceConfig(Span(20, Seconds), Span(1, Second))

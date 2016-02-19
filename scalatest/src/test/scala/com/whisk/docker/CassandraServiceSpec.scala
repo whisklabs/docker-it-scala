@@ -5,7 +5,7 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{ Second, Seconds, Span }
 import org.scalatest.{ BeforeAndAfterAll, FlatSpec, GivenWhenThen, Matchers }
 
-class CassandraServiceSpec extends FlatSpec with Matchers with BeforeAndAfterAll with GivenWhenThen with ScalaFutures
+class CassandraServiceSpec extends FlatSpec with Matchers
     with DockerCassandraService with DockerTestKit {
 
   implicit val pc = PatienceConfig(Span(20, Seconds), Span(1, Second))
