@@ -4,8 +4,8 @@ import java.io.InputStream
 import java.util.concurrent.atomic.AtomicBoolean
 
 import com.github.dockerjava.api.command.InspectContainerResponse
+import com.github.dockerjava.api.exception.{NotFoundException, NotModifiedException}
 import com.github.dockerjava.api.model.{Frame, Link}
-import com.github.dockerjava.api.{NotFoundException, NotModifiedException}
 import com.github.dockerjava.core.command.{LogContainerResultCallback, PullImageResultCallback}
 import org.slf4j.LoggerFactory
 
@@ -115,8 +115,7 @@ trait DockerContainerOps {
   def withLogStreamLines[T](withErr: Boolean)(f: PartialFunction[Frame, T])(implicit docker: Docker, ec: ExecutionContext): Future[T] = {
     for {
       s <- id
-      baseCmd = docker.client.logContainerCmd(s).withStdOut().withFollowStream()
-      cmd = if (withErr) baseCmd.withStdErr() else baseCmd
+      cmd = docker.client.logContainerCmd(s).withStdOut(true).withStdErr(withErr).withFollowStream(true)
       res <- {
         val p = Promise[T]()
         cmd.exec(new LogContainerResultCallback {
