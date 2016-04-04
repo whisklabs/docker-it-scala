@@ -50,6 +50,9 @@ trait DockerKit {
     Await.result(pullImages(), PullImagesTimeout)
     val allRunning: Boolean = try {
       val future: Future[Boolean] = initReadyAll().map(_.map(_._2).forall(identity))
+      sys.addShutdownHook(
+        stopRmAll()
+      )
       Await.result(future, StartContainersTimeout)
     } catch {
       case e: Exception =>
