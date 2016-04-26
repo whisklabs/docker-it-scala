@@ -50,6 +50,13 @@ export DOCKER_TLS_VERIFY=1
 export DOCKER_HOST=tcp://127.0.0.1:2375
 ```
 
+### Docker for Mac setup
+
+```
+export DOCKER_HOST=tcp://docker.local:2375
+export DOCKER_TLS_VERIFY=0
+```
+
 ## Dependency
 
 Artifacts are available for Scala 2.10 and 2.11
