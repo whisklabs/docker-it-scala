@@ -11,7 +11,7 @@ class ElasticsearchServiceSpec extends FlatSpec with Matchers
   implicit val pc = PatienceConfig(Span(20, Seconds), Span(1, Second))
 
   "elasticsearch container" should "be ready" in {
-    elasticsearchContainer.isReady().futureValue shouldBe true
+    isContainerReady(elasticsearchContainer).futureValue shouldBe true
   }
 
 }

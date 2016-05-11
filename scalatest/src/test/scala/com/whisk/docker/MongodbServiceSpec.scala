@@ -12,6 +12,6 @@ class MongodbServiceSpec extends FlatSpec with Matchers
   implicit val pc = PatienceConfig(Span(20, Seconds), Span(1, Second))
 
   "mongodb node" should "be ready with log line checker" in {
-    mongodbContainer.isReady().futureValue shouldBe true
+    isContainerReady(mongodbContainer).futureValue shouldBe true
   }
 }

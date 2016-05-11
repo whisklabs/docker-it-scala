@@ -14,6 +14,6 @@ class AllAtOnceSpec extends FlatSpec with Matchers
 
   "all containers" should "be ready at the same time" in {
     dockerContainers.map(_.image).foreach(println)
-    dockerContainers.forall(_.isReady().futureValue) shouldBe true
+    dockerContainers.forall(c => isContainerReady(c).futureValue) shouldBe true
   }
 }

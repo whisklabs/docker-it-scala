@@ -10,7 +10,7 @@ class KafkaServiceSpec extends FlatSpec with Matchers
   implicit val pc = PatienceConfig(Span(20, Seconds), Span(1, Second))
 
   "kafka container" should "be ready" in {
-    kafkaContainer.isReady().futureValue shouldBe true
+    isContainerReady(kafkaContainer).futureValue shouldBe true
   }
 
 }

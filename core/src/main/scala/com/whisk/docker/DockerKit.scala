@@ -1,5 +1,7 @@
 package com.whisk.docker
 
+import java.util.concurrent.Executors
+
 import com.github.dockerjava.core.DockerClientConfig
 import org.slf4j.LoggerFactory
 
@@ -15,43 +17,24 @@ trait DockerKit {
   val StartContainersTimeout = 20.seconds
   val StopContainersTimeout = 10.seconds
 
-  // we need ExecutionContext in order to run docker.init() / docker.stop() there
-  implicit def dockerExecutionContext: ExecutionContext = ExecutionContext.global
-
   def dockerContainers: List[DockerContainer] = Nil
 
-  def listImages(): Future[Set[String]] = {
-    import scala.collection.JavaConverters._
-    Future(docker.client.listImagesCmd().exec().asScala.flatMap(_.getRepoTags).toSet)
-  }
+  // we need ExecutionContext in order to run docker.init() / docker.stop() there
+  implicit lazy val dockerExecutionContext: ExecutionContext =
+    ExecutionContext.fromExecutor(Executors.newFixedThreadPool(dockerContainers.length * 2))
+  implicit lazy val dockerExecutor = new DockerJavaExecutor(docker.host, docker.client)
 
-  def stopRmAll(): Future[Seq[DockerContainer]] =
-    Future.traverse(dockerContainers)(_.remove(force = true))
+  lazy val containerManager = new DockerContainerManager(dockerContainers, dockerExecutor)
 
-  def pullImages(): Future[Seq[DockerContainer]] = {
-    listImages().flatMap { images =>
-      val containersToPull = dockerContainers.filterNot { c =>
-        val cImage = if (c.image.contains(":")) c.image else c.image + ":latest"
-        images(cImage)
-      }
-      Future.traverse(containersToPull)(_.pull())
-    }
-  }
-
-  def initReadyAll(): Future[Seq[(DockerContainer, Boolean)]] =
-    Future.traverse(dockerContainers)(_.init()).flatMap(Future.traverse(_)(c => c.isReady().map(c -> _).recover {
-      case e =>
-        log.error(e.getMessage, e)
-        c -> false
-    }))
-
+  def isContainerReady(container: DockerContainer): Future[Boolean] =
+    containerManager.isReady(container)
 
   def startAllOrFail(): Unit = {
-    Await.result(pullImages(), PullImagesTimeout)
+    Await.result(containerManager.pullImages(), PullImagesTimeout)
     val allRunning: Boolean = try {
-      val future: Future[Boolean] = initReadyAll().map(_.map(_._2).forall(identity))
+      val future: Future[Boolean] = containerManager.initReadyAll().map(_.map(_._2).forall(identity))
       sys.addShutdownHook(
-        stopRmAll()
+        containerManager.stopRmAll()
       )
       Await.result(future, StartContainersTimeout)
     } catch {
@@ -60,14 +43,14 @@ trait DockerKit {
         false
     }
     if (!allRunning) {
-      Await.ready(stopRmAll(), StopContainersTimeout)
+      Await.ready(containerManager.stopRmAll(), StopContainersTimeout)
       throw new RuntimeException("Cannot run all required containers")
     }
   }
 
   def stopAllQuietly(): Unit = {
     try {
-      Await.ready(stopRmAll(), StopContainersTimeout)
+      Await.ready(containerManager.stopRmAll(), StopContainersTimeout)
     } catch {
       case e: Throwable =>
         log.error(e.getMessage, e)
