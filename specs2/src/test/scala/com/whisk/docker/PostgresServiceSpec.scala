@@ -18,5 +18,5 @@ class PostgresServiceSpec(env: Env) extends Specification
   The Postgres node should be ready with log line checker  $x1
                                                            """
 
-  def x1 = postgresContainer.isReady() must beTrue.await
+  def x1 = isContainerReady(postgresContainer) must beTrue.await
 }

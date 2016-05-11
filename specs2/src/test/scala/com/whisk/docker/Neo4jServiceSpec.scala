@@ -16,13 +16,7 @@ class Neo4jServiceSpec(env: Env) extends Specification
   def is = s2"""
   The neo4j container should
     be ready                     $x1
-    pass ready checker with logs $x2
                                  """
 
-  def x1 = neo4jContainer.isReady() must beTrue.await
-
-  def x2 = {
-    val c = DockerReadyChecker.LogLineContains("Starting HTTP on port :7474")
-    c(neo4jContainer) must beTrue.await
-  }
+  def x1 = isContainerReady(neo4jContainer) must beTrue.await
 }

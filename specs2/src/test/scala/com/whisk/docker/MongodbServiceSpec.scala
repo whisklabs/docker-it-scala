@@ -15,5 +15,5 @@ class MongodbServiceSpec(env: Env) extends Specification
   The mongodb container should be ready $x1
                                         """
 
-  def x1 = mongodbContainer.isReady() must beTrue.await
+  def x1 = isContainerReady(mongodbContainer) must beTrue.await
 }
