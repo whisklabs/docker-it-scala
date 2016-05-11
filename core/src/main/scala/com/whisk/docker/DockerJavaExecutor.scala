@@ -6,6 +6,7 @@ import com.github.dockerjava.api.DockerClient
 import com.github.dockerjava.api.exception.NotFoundException
 import com.github.dockerjava.api.model.{ExposedPort, Frame, Ports}
 import com.github.dockerjava.core.command.{LogContainerResultCallback, PullImageResultCallback}
+import com.google.common.io.Closeables
 
 import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.collection.JavaConverters._
@@ -104,4 +105,6 @@ class DockerJavaExecutor(override val host: String, client: DockerClient) extend
   override def remove(id: String, force: Boolean, removeVolumes: Boolean)(implicit ec: ExecutionContext): Future[Unit] = {
     Future(client.removeContainerCmd(id).withForce(force).withRemoveVolumes(true).exec())
   }
+
+  override def close(): Unit = Closeables.close(client, true)
 }

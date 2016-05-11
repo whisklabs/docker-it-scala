@@ -30,4 +30,6 @@ trait DockerCommandExecutor {
   def pullImage(image: String)(implicit ec: ExecutionContext): Future[Unit]
 
   def remove(id: String, force: Boolean = true, removeVolumes: Boolean = true)(implicit ec: ExecutionContext): Future[Unit]
+
+  def close(): Unit
 }

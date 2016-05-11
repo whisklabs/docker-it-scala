@@ -35,7 +35,10 @@ class DockerContainerManager(containers: Seq[DockerContainer], executor: DockerC
         c -> false
     }))
 
-  def stopRmAll(): Future[Unit] =
-    Future.traverse(states)(_.remove(force = true, removeVolumes = true)).map(_ => ())
+  def stopRmAll(): Future[Unit] = {
+    val future = Future.traverse(states)(_.remove(force = true, removeVolumes = true)).map(_ => ())
+    future.onComplete { _ => executor.close() }
+    future
+  }
 
 }
