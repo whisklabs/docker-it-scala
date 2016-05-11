@@ -14,6 +14,10 @@ class DockerContainerManager(containers: Seq[DockerContainer], executor: DockerC
 
   val states = dockerStatesMap.values.toList
 
+  def getContainerState(container: DockerContainer): DockerContainerState = {
+    dockerStatesMap(container)
+  }
+
   def isReady(container: DockerContainer): Future[Boolean] = {
     dockerStatesMap(container).isReady()
   }

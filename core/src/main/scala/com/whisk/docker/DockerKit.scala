@@ -29,6 +29,10 @@ trait DockerKit {
   def isContainerReady(container: DockerContainer): Future[Boolean] =
     containerManager.isReady(container)
 
+  def getContainerState(container: DockerContainer): DockerContainerState = {
+    containerManager.getContainerState(container)
+  }
+
   def startAllOrFail(): Unit = {
     Await.result(containerManager.pullImages(), PullImagesTimeout)
     val allRunning: Boolean = try {
