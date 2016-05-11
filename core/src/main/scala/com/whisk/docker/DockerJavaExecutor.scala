@@ -50,18 +50,17 @@ class DockerJavaExecutor(override val host: String, client: DockerClient) extend
       case x: NotFoundException => None
     }
     val future = resp.map(_.map { result =>
-      if(result.getState.getRunning) {
-        val portMap = result.getNetworkSettings.getPorts.getBindings.asScala.toMap.collect { case (exposedPort, bindings) =>
-          val p = ContainerPort(exposedPort.getPort, PortProtocol.withName(exposedPort.getProtocol.toString.toUpperCase))
-          val hostBindings: Seq[PortBinding] = bindings.map { b =>
-            PortBinding(b.getHostIp, b.getHostPort)
-          }(collection.breakOut)
-          p -> hostBindings
+      val containerBindings =
+        Option(result.getNetworkSettings.getPorts).map(_.getBindings.asScala.toMap)
+            .getOrElse(Map())
+      val portMap = containerBindings.collect { case (exposedPort, bindings) if Option(bindings).isDefined =>
+        val p = ContainerPort(exposedPort.getPort, PortProtocol.withName(exposedPort.getProtocol.toString.toUpperCase))
+        val hostBindings: Seq[PortBinding] = bindings.map { b =>
+          PortBinding(b.getHostIp, b.getHostPort)
         }
-        InspectContainerResult(running = true, ports = portMap)
-      } else {
-        InspectContainerResult(running = false, Map())
+        p -> hostBindings
       }
+      InspectContainerResult(running = true, ports = portMap)
     })
     RetryUtils.looped(future.flatMap {
       case Some(x) if x.running => Future.successful(Some(x))
@@ -81,7 +80,7 @@ class DockerJavaExecutor(override val host: String, client: DockerClient) extend
         cmd.exec(new LogContainerResultCallback {
           override def onNext(item: Frame): Unit = {
             super.onNext(item)
-            if(f(item.toString)) {
+            if (f(item.toString)) {
               p.trySuccess(())
               onComplete()
             }

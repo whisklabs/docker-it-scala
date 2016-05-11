@@ -45,7 +45,6 @@ class DockerContainerState(spec: DockerContainer) {
 
   def init()(implicit docker: DockerCommandExecutor, ec: ExecutionContext): Future[this.type] = {
     for {
-
       s <- _id.init(docker.createContainer(spec))
       _ <- Future(docker.startContainer(s))
     } yield {
@@ -72,7 +71,7 @@ class DockerContainerState(spec: DockerContainer) {
     )
 
   protected def getRunningContainer()(implicit docker: DockerCommandExecutor, ec: ExecutionContext): Future[Option[InspectContainerResult]] =
-    id.flatMap(docker.inspectContainer).map(_.filter(_.running))
+    id.flatMap(docker.inspectContainer)
 
   private val _ports = SinglePromise[Map[Int, Int]]
 
