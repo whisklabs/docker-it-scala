@@ -14,5 +14,5 @@ class ZookeeperServiceSpec(env: Env) extends Specification
   The Zookeeper container should be ready $x1
                                           """
 
-  def x1 = zookeeperContainer.isReady() must beTrue.await
+  def x1 = isContainerReady(zookeeperContainer) must beTrue.await
 }
