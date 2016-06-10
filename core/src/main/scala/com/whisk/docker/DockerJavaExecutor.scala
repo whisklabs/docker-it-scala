@@ -25,10 +25,10 @@ class DockerJavaExecutor(override val host: String, client: DockerClient) extend
         .withPortBindings(
           spec.bindPorts.foldLeft(new Ports()) {
             case (ps, (guestPort, Some(hostPort))) =>
-              ps.bind(ExposedPort.tcp(guestPort), Ports.binding(hostPort))
+              ps.bind(ExposedPort.tcp(guestPort), Ports.Binding.bindPort(hostPort))
               ps
             case (ps, (guestPort, None)) =>
-              ps.bind(ExposedPort.tcp(guestPort), new Ports.Binding())
+              ps.bind(ExposedPort.tcp(guestPort), Ports.Binding.empty())
               ps
           }
         )
@@ -57,7 +57,7 @@ class DockerJavaExecutor(override val host: String, client: DockerClient) extend
       val portMap = containerBindings.collect { case (exposedPort, bindings) if Option(bindings).isDefined =>
         val p = ContainerPort(exposedPort.getPort, PortProtocol.withName(exposedPort.getProtocol.toString.toUpperCase))
         val hostBindings: Seq[PortBinding] = bindings.map { b =>
-          PortBinding(b.getHostIp, b.getHostPort)
+          PortBinding(b.getHostIp, b.getHostPortSpec.toInt)
         }
         p -> hostBindings
       }
