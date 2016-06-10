@@ -1,7 +1,7 @@
 
 lazy val commonSettings = Seq(
   organization := "com.whisk",
-  version := "0.8.0",
+  version := "0.8.1",
   scalaVersion := "2.11.7",
   crossScalaVersions := Seq("2.11.7", "2.10.5"),
   scalacOptions ++= Seq("-feature", "-deprecation"),
@@ -45,7 +45,7 @@ lazy val core =
     .settings(
       name := "docker-testkit-core",
       libraryDependencies ++=
-        Seq("com.github.docker-java" % "docker-java" % "3.0.0-RC5",
+        Seq("com.github.docker-java" % "docker-java" % "3.0.0",
           "com.google.code.findbugs" % "jsr305" % "3.0.1"))
 
 lazy val samples =
