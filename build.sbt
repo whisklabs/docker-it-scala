@@ -37,7 +37,7 @@ lazy val root =
       publish := {},
       publishLocal := {},
       packagedArtifacts := Map.empty)
-    .aggregate(core, config, scalatest, specs2)
+    .aggregate(core, testkitSpotifyImpl, config, scalatest, specs2)
 
 lazy val core =
   project
@@ -47,6 +47,14 @@ lazy val core =
       libraryDependencies ++=
         Seq("com.github.docker-java" % "docker-java" % "3.0.0",
           "com.google.code.findbugs" % "jsr305" % "3.0.1"))
+
+lazy val testkitSpotifyImpl =
+  project.in(file("impl/spotify"))
+    .settings(commonSettings: _*)
+    .settings(
+      name := "docker-testkit-impl-spotify",
+      libraryDependencies += "com.spotify" % "docker-client" % "5.0.2")
+    .dependsOn(core)
 
 lazy val samples =
   project
