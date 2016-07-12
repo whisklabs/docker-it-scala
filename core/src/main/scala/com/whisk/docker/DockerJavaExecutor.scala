@@ -15,10 +15,9 @@ import scala.concurrent.duration.FiniteDuration
 class DockerJavaExecutor(override val host: String, client: DockerClient) extends DockerCommandExecutor {
 
   override def createContainer(spec: DockerContainer)(implicit ec: ExecutionContext): Future[String] = {
-    val volumeToBind: Map[Volume, Bind] = spec.volumeMaps.map { kv =>
-      // kv is (container_path, (host_path, rw mode))
-      val volume: Volume = new Volume(kv._1)
-      (volume, new Bind(kv._2._1, volume, AccessMode.fromBoolean(kv._2._2)))
+    val volumeToBind: Seq[(Volume, Bind)] = spec.volumeMappings.map { mapping =>
+      val volume: Volume = new Volume(mapping.container)
+      (volume, new Bind(mapping.host, volume, AccessMode.fromBoolean(mapping.rw)))
     }
 
     val baseCmd =
@@ -38,8 +37,8 @@ class DockerJavaExecutor(override val host: String, client: DockerClient) extend
               ps
           }
         )
-        .withVolumes(volumeToBind.keys.toSeq: _*)
-        .withBinds(volumeToBind.values.toSeq: _*)
+        .withVolumes(volumeToBind.map(_._1): _*)
+        .withBinds(volumeToBind.map(_._2): _*)
 
     val cmd = spec.command.fold(baseCmd)(c => baseCmd.withCmd(c: _*))
     Future(cmd.exec()).map { resp =>
