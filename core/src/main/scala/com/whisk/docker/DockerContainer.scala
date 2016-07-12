@@ -8,7 +8,8 @@ case class DockerContainer(
                             stdinOpen: Boolean = false,
                             links: Map[DockerContainer, String] = Map.empty,
                             env: Seq[String] = Seq.empty,
-                            readyChecker: DockerReadyChecker = DockerReadyChecker.Always) {
+                            readyChecker: DockerReadyChecker = DockerReadyChecker.Always,
+                            volumeMaps: Map[String,(String,Boolean)] = Map.empty) {
 
   def withCommand(cmd: String*) = copy(command = Some(cmd))
 
@@ -19,4 +20,6 @@ case class DockerContainer(
   def withReadyChecker(checker: DockerReadyChecker) = copy(readyChecker = checker)
 
   def withEnv(env: String*) = copy(env = env)
+
+  def withVolumes(volumeMappings: (String, (String, Boolean))*) = copy(volumeMaps = volumeMappings.toMap)
 }
