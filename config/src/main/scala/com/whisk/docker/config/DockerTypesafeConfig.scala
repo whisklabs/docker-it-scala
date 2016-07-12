@@ -40,11 +40,14 @@ object DockerTypesafeConfig extends DockerKit {
     }
   }
 
+  case class VolumeMapping(host: String, container: String, rw: Boolean = false)
+
   case class DockerConfig (
     `image-name`: String, command: Option[Seq[String]],
     `environmental-variables`: Seq[String] = Seq.empty,
     `port-maps`: Option[Map[String, DockerConfigPortMap]],
-    `ready-checker`: Option[DockerConfigReadyChecker]) {
+    `ready-checker`: Option[DockerConfigReadyChecker],
+    `volume-maps`: Seq[VolumeMapping] = Seq.empty) {
 
     def toDockerContainer() = {
       val bindPorts =
@@ -55,12 +58,15 @@ object DockerTypesafeConfig extends DockerKit {
         `ready-checker`
           .fold[DockerReadyChecker](AlwaysReady) { _.toReadyChecker }
 
+      val volumeMaps = `volume-maps`.map(vb => (vb.container, (vb.host, vb.rw))).toMap
+
       DockerContainer(
         image = `image-name`,
         command = command,
         bindPorts = bindPorts,
         env = `environmental-variables`,
-        readyChecker = readyChecker
+        readyChecker = readyChecker,
+        volumeMaps = volumeMaps
       )
     }
   }
