@@ -10,7 +10,8 @@ import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.language.implicitConversions
 
 trait DockerKit {
-  implicit val docker: Docker = new Docker(DockerClientConfig.createDefaultConfigBuilder().build())
+  implicit val dockerFactory: DockerFactory =
+    new DockerJavaExecutorFactory(new Docker(DockerClientConfig.createDefaultConfigBuilder().build()))
 
   private lazy val log = LoggerFactory.getLogger(this.getClass)
 
@@ -25,7 +26,7 @@ trait DockerKit {
     // using Math.max to prevent unexpected zero length of docker containers
     ExecutionContext.fromExecutor(Executors.newFixedThreadPool(Math.max(1, dockerContainers.length * 2)))
   }
-  implicit lazy val dockerExecutor = new DockerJavaExecutor(docker.host, docker.client)
+  implicit lazy val dockerExecutor = dockerFactory.createExecutor()
 
   lazy val containerManager = new DockerContainerManager(dockerContainers, dockerExecutor)
 

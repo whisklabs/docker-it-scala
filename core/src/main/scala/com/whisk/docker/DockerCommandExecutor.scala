@@ -8,6 +8,16 @@ object PortProtocol extends Enumeration {
 
 case class ContainerPort(port: Int, protocol: PortProtocol.Value)
 
+object ContainerPort {
+  def parse(str: String) = {
+    val Array(p, rest @ _*) = str.split("/")
+    val proto =
+      rest.headOption.flatMap(pr => PortProtocol.values.find(_.toString.equalsIgnoreCase(pr))).getOrElse(PortProtocol.TCP)
+    ContainerPort(p.toInt, proto)
+  }
+}
+
+
 case class PortBinding(hostIp: String, hostPort: Int)
 
 case class InspectContainerResult(running: Boolean, ports: Map[ContainerPort, Seq[PortBinding]])

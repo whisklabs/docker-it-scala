@@ -40,11 +40,11 @@ trait DockerReadyChecker {
     }
   }
 
-  def within(duration: FiniteDuration)(implicit docker: DockerCommandExecutor, ec: ExecutionContext): DockerReadyChecker = {
+  def within(duration: FiniteDuration): DockerReadyChecker = {
     DockerReadyChecker.TimeLimited(this, duration)
   }
 
-  def looped(attempts: Int, delay: FiniteDuration)(implicit docker: DockerCommandExecutor, ec: ExecutionContext): DockerReadyChecker = {
+  def looped(attempts: Int, delay: FiniteDuration): DockerReadyChecker = {
     DockerReadyChecker.Looped(this, attempts, delay)
   }
 }
