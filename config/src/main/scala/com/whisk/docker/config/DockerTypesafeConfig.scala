@@ -13,14 +13,16 @@ object DockerTypesafeConfig extends DockerKit {
 
   case class DockerConfigReadyCheckerLooped(attempts: Int, delay: Int)
 
-  case class DockerConfigHttpResponseReady (
-    port: Int, path: String = "/",
-    host: Option[String], code: Int = 200,
-    within: Option[Int], looped: Option[DockerConfigReadyCheckerLooped])
+  case class DockerConfigHttpResponseReady(port: Int,
+                                           path: String = "/",
+                                           host: Option[String],
+                                           code: Int = 200,
+                                           within: Option[Int],
+                                           looped: Option[DockerConfigReadyCheckerLooped])
 
   case class DockerConfigReadyChecker(
-    `log-line`: Option[String],
-    `http-response-code`: Option[DockerConfigHttpResponseReady]) {
+      `log-line`: Option[String],
+      `http-response-code`: Option[DockerConfigHttpResponseReady]) {
 
     def httpResponseCodeReadyChecker(rr: DockerConfigHttpResponseReady) = {
       val codeChecker: DockerReadyChecker =
@@ -39,31 +41,27 @@ object DockerTypesafeConfig extends DockerKit {
     }
   }
 
-  case class DockerConfig (
-    `image-name`: String, command: Option[Seq[String]],
-    `environmental-variables`: Seq[String] = Seq.empty,
-    `port-maps`: Option[Map[String, DockerConfigPortMap]],
-    `ready-checker`: Option[DockerConfigReadyChecker],
-    `volume-maps`: Seq[VolumeMapping] = Seq.empty) {
+  case class DockerConfig(`image-name`: String,
+                          command: Option[Seq[String]],
+                          `environmental-variables`: Seq[String] = Seq.empty,
+                          `port-maps`: Option[Map[String, DockerConfigPortMap]],
+                          `ready-checker`: Option[DockerConfigReadyChecker],
+                          `volume-maps`: Seq[VolumeMapping] = Seq.empty) {
 
     def toDockerContainer() = {
-      val bindPorts =
-        `port-maps`
-          .fold(EmptyPortBindings) { _.values.map(_.asTuple).toMap }
+      val bindPorts = `port-maps`.fold(EmptyPortBindings) { _.values.map(_.asTuple).toMap }
 
-      val readyChecker =
-        `ready-checker`
-          .fold[DockerReadyChecker](AlwaysReady) { _.toReadyChecker }
+      val readyChecker = `ready-checker`.fold[DockerReadyChecker](AlwaysReady) { _.toReadyChecker }
 
       val volumeMaps = `volume-maps`.map(vb => (vb.container, (vb.host, vb.rw))).toMap
 
       DockerContainer(
-        image = `image-name`,
-        command = command,
-        bindPorts = bindPorts,
-        env = `environmental-variables`,
-        readyChecker = readyChecker,
-        volumeMappings = `volume-maps`
+          image = `image-name`,
+          command = command,
+          bindPorts = bindPorts,
+          env = `environmental-variables`,
+          readyChecker = readyChecker,
+          volumeMappings = `volume-maps`
       )
     }
   }

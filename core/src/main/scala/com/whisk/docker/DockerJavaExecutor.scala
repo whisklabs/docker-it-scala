@@ -12,22 +12,24 @@ import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.collection.JavaConverters._
 import scala.concurrent.duration.FiniteDuration
 
-class DockerJavaExecutor(override val host: String, client: DockerClient) extends DockerCommandExecutor {
+class DockerJavaExecutor(override val host: String, client: DockerClient)
+    extends DockerCommandExecutor {
 
-  override def createContainer(spec: DockerContainer)(implicit ec: ExecutionContext): Future[String] = {
+  override def createContainer(spec: DockerContainer)(
+      implicit ec: ExecutionContext): Future[String] = {
     val volumeToBind: Seq[(Volume, Bind)] = spec.volumeMappings.map { mapping =>
       val volume: Volume = new Volume(mapping.container)
       (volume, new Bind(mapping.host, volume, AccessMode.fromBoolean(mapping.rw)))
     }
 
-    val baseCmd =
-      client.createContainerCmd(spec.image)
-        .withPortSpecs(spec.bindPorts.map(kv => kv._2.fold("")(_.toString + ":") + kv._1).toSeq: _*)
-        .withExposedPorts(spec.bindPorts.keys.map(ExposedPort.tcp).toSeq: _*)
-        .withTty(spec.tty)
-        .withStdinOpen(spec.stdinOpen)
-        .withEnv(spec.env: _*)
-        .withPortBindings(
+    val baseCmd = client
+      .createContainerCmd(spec.image)
+      .withPortSpecs(spec.bindPorts.map(kv => kv._2.fold("")(_.toString + ":") + kv._1).toSeq: _*)
+      .withExposedPorts(spec.bindPorts.keys.map(ExposedPort.tcp).toSeq: _*)
+      .withTty(spec.tty)
+      .withStdinOpen(spec.stdinOpen)
+      .withEnv(spec.env: _*)
+      .withPortBindings(
           spec.bindPorts.foldLeft(new Ports()) {
             case (ps, (guestPort, Some(hostPort))) =>
               ps.bind(ExposedPort.tcp(guestPort), Ports.Binding.bindPort(hostPort))
@@ -36,16 +38,17 @@ class DockerJavaExecutor(override val host: String, client: DockerClient) extend
               ps.bind(ExposedPort.tcp(guestPort), Ports.Binding.empty())
               ps
           }
-        )
-        .withVolumes(volumeToBind.map(_._1): _*)
-        .withBinds(volumeToBind.map(_._2): _*)
+      )
+      .withVolumes(volumeToBind.map(_._1): _*)
+      .withBinds(volumeToBind.map(_._2): _*)
 
     val cmd = spec.command.fold(baseCmd)(c => baseCmd.withCmd(c: _*))
     Future(cmd.exec()).map { resp =>
       if (resp.getId != null && resp.getId != "") {
         resp.getId
       } else {
-        throw new RuntimeException(s"Cannot run container ${spec.image}: ${resp.getWarnings.mkString(", ")}")
+        throw new RuntimeException(
+            s"Cannot run container ${spec.image}: ${resp.getWarnings.mkString(", ")}")
       }
     }
   }
@@ -54,20 +57,24 @@ class DockerJavaExecutor(override val host: String, client: DockerClient) extend
     Future(client.startContainerCmd(id).exec()).map(_ => ())
   }
 
-  override def inspectContainer(id: String)(implicit ec: ExecutionContext): Future[Option[InspectContainerResult]] = {
+  override def inspectContainer(id: String)(
+      implicit ec: ExecutionContext): Future[Option[InspectContainerResult]] = {
     val resp = Future(Some(client.inspectContainerCmd(id).exec())).recover {
       case x: NotFoundException => None
     }
     val future = resp.map(_.map { result =>
-      val containerBindings =
-        Option(result.getNetworkSettings.getPorts).map(_.getBindings.asScala.toMap)
-            .getOrElse(Map())
-      val portMap = containerBindings.collect { case (exposedPort, bindings) if Option(bindings).isDefined =>
-        val p = ContainerPort(exposedPort.getPort, PortProtocol.withName(exposedPort.getProtocol.toString.toUpperCase))
-        val hostBindings: Seq[PortBinding] = bindings.map { b =>
-          PortBinding(b.getHostIp, b.getHostPortSpec.toInt)
-        }
-        p -> hostBindings
+      val containerBindings = Option(result.getNetworkSettings.getPorts)
+        .map(_.getBindings.asScala.toMap)
+        .getOrElse(Map())
+      val portMap = containerBindings.collect {
+        case (exposedPort, bindings) if Option(bindings).isDefined =>
+          val p =
+            ContainerPort(exposedPort.getPort,
+                          PortProtocol.withName(exposedPort.getProtocol.toString.toUpperCase))
+          val hostBindings: Seq[PortBinding] = bindings.map { b =>
+            PortBinding(b.getHostIp, b.getHostPortSpec.toInt)
+          }
+          p -> hostBindings
       }
       InspectContainerResult(running = true, ports = portMap)
     })
@@ -79,9 +86,11 @@ class DockerJavaExecutor(override val host: String, client: DockerClient) extend
   }
 
   override def withLogStreamLines(id: String, withErr: Boolean)(f: String => Boolean)(
-    implicit docker: DockerCommandExecutor, ec: ExecutionContext): Future[Unit] = {
+      implicit docker: DockerCommandExecutor,
+      ec: ExecutionContext): Future[Unit] = {
 
-    val cmd = client.logContainerCmd(id).withStdOut(true).withStdErr(withErr).withFollowStream(true)
+    val cmd =
+      client.logContainerCmd(id).withStdOut(true).withStdErr(withErr).withFollowStream(true)
     for {
 
       res <- {
@@ -110,7 +119,8 @@ class DockerJavaExecutor(override val host: String, client: DockerClient) extend
     Future(client.pullImageCmd(image).exec(new PullImageResultCallback()).awaitSuccess())
   }
 
-  override def remove(id: String, force: Boolean, removeVolumes: Boolean)(implicit ec: ExecutionContext): Future[Unit] = {
+  override def remove(id: String, force: Boolean, removeVolumes: Boolean)(
+      implicit ec: ExecutionContext): Future[Unit] = {
     Future(client.removeContainerCmd(id).withForce(force).withRemoveVolumes(true).exec())
   }
 

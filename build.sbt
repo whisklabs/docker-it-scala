@@ -8,6 +8,7 @@ lazy val commonSettings = Seq(
   fork in Test := true,
   licenses +=("MIT", url("http://opensource.org/licenses/MIT")),
   sonatypeProfileName := "com.whisk",
+  scalafmtConfig := Some(file(".scalafmt")),
   pomExtra in Global := {
     <url>https://github.com/whisklabs/docker-it-scala</url>
       <scm>
