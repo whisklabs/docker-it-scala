@@ -21,8 +21,10 @@ trait DockerKit {
   def dockerContainers: List[DockerContainer] = Nil
 
   // we need ExecutionContext in order to run docker.init() / docker.stop() there
-  implicit lazy val dockerExecutionContext: ExecutionContext =
-    ExecutionContext.fromExecutor(Executors.newFixedThreadPool(dockerContainers.length * 2))
+  implicit lazy val dockerExecutionContext: ExecutionContext = {
+    // using Math.max to prevent unexpected zero length of docker containers
+    ExecutionContext.fromExecutor(Executors.newFixedThreadPool(Math.max(1, dockerContainers.length * 2)))
+  }
   implicit lazy val dockerExecutor = new DockerJavaExecutor(docker.host, docker.client)
 
   lazy val containerManager = new DockerContainerManager(dockerContainers, dockerExecutor)

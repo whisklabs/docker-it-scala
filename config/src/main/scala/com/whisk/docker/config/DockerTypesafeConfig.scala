@@ -1,8 +1,7 @@
 package com.whisk.docker.config
 
 import scala.concurrent.duration._
-
-import com.whisk.docker.{ DockerContainer, DockerKit, DockerReadyChecker }
+import com.whisk.docker.{DockerContainer, DockerKit, DockerReadyChecker, VolumeMapping}
 
 object DockerTypesafeConfig extends DockerKit {
   val EmptyPortBindings: Map[Int, Option[Int]] = Map.empty
@@ -44,7 +43,8 @@ object DockerTypesafeConfig extends DockerKit {
     `image-name`: String, command: Option[Seq[String]],
     `environmental-variables`: Seq[String] = Seq.empty,
     `port-maps`: Option[Map[String, DockerConfigPortMap]],
-    `ready-checker`: Option[DockerConfigReadyChecker]) {
+    `ready-checker`: Option[DockerConfigReadyChecker],
+    `volume-maps`: Seq[VolumeMapping] = Seq.empty) {
 
     def toDockerContainer() = {
       val bindPorts =
@@ -55,12 +55,15 @@ object DockerTypesafeConfig extends DockerKit {
         `ready-checker`
           .fold[DockerReadyChecker](AlwaysReady) { _.toReadyChecker }
 
+      val volumeMaps = `volume-maps`.map(vb => (vb.container, (vb.host, vb.rw))).toMap
+
       DockerContainer(
         image = `image-name`,
         command = command,
         bindPorts = bindPorts,
         env = `environmental-variables`,
-        readyChecker = readyChecker
+        readyChecker = readyChecker,
+        volumeMappings = `volume-maps`
       )
     }
   }

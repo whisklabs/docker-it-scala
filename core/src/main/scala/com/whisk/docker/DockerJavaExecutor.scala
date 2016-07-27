@@ -4,7 +4,7 @@ import java.util.concurrent.TimeUnit
 
 import com.github.dockerjava.api.DockerClient
 import com.github.dockerjava.api.exception.NotFoundException
-import com.github.dockerjava.api.model.{ExposedPort, Frame, Ports}
+import com.github.dockerjava.api.model._
 import com.github.dockerjava.core.command.{LogContainerResultCallback, PullImageResultCallback}
 import com.google.common.io.Closeables
 
@@ -15,6 +15,11 @@ import scala.concurrent.duration.FiniteDuration
 class DockerJavaExecutor(override val host: String, client: DockerClient) extends DockerCommandExecutor {
 
   override def createContainer(spec: DockerContainer)(implicit ec: ExecutionContext): Future[String] = {
+    val volumeToBind: Seq[(Volume, Bind)] = spec.volumeMappings.map { mapping =>
+      val volume: Volume = new Volume(mapping.container)
+      (volume, new Bind(mapping.host, volume, AccessMode.fromBoolean(mapping.rw)))
+    }
+
     val baseCmd =
       client.createContainerCmd(spec.image)
         .withPortSpecs(spec.bindPorts.map(kv => kv._2.fold("")(_.toString + ":") + kv._1).toSeq: _*)
@@ -32,6 +37,9 @@ class DockerJavaExecutor(override val host: String, client: DockerClient) extend
               ps
           }
         )
+        .withVolumes(volumeToBind.map(_._1): _*)
+        .withBinds(volumeToBind.map(_._2): _*)
+
     val cmd = spec.command.fold(baseCmd)(c => baseCmd.withCmd(c: _*))
     Future(cmd.exec()).map { resp =>
       if (resp.getId != null && resp.getId != "") {

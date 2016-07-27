@@ -166,6 +166,10 @@ trait DockerMongodbService extends DockerKitConfig {
   - `SOME_MAPPING_NAME`
     - `internal` required (Int)
     - `external` optional (Int)
+- `volume-maps` optional structure (list of structures)
+  - `container` required (String)
+  - `host`      required (String)
+  - `rw`        optional (Boolean - default:false)
 
 # Testkit
 

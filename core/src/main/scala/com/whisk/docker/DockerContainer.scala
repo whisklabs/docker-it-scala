@@ -1,5 +1,7 @@
 package com.whisk.docker
 
+case class VolumeMapping(host: String, container: String, rw: Boolean = false)
+
 case class DockerContainer(
                             image: String,
                             command: Option[Seq[String]] = None,
@@ -8,7 +10,8 @@ case class DockerContainer(
                             stdinOpen: Boolean = false,
                             links: Map[DockerContainer, String] = Map.empty,
                             env: Seq[String] = Seq.empty,
-                            readyChecker: DockerReadyChecker = DockerReadyChecker.Always) {
+                            readyChecker: DockerReadyChecker = DockerReadyChecker.Always,
+                            volumeMappings: Seq[VolumeMapping] = Seq.empty) {
 
   def withCommand(cmd: String*) = copy(command = Some(cmd))
 
@@ -19,4 +22,6 @@ case class DockerContainer(
   def withReadyChecker(checker: DockerReadyChecker) = copy(readyChecker = checker)
 
   def withEnv(env: String*) = copy(env = env)
+
+  def withVolumes(volumeMappings: Seq[VolumeMapping]) = copy(volumeMappings = volumeMappings)
 }

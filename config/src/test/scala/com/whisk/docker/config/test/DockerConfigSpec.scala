@@ -1,6 +1,6 @@
 package com.whisk.docker.config.test
 
-import com.whisk.docker.{DockerReadyChecker, DockerContainer}
+import com.whisk.docker.{DockerContainer, DockerReadyChecker, VolumeMapping}
 import com.whisk.docker.config.DockerKitConfig
 import org.scalatest._
 
@@ -9,10 +9,16 @@ import scala.concurrent.duration._
 class DockerConfigSpec extends FlatSpec with Matchers with DockerKitConfig {
 
   "Config-based configurations" should "produce same containers as code-based ones" in {
+    val volumes = Seq(
+      VolumeMapping(container = "/opt/data", host = "/opt/docker/data", rw = false),
+      VolumeMapping(container = "/opt/log", host = "/opt/docker/log", rw = true)
+    )
+
     val cassandraExpected =
       DockerContainer("whisk/cassandra:2.1.8")
         .withPorts(9042 -> None)
         .withReadyChecker(DockerReadyChecker.LogLineContains("Starting listening for CQL clients on"))
+        .withVolumes(volumes)
 
     configureDockerContainer("docker.cassandra") shouldBe cassandraExpected
 
