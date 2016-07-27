@@ -72,7 +72,7 @@ lazy val scalatest =
         Seq(
           "org.scalatest" %% "scalatest" % "2.2.6",
           "ch.qos.logback" % "logback-classic" % "1.1.5" % "test"))
-    .dependsOn(core, samples % "test")
+    .dependsOn(core, testkitSpotifyImpl, samples % "test")
 
 lazy val specs2 =
   project

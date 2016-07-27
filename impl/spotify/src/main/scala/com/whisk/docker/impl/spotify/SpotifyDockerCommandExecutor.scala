@@ -1,5 +1,6 @@
 package com.whisk.docker.impl.spotify
 
+import java.nio.charset.StandardCharsets
 import java.util
 import java.util.Collections
 import java.util.function.Consumer
@@ -9,7 +10,7 @@ import com.spotify.docker.client.DockerClient.{AttachParameter, RemoveContainerP
 import com.spotify.docker.client.{DockerClient, LogMessage}
 import com.spotify.docker.client.exceptions.ContainerNotFoundException
 import com.spotify.docker.client.messages.{ContainerConfig, HostConfig, PortBinding}
-import com.whisk.docker.{DockerCommandExecutor, DockerContainer, InspectContainerResult}
+import com.whisk.docker._
 
 import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.collection.JavaConverters._
@@ -47,14 +48,12 @@ class SpotifyDockerCommandExecutor(override val host: String, client: DockerClie
   }
 
   override def inspectContainer(id: String)(implicit ec: ExecutionContext): Future[Option[InspectContainerResult]] = {
-    Future(client.inspectContainer(id)).flatMap { case info =>
-      //       info.state()
-      //      val containerBindings =
-      //        info.networkSettings().portMapping().
-      //          .getOrElse(Map())
-      println(info)
-      println(info.networkSettings().ports())
-      Future.successful(Some(InspectContainerResult(info.state().running(), Map())))
+    Future(client.inspectContainer(id)).flatMap { info =>
+      val ports = info.networkSettings().ports().asScala.collect { case (cPort, bindings) if Option(bindings).exists(!_.isEmpty) =>
+        val binds = bindings.asScala.map(b => com.whisk.docker.PortBinding(b.hostIp(), b.hostPort().toInt)).toList
+        ContainerPort.parse(cPort) -> binds
+      }.toMap
+      Future.successful(Some(InspectContainerResult(info.state().running(), ports)))
     }.recover { case t: ContainerNotFoundException =>
       None
     }
@@ -65,14 +64,16 @@ class SpotifyDockerCommandExecutor(override val host: String, client: DockerClie
 
     streamF.flatMap { stream =>
       val p = Promise[Unit]()
-      stream.forEachRemaining(new Consumer[LogMessage] {
-        override def accept(t: LogMessage): Unit = {
-          if (f(new String(t.content().array(), "utf-8"))) {
-            p.trySuccess(())
-            stream.close()
+      Future {
+        stream.forEachRemaining(new Consumer[LogMessage] {
+          override def accept(t: LogMessage): Unit = {
+            val str = StandardCharsets.US_ASCII.decode(t.content()).toString
+            if (f(str)) {
+              p.trySuccess(())
+            }
           }
-        }
-      })
+        })
+      }
       p.future
     }
   }
