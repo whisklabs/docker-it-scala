@@ -10,8 +10,8 @@ import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.language.implicitConversions
 
 trait DockerKit {
-  implicit val dockerFactory: DockerFactory =
-    new DockerJavaExecutorFactory(new Docker(DockerClientConfig.createDefaultConfigBuilder().build()))
+  implicit val dockerFactory: DockerFactory = new DockerJavaExecutorFactory(
+      new Docker(DockerClientConfig.createDefaultConfigBuilder().build()))
 
   private lazy val log = LoggerFactory.getLogger(this.getClass)
 
@@ -24,7 +24,8 @@ trait DockerKit {
   // we need ExecutionContext in order to run docker.init() / docker.stop() there
   implicit lazy val dockerExecutionContext: ExecutionContext = {
     // using Math.max to prevent unexpected zero length of docker containers
-    ExecutionContext.fromExecutor(Executors.newFixedThreadPool(Math.max(1, dockerContainers.length * 2)))
+    ExecutionContext.fromExecutor(
+        Executors.newFixedThreadPool(Math.max(1, dockerContainers.length * 2)))
   }
   implicit lazy val dockerExecutor = dockerFactory.createExecutor()
 
@@ -44,9 +45,10 @@ trait DockerKit {
   def startAllOrFail(): Unit = {
     Await.result(containerManager.pullImages(), PullImagesTimeout)
     val allRunning: Boolean = try {
-      val future: Future[Boolean] = containerManager.initReadyAll().map(_.map(_._2).forall(identity))
+      val future: Future[Boolean] =
+        containerManager.initReadyAll().map(_.map(_._2).forall(identity))
       sys.addShutdownHook(
-        containerManager.stopRmAll()
+          containerManager.stopRmAll()
       )
       Await.result(future, StartContainersTimeout)
     } catch {

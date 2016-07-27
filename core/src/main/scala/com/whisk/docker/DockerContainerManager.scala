@@ -4,7 +4,8 @@ import org.slf4j.LoggerFactory
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class DockerContainerManager(containers: Seq[DockerContainer], executor: DockerCommandExecutor)(implicit ec: ExecutionContext) {
+class DockerContainerManager(containers: Seq[DockerContainer], executor: DockerCommandExecutor)(
+    implicit ec: ExecutionContext) {
 
   private lazy val log = LoggerFactory.getLogger(this.getClass)
   private implicit val dockerExecutor = executor
@@ -33,15 +34,20 @@ class DockerContainerManager(containers: Seq[DockerContainer], executor: DockerC
   }
 
   def initReadyAll(): Future[Seq[(DockerContainerState, Boolean)]] =
-    Future.traverse(states)(_.init()).flatMap(Future.traverse(_)(c => c.isReady().map(c -> _).recover {
-      case e =>
-        log.error(e.getMessage, e)
-        c -> false
-    }))
+    Future
+      .traverse(states)(_.init())
+      .flatMap(Future.traverse(_)(c =>
+                c.isReady().map(c -> _).recover {
+          case e =>
+            log.error(e.getMessage, e)
+            c -> false
+      }))
 
   def stopRmAll(): Future[Unit] = {
     val future = Future.traverse(states)(_.remove(force = true, removeVolumes = true)).map(_ => ())
-    future.onComplete { _ => executor.close() }
+    future.onComplete { _ =>
+      executor.close()
+    }
     future
   }
 
