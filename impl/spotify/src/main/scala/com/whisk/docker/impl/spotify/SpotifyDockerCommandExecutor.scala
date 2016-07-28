@@ -88,6 +88,7 @@ class SpotifyDockerCommandExecutor(override val host: String, client: DockerClie
             val str = StandardCharsets.US_ASCII.decode(t.content()).toString
             if (f(str)) {
               p.trySuccess(())
+              Closeables.close(stream, true)
             }
           }
         })
