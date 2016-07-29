@@ -52,9 +52,23 @@ export DOCKER_HOST=tcp://127.0.0.1:2375
 
 ### Docker for Mac setup
 
+Since version `0.9.0-M2` you can use implementation with Spotify's [docker-client](https://github.com/spotify/docker-client) in Docker for Mac setup as it works better with unix socket
+ 
+```scala
+import com.spotify.docker.client.DefaultDockerClient
+import com.whisk.docker.impl.spotify.SpotifyDockerFactory
+import com.whisk.docker.{DockerFactory, DockerKit}
+
+trait MyDockerKit extends DockerKit {
+  override implicit val dockerFactory: DockerFactory =
+    new SpotifyDockerFactory(DefaultDockerClient.fromEnv().build())
+}
 ```
-export DOCKER_HOST=tcp://docker.local:2375
-export DOCKER_TLS_VERIFY=0
+
+with
+
+```
+export DOCKER_HOST=unix:///var/run/docker.sock
 ```
 
 ## Dependency
@@ -64,17 +78,26 @@ Artifacts are available for Scala 2.10 and 2.11
 Include a dependency on one of the testkits of your choice to get started.
 
 ```scala
-libraryDependencies += "com.whisk" %% "docker-testkit-specs2" % "0.6.1" % "test"
+libraryDependencies += "com.whisk" %% "docker-testkit-specs2" % "0.8.3" % "test"
 ```
 
 ```scala
-libraryDependencies += "com.whisk" %% "docker-testkit-scalatest" % "0.6.1" % "test"
+libraryDependencies += "com.whisk" %% "docker-testkit-scalatest" % "0.8.3" % "test"
 ```
 
-If you want to configure via typesafe config, also include
+If you want to configure via typesafe config (only for Scala 2.11), also include
 
 ```scala
-libraryDependencies += "com.whisk" %% "docker-testkit-config" % "0.6.1" % "test"
+libraryDependencies += "com.whisk" %% "docker-testkit-config" % "0.8.3" % "test"
+```
+
+
+### Unstable dependencies
+
+```scala
+libraryDependencies ++= Seq(
+  "com.whisk" %% "docker-testkit-scalatest" % "0.9.0-M2" % "test",
+  "com.whisk" %% "docker-testkit-impl-spotify" % "0.9.0-M2" % "test")
 ```
 
 # Sample Services
