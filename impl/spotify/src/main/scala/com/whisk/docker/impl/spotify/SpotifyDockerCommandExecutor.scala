@@ -110,7 +110,7 @@ class SpotifyDockerCommandExecutor(override val host: String, client: DockerClie
   }
 
   override def listImages()(implicit ec: ExecutionContext): Future[Set[String]] = {
-    Future(client.listImages().asScala.flatMap(_.repoTags().asScala).toSet)
+    Future(client.listImages().asScala.flatMap(img => Option(img.repoTags()).map(_.asScala).getOrElse(Seq.empty)).toSet)
   }
 
   override def pullImage(image: String)(implicit ec: ExecutionContext): Future[Unit] = {
