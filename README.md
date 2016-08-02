@@ -96,8 +96,8 @@ libraryDependencies += "com.whisk" %% "docker-testkit-config" % "0.8.3" % "test"
 
 ```scala
 libraryDependencies ++= Seq(
-  "com.whisk" %% "docker-testkit-scalatest" % "0.9.0-M2" % "test",
-  "com.whisk" %% "docker-testkit-impl-spotify" % "0.9.0-M2" % "test")
+  "com.whisk" %% "docker-testkit-scalatest" % "0.9.0-M3" % "test",
+  "com.whisk" %% "docker-testkit-impl-spotify" % "0.9.0-M3" % "test")
 ```
 
 # Sample Services
