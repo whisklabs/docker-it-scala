@@ -3,6 +3,7 @@ package com.whisk.docker.impl.spotify
 import java.nio.charset.StandardCharsets
 import java.util
 import java.util.Collections
+import java.util.concurrent.TimeUnit
 import java.util.function.Consumer
 
 import com.google.common.io.Closeables
@@ -14,6 +15,7 @@ import com.whisk.docker._
 
 import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.collection.JavaConverters._
+import scala.concurrent.duration.FiniteDuration
 
 class SpotifyDockerCommandExecutor(override val host: String, client: DockerClient)
     extends DockerCommandExecutor {
@@ -51,24 +53,34 @@ class SpotifyDockerCommandExecutor(override val host: String, client: DockerClie
 
   override def inspectContainer(id: String)(
       implicit ec: ExecutionContext): Future[Option[InspectContainerResult]] = {
-    Future(client.inspectContainer(id)).flatMap { info =>
-      val ports = info
-        .networkSettings()
-        .ports()
-        .asScala
-        .collect {
-          case (cPort, bindings) if Option(bindings).exists(!_.isEmpty) =>
-            val binds = bindings.asScala
-              .map(b => com.whisk.docker.PortBinding(b.hostIp(), b.hostPort().toInt))
-              .toList
-            ContainerPort.parse(cPort) -> binds
+
+    def inspect() =
+      Future(client.inspectContainer(id)).flatMap { info =>
+        val networkPorts = Option(info.networkSettings().ports())
+        networkPorts match {
+          case Some(p) =>
+            val ports = info
+              .networkSettings()
+              .ports()
+              .asScala
+              .collect {
+                case (cPort, bindings) if Option(bindings).exists(!_.isEmpty) =>
+                  val binds = bindings.asScala
+                    .map(b => com.whisk.docker.PortBinding(b.hostIp(), b.hostPort().toInt))
+                    .toList
+                  ContainerPort.parse(cPort) -> binds
+              }
+              .toMap
+            Future.successful(Some(InspectContainerResult(info.state().running(), ports)))
+          case None =>
+            Future.failed(new Exception("can't extract ports"))
         }
-        .toMap
-      Future.successful(Some(InspectContainerResult(info.state().running(), ports)))
-    }.recover {
-      case t: ContainerNotFoundException =>
-        None
-    }
+      }.recover {
+        case t: ContainerNotFoundException =>
+          None
+      }
+
+    RetryUtils.looped(inspect(), attempts = 5, delay = FiniteDuration(1, TimeUnit.SECONDS))
   }
 
   override def withLogStreamLines(id: String, withErr: Boolean)(f: (String) => Boolean)(
