@@ -46,7 +46,7 @@ lazy val core =
     .settings(
       name := "docker-testkit-core",
       libraryDependencies ++=
-        Seq("com.github.docker-java" % "docker-java" % "3.0.0",
+        Seq("com.github.docker-java" % "docker-java" % "3.0.1",
           "com.google.code.findbugs" % "jsr305" % "3.0.1"))
 
 lazy val testkitSpotifyImpl =
