@@ -42,6 +42,7 @@ object DockerTypesafeConfig extends DockerKit {
   }
 
   case class DockerConfig(`image-name`: String,
+                          `container-name`: Option[String],
                           command: Option[Seq[String]],
                           `environmental-variables`: Seq[String] = Seq.empty,
                           `port-maps`: Option[Map[String, DockerConfigPortMap]],
@@ -57,6 +58,7 @@ object DockerTypesafeConfig extends DockerKit {
 
       DockerContainer(
           image = `image-name`,
+          name = `container-name`,
           command = command,
           bindPorts = bindPorts,
           env = `environmental-variables`,

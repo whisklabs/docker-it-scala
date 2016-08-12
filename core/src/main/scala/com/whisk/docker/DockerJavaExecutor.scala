@@ -22,7 +22,8 @@ class DockerJavaExecutor(override val host: String, client: DockerClient)
       (volume, new Bind(mapping.host, volume, AccessMode.fromBoolean(mapping.rw)))
     }
 
-    val baseCmd = client
+    val baseCmd = {
+      val tmpCmd = client
       .createContainerCmd(spec.image)
       .withPortSpecs(spec.bindPorts.map(kv => kv._2.fold("")(_.toString + ":") + kv._1).toSeq: _*)
       .withExposedPorts(spec.bindPorts.keys.map(ExposedPort.tcp).toSeq: _*)
@@ -39,8 +40,16 @@ class DockerJavaExecutor(override val host: String, client: DockerClient)
               ps
           }
       )
+      .withLinks(
+        spec.links.map{ case ContainerLink(container, alias) =>
+          new Link(container.name.get, alias)
+        }.asJava
+      )
       .withVolumes(volumeToBind.map(_._1): _*)
       .withBinds(volumeToBind.map(_._2): _*)
+
+      spec.name.map(tmpCmd.withName).getOrElse(tmpCmd)
+    }
 
     val cmd = spec.command.fold(baseCmd)(c => baseCmd.withCmd(c: _*))
     Future(cmd.exec()).map { resp =>
