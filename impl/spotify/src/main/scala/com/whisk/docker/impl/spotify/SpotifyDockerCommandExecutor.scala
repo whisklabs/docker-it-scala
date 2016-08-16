@@ -71,7 +71,7 @@ class SpotifyDockerCommandExecutor(override val host: String, client: DockerClie
                   ContainerPort.parse(cPort) -> binds
               }
               .toMap
-            Future.successful(Some(InspectContainerResult(info.state().running(), ports)))
+            Future.successful(Some(InspectContainerResult(info.state().running(), ports, info.name())))
           case None =>
             Future.failed(new Exception("can't extract ports"))
         }

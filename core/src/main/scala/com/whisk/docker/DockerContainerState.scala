@@ -75,6 +75,12 @@ class DockerContainerState(spec: DockerContainer) {
       ec: ExecutionContext): Future[Option[InspectContainerResult]] =
     id.flatMap(docker.inspectContainer)
 
+  def getName()(implicit docker: DockerCommandExecutor,
+    ec: ExecutionContext): Future[String] = getRunningContainer.flatMap {
+    case Some(InspectContainerResult(_, _, name)) => Future.successful(name)
+    case None => Future.failed(new RuntimeException(s"Container ${spec.image} is not running"))
+  }
+
   private val _ports = SinglePromise[Map[Int, Int]]
 
   def getPorts()(implicit docker: DockerCommandExecutor,

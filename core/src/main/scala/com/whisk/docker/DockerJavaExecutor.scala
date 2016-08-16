@@ -85,7 +85,7 @@ class DockerJavaExecutor(override val host: String, client: DockerClient)
           }
           p -> hostBindings
       }
-      InspectContainerResult(running = true, ports = portMap)
+      InspectContainerResult(running = true, ports = portMap, name = result.getName())
     })
     RetryUtils.looped(future.flatMap {
       case Some(x) if x.running => Future.successful(Some(x))
