@@ -83,14 +83,37 @@ class SpotifyDockerCommandExecutor(override val host: String, client: DockerClie
     RetryUtils.looped(inspect(), attempts = 5, delay = FiniteDuration(1, TimeUnit.SECONDS))
   }
 
-  override def withLogStreamLines(id: String, withErr: Boolean)(f: (String) => Boolean)(
+  override def withLogStreamLines(id: String, withErr: Boolean)(f: String => Unit)(
       implicit docker: DockerCommandExecutor,
-      ec: ExecutionContext): Future[Unit] = {
+      ec: ExecutionContext): Unit = {
+    val baseParams = List(AttachParameter.STDOUT, AttachParameter.STREAM)
+    val logParams = if (withErr) AttachParameter.STDERR :: baseParams else baseParams
     val streamF = Future(
         client.attachContainer(id,
-                               AttachParameter.STDOUT,
-                               AttachParameter.STREAM,
-                               AttachParameter.STDERR))
+                               logParams: _*))
+
+    streamF.flatMap { stream =>
+      Future {
+        stream.forEachRemaining(new Consumer[LogMessage] {
+          override def accept(t: LogMessage): Unit = {
+            val str = StandardCharsets.US_ASCII.decode(t.content()).toString
+            f(str)
+          }
+        })
+      }
+    }
+  }
+
+  override def withLogStreamLinesRequirement(id: String, withErr: Boolean)(f: (String) => Boolean)(
+      implicit docker: DockerCommandExecutor,
+      ec: ExecutionContext): Future[Unit] = {
+    
+    val baseParams = List(AttachParameter.STDOUT, AttachParameter.STREAM)
+    val logParams = if (withErr) AttachParameter.STDERR :: baseParams else baseParams
+    
+    val streamF = Future(
+        client.attachContainer(id,
+                               logParams: _*))
 
     streamF.flatMap { stream =>
       val p = Promise[Unit]()

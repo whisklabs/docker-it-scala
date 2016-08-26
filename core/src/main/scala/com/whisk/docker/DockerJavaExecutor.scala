@@ -85,7 +85,23 @@ class DockerJavaExecutor(override val host: String, client: DockerClient)
     }, 5, FiniteDuration(2, TimeUnit.SECONDS))
   }
 
-  override def withLogStreamLines(id: String, withErr: Boolean)(f: String => Boolean)(
+  override def withLogStreamLines(id: String, withErr: Boolean)(f: String => Unit)(
+    implicit
+    docker: DockerCommandExecutor,
+    ec: ExecutionContext
+  ): Unit = {
+    val cmd =
+      client.logContainerCmd(id).withStdOut(true).withStdErr(withErr).withFollowStream(true)
+
+    cmd.exec(new LogContainerResultCallback {
+      override def onNext(item: Frame): Unit = {
+        super.onNext(item)
+        f(s"[$id] ${item.toString}")
+      }
+    })
+  }
+
+  override def withLogStreamLinesRequirement(id: String, withErr: Boolean)(f: String => Boolean)(
       implicit docker: DockerCommandExecutor,
       ec: ExecutionContext): Future[Unit] = {
 

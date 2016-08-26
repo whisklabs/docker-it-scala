@@ -2,6 +2,8 @@ package com.whisk.docker
 
 case class VolumeMapping(host: String, container: String, rw: Boolean = false)
 
+case class LogLineReceiver(withErr: Boolean, f: String => Unit)
+
 case class DockerContainer(image: String,
                            command: Option[Seq[String]] = None,
                            bindPorts: Map[Int, Option[Int]] = Map.empty,
@@ -10,7 +12,8 @@ case class DockerContainer(image: String,
                            links: Map[DockerContainer, String] = Map.empty,
                            env: Seq[String] = Seq.empty,
                            readyChecker: DockerReadyChecker = DockerReadyChecker.Always,
-                           volumeMappings: Seq[VolumeMapping] = Seq.empty) {
+                           volumeMappings: Seq[VolumeMapping] = Seq.empty,
+                           logLineReceiver: Option[LogLineReceiver] = None) {
 
   def withCommand(cmd: String*) = copy(command = Some(cmd))
 
@@ -23,4 +26,6 @@ case class DockerContainer(image: String,
   def withEnv(env: String*) = copy(env = env)
 
   def withVolumes(volumeMappings: Seq[VolumeMapping]) = copy(volumeMappings = volumeMappings)
+
+  def withLogLineReceiver(logLineReceiver: Option[LogLineReceiver]) = copy(logLineReceiver = logLineReceiver)
 }
