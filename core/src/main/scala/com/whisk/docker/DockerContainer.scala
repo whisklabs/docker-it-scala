@@ -27,5 +27,5 @@ case class DockerContainer(image: String,
 
   def withVolumes(volumeMappings: Seq[VolumeMapping]) = copy(volumeMappings = volumeMappings)
 
-  def withLogLineReceiver(logLineReceiver: Option[LogLineReceiver]) = copy(logLineReceiver = logLineReceiver)
+  def withLogLineReceiver(logLineReceiver: LogLineReceiver) = copy(logLineReceiver = Some(logLineReceiver))
 }
