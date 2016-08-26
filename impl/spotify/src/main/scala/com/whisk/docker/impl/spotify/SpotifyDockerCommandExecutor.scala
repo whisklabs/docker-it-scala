@@ -97,7 +97,7 @@ class SpotifyDockerCommandExecutor(override val host: String, client: DockerClie
         stream.forEachRemaining(new Consumer[LogMessage] {
           override def accept(t: LogMessage): Unit = {
             val str = StandardCharsets.US_ASCII.decode(t.content()).toString
-            f(s"$[$id] $str")
+            f(s"[$id] $str")
           }
         })
       }
