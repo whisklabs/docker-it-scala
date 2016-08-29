@@ -90,7 +90,8 @@ class SpotifyDockerCommandExecutor(override val host: String, client: DockerClie
         client.attachContainer(id,
                                AttachParameter.STDOUT,
                                AttachParameter.STREAM,
-                               AttachParameter.STDERR))
+                               AttachParameter.STDERR,
+                               AttachParameter.LOGS))
 
     streamF.flatMap { stream =>
       val p = Promise[Unit]()
