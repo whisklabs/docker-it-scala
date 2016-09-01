@@ -2,7 +2,48 @@ package com.whisk.docker
 
 import org.slf4j.LoggerFactory
 
+import scala.annotation.tailrec
+
 import scala.concurrent.{ExecutionContext, Future}
+
+object DockerContainerManager {
+  case class ContainerDependencyGraph(containers: Seq[DockerContainer], dependants: Option[ContainerDependencyGraph] = None)
+
+  def buildDependencyGraph(containers: Seq[DockerContainer]): ContainerDependencyGraph = {    
+    @tailrec def buildDependencyGraph(graph: ContainerDependencyGraph): ContainerDependencyGraph = graph match {
+      case ContainerDependencyGraph(Nil, Some(dependants)) => dependants
+      case ContainerDependencyGraph(containers, dependants) =>
+        containers.partition(_.links.isEmpty) match {
+          case (containersWithoutLinks, Nil) => graph
+          case (containersWithoutLinks, containersWithLinks) => 
+            val linkedContainers = containers.foldLeft(Seq[DockerContainer]()) { 
+              case (links, container) => (links ++ container.links.map(_.container))
+            }
+            val (containersWithLinksAndLinked, containersWithLinksNotLinked) = 
+              containersWithLinks.partition(linkedContainers.contains)  
+            val (containersToBeLeftAtCurrentPosition, containersToBeMovedUpALevel) = 
+              dependants.map(_.containers).getOrElse(List.empty)
+              .partition(
+                _.links.map(_.container)
+                .exists(containersWithLinksNotLinked.contains)
+              )
+
+            buildDependencyGraph(
+              ContainerDependencyGraph(
+                containers = containersWithoutLinks ++ containersWithLinksAndLinked, 
+                dependants = Some(ContainerDependencyGraph(
+                  containers = containersWithLinksNotLinked ++ containersToBeMovedUpALevel, 
+                  dependants = dependants.map(_.copy(containers = containersToBeLeftAtCurrentPosition))
+                )
+              )
+            )
+          )
+        }
+    }
+
+    buildDependencyGraph(ContainerDependencyGraph(containers))
+  }
+}
 
 class DockerContainerManager(containers: Seq[DockerContainer], executor: DockerCommandExecutor)(
     implicit ec: ExecutionContext) {
@@ -12,6 +53,7 @@ class DockerContainerManager(containers: Seq[DockerContainer], executor: DockerC
 
   private val dockerStatesMap: Map[DockerContainer, DockerContainerState] =
     containers.map(c => c -> new DockerContainerState(c))(collection.breakOut)
+
 
   val states = dockerStatesMap.values.toList
 
