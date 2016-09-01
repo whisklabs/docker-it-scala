@@ -14,34 +14,22 @@ class DockerContainerLinkingSpec extends FlatSpec with Matchers with DockerTestK
     val pongName = "pong"
     val pingAlias = "pang"
 
-    val pingService = new PingService(pingName, None)
-    val pongService = new PingService(pongName, Some(ContainerLink(pingService.container, pingAlias)))
+    val pingService = DockerContainer("nginx:1.7.11", name = Some(pingName))
+
+    val pongService = DockerContainer("nginx:1.7.11", name = Some(pongName))
+      .withLinks(ContainerLink(pingService, pingAlias))
+
+    override def dockerContainers = pingService :: pongService :: super.dockerContainers
  
   "A DockerContainer" should "be linked to the specified containers upon start" in {
-      pingService.startAllOrFail()
-      pongService.startAllOrFail()
+    val ping = cmdExecutor.inspectContainer(pingName)
+    val pongPing = cmdExecutor.inspectContainer(s"$pongName/$pingAlias")
 
-      val ping = cmdExecutor.inspectContainer(pingName)
-      val pongPing = cmdExecutor.inspectContainer(s"$pongName/$pingAlias")
-
-      whenReady(ping) { pingState =>
-        whenReady(pongPing) { pongPingState =>
-          pingState should not be empty
-          pingState shouldBe pongPingState
-        }
+    whenReady(ping) { pingState =>
+      whenReady(pongPing) { pongPingState =>
+        pingState should not be empty
+        pingState shouldBe pongPingState
       }
-
-      pingService.stopAllQuietly()
-      pongService.stopAllQuietly()
+    }
   }
-}
-
-class PingService(name: String, link: Option[ContainerLink]) extends DockerKit {
-  private val tmpContainer = DockerContainer("nginx:1.7.11", name = Some(name))
-    .withPorts(80 -> None)
-    .withReadyChecker(DockerReadyChecker.HttpResponseCode(port = 80, path = "/", host = None, code = 200)) 
-
-  val container = link.fold(tmpContainer)(link => tmpContainer.withLinks(link))
-
-  override def dockerContainers  = container :: super.dockerContainers
 }

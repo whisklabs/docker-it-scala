@@ -36,15 +36,29 @@ class DockerContainerManager(containers: Seq[DockerContainer], executor: DockerC
     }
   }
 
-  def initReadyAll(): Future[Seq[(DockerContainerState, Boolean)]] =
-    Future
-      .traverse(states)(_.init())
-      .flatMap(Future.traverse(_)(c =>
-                c.isReady().map(c -> _).recover {
+  def initReadyAll(): Future[Seq[(DockerContainerState, Boolean)]] = {
+    import DockerContainerManager._
+
+    @tailrec def initGraph(
+      graph: ContainerDependencyGraph, 
+      previousInits: Future[Seq[DockerContainerState]] = Future.successful(Seq.empty)
+    ): Future[Seq[DockerContainerState]] = {
+      val updatedInits: Future[Seq[DockerContainerState]] = previousInits.flatMap{ prevInits =>
+        Future.traverse(graph.containers.map(dockerStatesMap))(_.init()).map(prevInits ++ _)
+      }
+      if (graph.dependants.isEmpty) updatedInits else initGraph(graph.dependants.get, updatedInits)
+    }
+
+    initGraph(buildDependencyGraph(containers))
+      .flatMap(Future.traverse(_){ c =>
+        c.isReady().map(c -> _)
+        .recover {
           case e =>
             log.error(e.getMessage, e)
             c -> false
-      }))
+        }
+      })
+  }
 
   def stopRmAll(): Future[Unit] = {
     val future = Future.traverse(states)(_.remove(force = true, removeVolumes = true)).map(_ => ())
