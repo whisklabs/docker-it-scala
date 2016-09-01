@@ -8,14 +8,14 @@ import java.util.function.Consumer
 
 import com.google.common.io.Closeables
 import com.spotify.docker.client.DockerClient.{AttachParameter, RemoveContainerParam}
-import com.spotify.docker.client.{DockerClient, LogMessage}
 import com.spotify.docker.client.exceptions.ContainerNotFoundException
 import com.spotify.docker.client.messages.{ContainerConfig, HostConfig, PortBinding}
+import com.spotify.docker.client.{DockerClient, LogMessage}
 import com.whisk.docker._
 
-import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.collection.JavaConverters._
 import scala.concurrent.duration.FiniteDuration
+import scala.concurrent.{ExecutionContext, Future, Promise}
 
 class SpotifyDockerCommandExecutor(override val host: String, client: DockerClient)
     extends DockerCommandExecutor {
@@ -23,10 +23,10 @@ class SpotifyDockerCommandExecutor(override val host: String, client: DockerClie
   override def createContainer(spec: DockerContainer)(
       implicit ec: ExecutionContext): Future[String] = {
     val portBindings: Map[String, util.List[PortBinding]] = spec.bindPorts.map {
-      case (port, Some(bindTo)) =>
-        port.toString -> Collections.singletonList(PortBinding.of("0.0.0.0", bindTo))
-      case (port, None) =>
-        port.toString -> Collections.singletonList(PortBinding.randomPort("0.0.0.0"))
+      case (guestPort, DockerPortMapping(Some(hostPort), address)) =>
+        guestPort.toString -> Collections.singletonList(PortBinding.of(address, hostPort))
+      case (guestPort, DockerPortMapping(None, address)) =>
+        guestPort.toString -> Collections.singletonList(PortBinding.randomPort(address))
     }
 
     val hostConfig = HostConfig.builder().portBindings(portBindings.asJava).build()
@@ -108,12 +108,10 @@ class SpotifyDockerCommandExecutor(override val host: String, client: DockerClie
       implicit docker: DockerCommandExecutor,
       ec: ExecutionContext): Future[Unit] = {
     
-    val baseParams = List(AttachParameter.STDOUT, AttachParameter.STREAM)
+    val baseParams = List(AttachParameter.STDOUT, AttachParameter.STREAM, AttachParameter.LOGS)
     val logParams = if (withErr) AttachParameter.STDERR :: baseParams else baseParams
     
-    val streamF = Future(
-        client.attachContainer(id,
-                               logParams: _*))
+    val streamF = Future(client.attachContainer(id, logParams: _*))
 
     streamF.flatMap { stream =>
       val p = Promise[Unit]()
