@@ -75,7 +75,6 @@ object DockerContainerManager {
 
   def buildDependencyGraph(containers: Seq[DockerContainer]): ContainerDependencyGraph = {    
     @tailrec def buildDependencyGraph(graph: ContainerDependencyGraph): ContainerDependencyGraph = graph match {
-      case ContainerDependencyGraph(Nil, Some(dependants)) => dependants
       case ContainerDependencyGraph(containers, dependants) =>
         containers.partition(_.links.isEmpty) match {
           case (containersWithoutLinks, Nil) => graph
