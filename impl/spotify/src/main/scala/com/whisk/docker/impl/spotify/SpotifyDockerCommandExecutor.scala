@@ -86,7 +86,7 @@ class SpotifyDockerCommandExecutor(override val host: String, client: DockerClie
   override def withLogStreamLines(id: String, withErr: Boolean)(f: String => Unit)(
       implicit docker: DockerCommandExecutor,
       ec: ExecutionContext): Unit = {
-    val baseParams = List(AttachParameter.STDOUT, AttachParameter.STREAM)
+    val baseParams = List(AttachParameter.STDOUT, AttachParameter.STREAM, AttachParameter.LOGS)
     val logParams = if (withErr) AttachParameter.STDERR :: baseParams else baseParams
     val streamF = Future(
         client.attachContainer(id,
