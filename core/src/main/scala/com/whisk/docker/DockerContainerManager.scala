@@ -43,8 +43,8 @@ class DockerContainerManager(containers: Seq[DockerContainer], executor: DockerC
       graph: ContainerDependencyGraph, 
       previousInits: Future[Seq[DockerContainerState]] = Future.successful(Seq.empty)
     ): Future[Seq[DockerContainerState]] = {
-      val updatedInits: Future[Seq[DockerContainerState]] = previousInits.flatMap{ prevInits =>
-        Future.traverse(graph.containers.map(dockerStatesMap))(_.init()).map(prevInits ++ _)
+      val updatedInits = previousInits.flatMap{ prev =>
+        Future.traverse(graph.containers.map(dockerStatesMap))(_.init()).map(prev ++ _)
       }
       if (graph.dependants.isEmpty) updatedInits else initGraph(graph.dependants.get, updatedInits)
     }
