@@ -25,17 +25,20 @@ class DockerJavaExecutor(override val host: String, client: DockerClient)
     val baseCmd = {
       val tmpCmd = client
       .createContainerCmd(spec.image)
-      .withPortSpecs(spec.bindPorts.map(kv => kv._2.fold("")(_.toString + ":") + kv._1).toSeq: _*)
+      .withPortSpecs(spec.bindPorts.map({
+        case (guestPort, DockerPortMapping(Some(hostPort), address)) => s"$address:$hostPort:$guestPort"
+        case (guestPort, DockerPortMapping(None, address)) => s"$address::$guestPort"
+      }).toSeq: _*)
       .withExposedPorts(spec.bindPorts.keys.map(ExposedPort.tcp).toSeq: _*)
       .withTty(spec.tty)
       .withStdinOpen(spec.stdinOpen)
       .withEnv(spec.env: _*)
       .withPortBindings(
           spec.bindPorts.foldLeft(new Ports()) {
-            case (ps, (guestPort, Some(hostPort))) =>
+            case (ps, (guestPort, DockerPortMapping(Some(hostPort), address))) =>
               ps.bind(ExposedPort.tcp(guestPort), Ports.Binding.bindPort(hostPort))
               ps
-            case (ps, (guestPort, None)) =>
+            case (ps, (guestPort, DockerPortMapping(None, address))) =>
               ps.bind(ExposedPort.tcp(guestPort), Ports.Binding.empty())
               ps
           }

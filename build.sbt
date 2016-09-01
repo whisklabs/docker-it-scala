@@ -1,7 +1,7 @@
 
 lazy val commonSettings = Seq(
   organization := "com.whisk",
-  version := "0.9.0-M5",
+  version := "0.9.0-M6",
   scalaVersion := "2.11.8",
   crossScalaVersions := Seq("2.11.8", "2.10.5"),
   scalacOptions ++= Seq("-feature", "-deprecation"),
@@ -46,7 +46,7 @@ lazy val core =
     .settings(
       name := "docker-testkit-core",
       libraryDependencies ++=
-        Seq("com.github.docker-java" % "docker-java" % "3.0.1",
+        Seq("com.github.docker-java" % "docker-java" % "3.0.5",
           "com.google.code.findbugs" % "jsr305" % "3.0.1"))
 
 lazy val testkitSpotifyImpl =
