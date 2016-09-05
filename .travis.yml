@@ -6,6 +6,7 @@ before_install:
   - docker pull mongo:3.0.6
 
 language: scala
+
 scala:
   - 2.11.8
 
