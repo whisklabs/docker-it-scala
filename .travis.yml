@@ -4,7 +4,6 @@ services:
 
 before_install:
   - docker pull mongo:3.0.6
-  - docker pull elasticsearch:1.7.1
 
 language: scala
 
@@ -15,7 +14,7 @@ jdk:
   - oraclejdk8
 
 script:
-  - sbt "scalatest/test-only com.whisk.docker.MongodbServiceSpec com.whisk.docker.ElasticsearchServiceSpec"
+  - sbt "scalatest/test-only com.whisk.docker.MongodbServiceSpec"
 
 cache:
   directories:
