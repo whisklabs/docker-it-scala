@@ -1,7 +1,7 @@
 
 lazy val commonSettings = Seq(
   organization := "com.whisk",
-  version := "0.9.0-M6",
+  version := "0.9.0-M7",
   scalaVersion := "2.11.8",
   crossScalaVersions := Seq("2.11.8", "2.10.5"),
   scalacOptions ++= Seq("-feature", "-deprecation"),
@@ -54,7 +54,7 @@ lazy val testkitSpotifyImpl =
     .settings(commonSettings: _*)
     .settings(
       name := "docker-testkit-impl-spotify",
-      libraryDependencies += "com.spotify" % "docker-client" % "5.0.2")
+      libraryDependencies += "com.spotify" % "docker-client" % "5.0.2" classifier "shaded")
     .dependsOn(core)
 
 lazy val samples =
