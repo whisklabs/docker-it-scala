@@ -38,7 +38,7 @@ lazy val root =
       publish := {},
       publishLocal := {},
       packagedArtifacts := Map.empty)
-    .aggregate(core, testkitSpotifyImpl, config, scalatest, specs2)
+    .aggregate(core, testkitSpotifyImpl, testkitDockerJavaImpl, config, scalatest, specs2)
 
 lazy val core =
   project
