@@ -54,7 +54,7 @@ lazy val testkitSpotifyImpl =
     .settings(commonSettings: _*)
     .settings(
       name := "docker-testkit-impl-spotify",
-      libraryDependencies += "com.spotify" % "docker-client" % "5.0.2" classifier "shaded")
+      libraryDependencies += "com.spotify" % "docker-client" % "5.0.2")
     .dependsOn(core)
 
 lazy val samples =
