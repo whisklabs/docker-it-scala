@@ -1,11 +1,11 @@
 package com.whisk.docker
 
-import com.whisk.docker.specs2.DockerTestKit
 import org.specs2._
 import org.specs2.specification.core.Env
 
-class ZookeeperServiceSpec(env: Env) extends Specification
-    with DockerTestKit
+class ZookeeperServiceSpec(env: Env)
+    extends Specification
+    with DockerTestKitDockerJava
     with DockerZookeeperService {
 
   implicit val ee = env.executionEnv

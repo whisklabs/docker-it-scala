@@ -1,15 +1,11 @@
 package com.whisk.docker
 
-import com.whisk.docker.specs2.DockerTestKit
 import org.specs2._
-import org.specs2.matcher.ResultMatchers
-import org.specs2.specification.ExecutionEnvironment
 import org.specs2.specification.core.Env
 
-import scala.concurrent._
-
-class PostgresServiceSpec(env: Env) extends Specification
-    with DockerTestKit
+class PostgresServiceSpec(env: Env)
+    extends Specification
+    with DockerTestKitDockerJava
     with DockerPostgresService {
 
   implicit val ee = env.executionEnv

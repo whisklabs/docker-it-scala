@@ -5,7 +5,9 @@ import org.specs2.specification.core.Env
 import scala.concurrent._
 import scala.concurrent.duration._
 
-class AllAtOnceSpec(env: Env) extends Specification
+class AllAtOnceSpec(env: Env)
+    extends Specification
+    with DockerTestKitDockerJava
     with DockerElasticsearchService
     with DockerCassandraService
     with DockerNeo4jService

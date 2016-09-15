@@ -1,4 +1,4 @@
-package com.whisk.docker
+package com.whisk.docker.impl.dockerjava
 
 import java.net.InetAddress
 

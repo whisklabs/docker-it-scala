@@ -6,7 +6,9 @@ import org.specs2.specification.core.Env
 import scala.concurrent._
 import scala.concurrent.duration._
 
-class Neo4jServiceSpec(env: Env) extends Specification
+class Neo4jServiceSpec(env: Env)
+    extends Specification
+    with DockerTestKitDockerJava
     with DockerTestKit
     with DockerNeo4jService {
 

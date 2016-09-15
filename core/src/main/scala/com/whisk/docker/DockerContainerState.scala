@@ -47,7 +47,9 @@ class DockerContainerState(spec: DockerContainer) {
       s <- _id.init(docker.createContainer(spec))
       _ <- Future(docker.startContainer(s))
     } yield {
-      spec.logLineReceiver.map { case LogLineReceiver(withErr, f) => docker.withLogStreamLines(s, withErr)(f) }
+      spec.logLineReceiver.map {
+        case LogLineReceiver(withErr, f) => docker.withLogStreamLines(s, withErr)(f)
+      }
       runReadyCheck
       this
     }

@@ -5,7 +5,9 @@ import org.specs2._
 import org.specs2.specification.core.Env
 import scala.concurrent._
 
-class MongodbServiceSpec(env: Env) extends Specification
+class MongodbServiceSpec(env: Env)
+    extends Specification
+    with DockerTestKitDockerJava
     with DockerTestKit
     with DockerMongodbService {
 

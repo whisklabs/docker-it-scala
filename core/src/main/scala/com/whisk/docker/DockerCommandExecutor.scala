@@ -34,9 +34,8 @@ trait DockerCommandExecutor {
       implicit ec: ExecutionContext): Future[Option[InspectContainerResult]]
 
   def withLogStreamLines(id: String, withErr: Boolean)(f: String => Unit)(
-    implicit
-    docker: DockerCommandExecutor,
-    ec: ExecutionContext
+      implicit docker: DockerCommandExecutor,
+      ec: ExecutionContext
   ): Unit
 
   def withLogStreamLinesRequirement(id: String, withErr: Boolean)(f: String => Boolean)(
