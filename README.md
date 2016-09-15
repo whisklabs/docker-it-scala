@@ -1,6 +1,7 @@
 docker-it-scala
 =============
 
+[![Build Status](https://travis-ci.org/whisklabs/docker-it-scala.svg?branch=master)](https://travis-ci.org/whisklabs/docker-it-scala)
 [![Join the chat at https://gitter.im/whisklabs/docker-it-scala](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/whisklabs/docker-it-scala?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 Set of utility classes to make integration testing with dockerised services in Scala easy.
