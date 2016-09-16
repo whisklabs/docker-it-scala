@@ -1,6 +1,7 @@
 package com.whisk.docker
 
 import com.whisk.docker.scalatest.DockerTestKit
+import com.whisk.docker.impl.dockerjava._
 import org.scalatest._
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time._
@@ -40,7 +41,7 @@ class DockerContainerManagerSpec extends WordSpecLike with Matchers {
     }
 
     "initialize all containers taking into account their dependencies" in {
-      val dockerKit = new DockerKit {
+      val dockerKit = new DockerKit with DockerKitDockerJava {
         override def dockerContainers = containers ++ super.dockerContainers
       }
       dockerKit.startAllOrFail()
