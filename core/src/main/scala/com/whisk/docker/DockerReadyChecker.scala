@@ -133,7 +133,7 @@ object DockerReadyChecker {
                                                         ec: ExecutionContext): Future[Boolean] = {
       for {
         id <- container.id
-        _ <- docker.withLogStreamLines(id, withErr = true)(_.contains(str))
+        _ <- docker.withLogStreamLinesRequirement(id, withErr = true)(_.contains(str))
       } yield {
         true
       }

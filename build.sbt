@@ -1,7 +1,7 @@
 
 lazy val commonSettings = Seq(
   organization := "com.whisk",
-  version := "0.9.0-M6",
+  version := "0.9.0-M9",
   scalaVersion := "2.11.8",
   crossScalaVersions := Seq("2.11.8", "2.10.5"),
   scalacOptions ++= Seq("-feature", "-deprecation"),
@@ -38,16 +38,14 @@ lazy val root =
       publish := {},
       publishLocal := {},
       packagedArtifacts := Map.empty)
-    .aggregate(core, testkitSpotifyImpl, config, scalatest, specs2)
+    .aggregate(core, testkitSpotifyImpl, testkitDockerJavaImpl, config, scalatest, specs2)
 
 lazy val core =
   project
     .settings(commonSettings: _*)
     .settings(
       name := "docker-testkit-core",
-      libraryDependencies ++=
-        Seq("com.github.docker-java" % "docker-java" % "3.0.5",
-          "com.google.code.findbugs" % "jsr305" % "3.0.1"))
+      libraryDependencies += "org.slf4j" % "slf4j-api" % "1.7.21")
 
 lazy val testkitSpotifyImpl =
   project.in(file("impl/spotify"))
@@ -55,6 +53,16 @@ lazy val testkitSpotifyImpl =
     .settings(
       name := "docker-testkit-impl-spotify",
       libraryDependencies += "com.spotify" % "docker-client" % "5.0.2")
+    .dependsOn(core)
+
+lazy val testkitDockerJavaImpl =
+  project.in(file("impl/docker-java"))
+    .settings(commonSettings: _*)
+    .settings(
+      name := "docker-testkit-impl-docker-java",
+      libraryDependencies ++=
+        Seq("com.github.docker-java" % "docker-java" % "3.0.6",
+            "com.google.code.findbugs" % "jsr305" % "3.0.1"))
     .dependsOn(core)
 
 lazy val samples =
@@ -72,8 +80,8 @@ lazy val scalatest =
       libraryDependencies ++=
         Seq(
           "org.scalatest" %% "scalatest" % "2.2.6",
-          "ch.qos.logback" % "logback-classic" % "1.1.5" % "test"))
-    .dependsOn(core, testkitSpotifyImpl, samples % "test")
+          "ch.qos.logback" % "logback-classic" % "1.1.7" % "test"))
+    .dependsOn(core, testkitSpotifyImpl % "test", testkitDockerJavaImpl % "test", samples % "test")
 
 lazy val specs2 =
   project
@@ -83,8 +91,8 @@ lazy val specs2 =
       libraryDependencies ++=
         Seq(
           "org.specs2" %% "specs2-core" % "3.6.4",
-          "ch.qos.logback" % "logback-classic" % "1.1.5" % "test"))
-    .dependsOn(core, samples % "test")
+          "ch.qos.logback" % "logback-classic" % "1.1.7" % "test"))
+    .dependsOn(core, samples % "test", testkitDockerJavaImpl % "test")
 
 lazy val config =
   project
@@ -100,4 +108,4 @@ lazy val config =
         case _ => publish.value
       }
     )
-    .dependsOn(core)
+    .dependsOn(core, testkitDockerJavaImpl)

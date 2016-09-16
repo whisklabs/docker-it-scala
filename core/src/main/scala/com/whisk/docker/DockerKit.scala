@@ -2,7 +2,6 @@ package com.whisk.docker
 
 import java.util.concurrent.Executors
 
-import com.github.dockerjava.core.DefaultDockerClientConfig
 import org.slf4j.LoggerFactory
 
 import scala.concurrent.duration._
@@ -10,8 +9,7 @@ import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.language.implicitConversions
 
 trait DockerKit {
-  implicit val dockerFactory: DockerFactory = new DockerJavaExecutorFactory(
-      new Docker(DefaultDockerClientConfig.createDefaultConfigBuilder().build()))
+  implicit def dockerFactory: DockerFactory
 
   private lazy val log = LoggerFactory.getLogger(this.getClass)
 

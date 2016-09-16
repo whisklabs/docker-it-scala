@@ -83,15 +83,32 @@ class SpotifyDockerCommandExecutor(override val host: String, client: DockerClie
     RetryUtils.looped(inspect(), attempts = 5, delay = FiniteDuration(1, TimeUnit.SECONDS))
   }
 
-  override def withLogStreamLines(id: String, withErr: Boolean)(f: (String) => Boolean)(
+  override def withLogStreamLines(id: String, withErr: Boolean)(
+      f: String => Unit)(implicit docker: DockerCommandExecutor, ec: ExecutionContext): Unit = {
+    val baseParams = List(AttachParameter.STDOUT, AttachParameter.STREAM, AttachParameter.LOGS)
+    val logParams = if (withErr) AttachParameter.STDERR :: baseParams else baseParams
+    val streamF = Future(client.attachContainer(id, logParams: _*))
+
+    streamF.flatMap { stream =>
+      Future {
+        stream.forEachRemaining(new Consumer[LogMessage] {
+          override def accept(t: LogMessage): Unit = {
+            val str = StandardCharsets.US_ASCII.decode(t.content()).toString
+            f(s"[$id] $str")
+          }
+        })
+      }
+    }
+  }
+
+  override def withLogStreamLinesRequirement(id: String, withErr: Boolean)(f: (String) => Boolean)(
       implicit docker: DockerCommandExecutor,
       ec: ExecutionContext): Future[Unit] = {
-    val streamF = Future(
-        client.attachContainer(id,
-                               AttachParameter.STDOUT,
-                               AttachParameter.STREAM,
-                               AttachParameter.STDERR,
-                               AttachParameter.LOGS))
+
+    val baseParams = List(AttachParameter.STDOUT, AttachParameter.STREAM, AttachParameter.LOGS)
+    val logParams = if (withErr) AttachParameter.STDERR :: baseParams else baseParams
+
+    val streamF = Future(client.attachContainer(id, logParams: _*))
 
     streamF.flatMap { stream =>
       val p = Promise[Unit]()
@@ -111,7 +128,12 @@ class SpotifyDockerCommandExecutor(override val host: String, client: DockerClie
   }
 
   override def listImages()(implicit ec: ExecutionContext): Future[Set[String]] = {
-    Future(client.listImages().asScala.flatMap(img => Option(img.repoTags()).map(_.asScala).getOrElse(Seq.empty)).toSet)
+    Future(
+        client
+          .listImages()
+          .asScala
+          .flatMap(img => Option(img.repoTags()).map(_.asScala).getOrElse(Seq.empty))
+          .toSet)
   }
 
   override def pullImage(image: String)(implicit ec: ExecutionContext): Future[Unit] = {

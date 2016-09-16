@@ -1,0 +1,29 @@
+sudo: true
+services:
+  - docker
+
+before_install:
+  - docker pull mongo:3.0.6
+  - docker pull elasticsearch:1.7.1
+
+language: scala
+
+scala:
+  - 2.11.8
+
+jdk:
+  - oraclejdk8
+
+script:
+  - sbt "scalatest/test-only com.whisk.docker.MongodbServiceSpec" #spotify executor
+  - sbt "scalatest/test-only com.whisk.docker.ElasticsearchServiceSpec"  #docker-java executor
+
+cache:
+  directories:
+    - $HOME/.ivy2/cache
+    - $HOME/.sbt/boot/
+
+before_cache:
+  # Tricks to avoid unnecessary cache updates
+  - find $HOME/.ivy2 -name "ivydata-*.properties" -delete
+  - find $HOME/.sbt -name "*.lock" -delete
