@@ -80,7 +80,8 @@ lazy val scalatest =
       libraryDependencies ++=
         Seq(
           "org.scalatest" %% "scalatest" % "2.2.6",
-          "ch.qos.logback" % "logback-classic" % "1.1.7" % "test"))
+          "ch.qos.logback" % "logback-classic" % "1.1.7" % "test",
+          "org.postgresql" % "postgresql" % "9.4.1210" % "test"))
     .dependsOn(core, testkitSpotifyImpl % "test", testkitDockerJavaImpl % "test", samples % "test")
 
 lazy val specs2 =
@@ -91,7 +92,8 @@ lazy val specs2 =
       libraryDependencies ++=
         Seq(
           "org.specs2" %% "specs2-core" % "3.6.4",
-          "ch.qos.logback" % "logback-classic" % "1.1.7" % "test"))
+          "ch.qos.logback" % "logback-classic" % "1.1.7" % "test",
+          "org.postgresql" % "postgresql" % "9.4.1210" % "test"))
     .dependsOn(core, samples % "test", testkitDockerJavaImpl % "test")
 
 lazy val config =
