@@ -89,7 +89,12 @@ class DockerJavaExecutor(override val host: String, client: DockerClient)
           }
           p -> hostBindings
       }
-      InspectContainerResult(running = true, ports = portMap, name = result.getName())
+      val addresses = Option(result.getNetworkSettings.getNetworks)
+        .map(_.asScala)
+        .getOrElse(Map.empty[String, ContainerNetwork])
+        .map(e => Option(e._2.getIpAddress)).collect { case Some(ip) => ip }.toSeq
+      
+      InspectContainerResult(running = true, ports = portMap, name = result.getName(), addresses)
     })
     RetryUtils.looped(future.flatMap {
       case Some(x) if x.running => Future.successful(Some(x))

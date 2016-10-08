@@ -9,7 +9,7 @@ import java.util.function.Consumer
 import com.google.common.io.Closeables
 import com.spotify.docker.client.DockerClient.{AttachParameter, RemoveContainerParam}
 import com.spotify.docker.client.exceptions.ContainerNotFoundException
-import com.spotify.docker.client.messages.{ContainerConfig, HostConfig, PortBinding}
+import com.spotify.docker.client.messages.{ContainerConfig, HostConfig, PortBinding, AttachedNetwork}
 import com.spotify.docker.client.{DockerClient, LogMessage}
 import com.whisk.docker._
 
@@ -71,7 +71,12 @@ class SpotifyDockerCommandExecutor(override val host: String, client: DockerClie
                   ContainerPort.parse(cPort) -> binds
               }
               .toMap
-            Future.successful(Some(InspectContainerResult(info.state().running(), ports, info.name())))
+            val addresses = Option(info.networkSettings().networks())
+              .map(_.asScala)
+              .getOrElse(Map.empty[String, AttachedNetwork])
+              .map(e => Option(e._2.ipAddress)).collect { case Some(ip) => ip }.toSeq
+
+            Future.successful(Some(InspectContainerResult(info.state().running(), ports, info.name(), addresses)))
           case None =>
             Future.failed(new Exception("can't extract ports"))
         }
