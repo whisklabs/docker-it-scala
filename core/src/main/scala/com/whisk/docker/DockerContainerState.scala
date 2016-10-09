@@ -80,7 +80,13 @@ class DockerContainerState(spec: DockerContainer) {
 
   def getName()(implicit docker: DockerCommandExecutor,
     ec: ExecutionContext): Future[String] = getRunningContainer.flatMap {
-    case Some(InspectContainerResult(_, _, name)) => Future.successful(name)
+    case Some(InspectContainerResult(_, _, name, _)) => Future.successful(name)
+    case None => Future.failed(new RuntimeException(s"Container ${spec.image} is not running"))
+  }
+
+  def getIpAddresses()(implicit docker: DockerCommandExecutor,
+    ec: ExecutionContext): Future[Seq[String]] = getRunningContainer.flatMap {
+    case Some(InspectContainerResult(_, _, _, addresses)) => Future.successful(addresses)
     case None => Future.failed(new RuntimeException(s"Container ${spec.image} is not running"))
   }
 

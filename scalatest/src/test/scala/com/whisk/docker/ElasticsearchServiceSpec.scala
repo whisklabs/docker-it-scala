@@ -16,6 +16,8 @@ class ElasticsearchServiceSpec
 
   "elasticsearch container" should "be ready" in {
     isContainerReady(elasticsearchContainer).futureValue shouldBe true
+    elasticsearchContainer.getPorts().futureValue.get(9300) should not be empty
+    elasticsearchContainer.getIpAddresses().futureValue should not be (Seq.empty)
   }
 
 }
