@@ -4,7 +4,7 @@ import java.util.concurrent.TimeUnit
 
 import com.github.dockerjava.api.DockerClient
 import com.github.dockerjava.api.exception.NotFoundException
-import com.github.dockerjava.api.model.{PortBinding => _, ContainerPort => _, _ }
+import com.github.dockerjava.api.model.{PortBinding => _, ContainerPort => _, _}
 import com.github.dockerjava.core.command.{LogContainerResultCallback, PullImageResultCallback}
 import com.google.common.io.Closeables
 import com.whisk.docker._
@@ -25,32 +25,36 @@ class DockerJavaExecutor(override val host: String, client: DockerClient)
 
     val baseCmd = {
       val tmpCmd = client
-      .createContainerCmd(spec.image)
-      .withPortSpecs(spec.bindPorts.map({
-        case (guestPort, DockerPortMapping(Some(hostPort), address)) => s"$address:$hostPort:$guestPort"
-        case (guestPort, DockerPortMapping(None, address)) => s"$address::$guestPort"
-      }).toSeq: _*)
-      .withExposedPorts(spec.bindPorts.keys.map(ExposedPort.tcp).toSeq: _*)
-      .withTty(spec.tty)
-      .withStdinOpen(spec.stdinOpen)
-      .withEnv(spec.env: _*)
-      .withPortBindings(
-          spec.bindPorts.foldLeft(new Ports()) {
-            case (ps, (guestPort, DockerPortMapping(Some(hostPort), address))) =>
-              ps.bind(ExposedPort.tcp(guestPort), Ports.Binding.bindPort(hostPort))
-              ps
-            case (ps, (guestPort, DockerPortMapping(None, address))) =>
-              ps.bind(ExposedPort.tcp(guestPort), Ports.Binding.empty())
-              ps
-          }
-      )
-      .withLinks(
-        spec.links.map{ case ContainerLink(container, alias) =>
-          new Link(container.name.get, alias)
-        }.asJava
-      )
-      .withVolumes(volumeToBind.map(_._1): _*)
-      .withBinds(volumeToBind.map(_._2): _*)
+        .createContainerCmd(spec.image)
+        .withPortSpecs(spec.bindPorts
+              .map({
+            case (guestPort, DockerPortMapping(Some(hostPort), address)) =>
+              s"$address:$hostPort:$guestPort"
+            case (guestPort, DockerPortMapping(None, address)) => s"$address::$guestPort"
+          })
+              .toSeq: _*)
+        .withExposedPorts(spec.bindPorts.keys.map(ExposedPort.tcp).toSeq: _*)
+        .withTty(spec.tty)
+        .withStdinOpen(spec.stdinOpen)
+        .withEnv(spec.env: _*)
+        .withPortBindings(
+            spec.bindPorts.foldLeft(new Ports()) {
+              case (ps, (guestPort, DockerPortMapping(Some(hostPort), address))) =>
+                ps.bind(ExposedPort.tcp(guestPort), Ports.Binding.bindPort(hostPort))
+                ps
+              case (ps, (guestPort, DockerPortMapping(None, address))) =>
+                ps.bind(ExposedPort.tcp(guestPort), Ports.Binding.empty())
+                ps
+            }
+        )
+        .withLinks(
+            spec.links.map {
+              case ContainerLink(container, alias) =>
+                new Link(container.name.get, alias)
+            }.asJava
+        )
+        .withVolumes(volumeToBind.map(_._1): _*)
+        .withBinds(volumeToBind.map(_._2): _*)
 
       spec.name.map(tmpCmd.withName).getOrElse(tmpCmd)
     }
@@ -89,12 +93,19 @@ class DockerJavaExecutor(override val host: String, client: DockerClient)
           }
           p -> hostBindings
       }
-      val addresses = Option(result.getNetworkSettings.getNetworks)
-        .map(_.asScala)
-        .getOrElse(Map.empty[String, ContainerNetwork])
-        .map(e => Option(e._2.getIpAddress)).collect { case Some(ip) => ip }.toSeq
-      
-      InspectContainerResult(running = true, ports = portMap, name = result.getName(), addresses)
+
+      val addresses: Iterable[String] = for {
+        networks <- Option(result.getNetworkSettings.getNetworks).map(_.asScala).toSeq
+        (key, network) <- networks
+        ip <- Option(network.getIpAddress)
+      } yield {
+        ip
+      }
+
+      InspectContainerResult(running = true,
+                             ports = portMap,
+                             name = result.getName,
+                             ipAddresses = addresses.toSeq)
     })
     RetryUtils.looped(future.flatMap {
       case Some(x) if x.running => Future.successful(Some(x))
@@ -104,9 +115,8 @@ class DockerJavaExecutor(override val host: String, client: DockerClient)
   }
 
   override def withLogStreamLines(id: String, withErr: Boolean)(f: String => Unit)(
-    implicit
-    docker: DockerCommandExecutor,
-    ec: ExecutionContext
+      implicit docker: DockerCommandExecutor,
+      ec: ExecutionContext
   ): Unit = {
     val cmd =
       client.logContainerCmd(id).withStdOut(true).withStdErr(withErr).withFollowStream(true)

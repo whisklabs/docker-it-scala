@@ -47,7 +47,7 @@ class DockerContainerState(spec: DockerContainer) {
       s <- _id.init(docker.createContainer(spec))
       _ <- Future(docker.startContainer(s))
     } yield {
-      spec.logLineReceiver.map {
+      spec.logLineReceiver.foreach {
         case LogLineReceiver(withErr, f) => docker.withLogStreamLines(s, withErr)(f)
       }
       runReadyCheck
@@ -78,15 +78,15 @@ class DockerContainerState(spec: DockerContainer) {
       ec: ExecutionContext): Future[Option[InspectContainerResult]] =
     id.flatMap(docker.inspectContainer)
 
-  def getName()(implicit docker: DockerCommandExecutor,
-    ec: ExecutionContext): Future[String] = getRunningContainer.flatMap {
-    case Some(InspectContainerResult(_, _, name, _)) => Future.successful(name)
-    case None => Future.failed(new RuntimeException(s"Container ${spec.image} is not running"))
-  }
+  def getName()(implicit docker: DockerCommandExecutor, ec: ExecutionContext): Future[String] =
+    getRunningContainer.flatMap {
+      case Some(res) => Future.successful(res.name)
+      case None => Future.failed(new RuntimeException(s"Container ${spec.image} is not running"))
+    }
 
   def getIpAddresses()(implicit docker: DockerCommandExecutor,
-    ec: ExecutionContext): Future[Seq[String]] = getRunningContainer.flatMap {
-    case Some(InspectContainerResult(_, _, _, addresses)) => Future.successful(addresses)
+                       ec: ExecutionContext): Future[Seq[String]] = getRunningContainer.flatMap {
+    case Some(res) => Future.successful(res.ipAddresses)
     case None => Future.failed(new RuntimeException(s"Container ${spec.image} is not running"))
   }
 

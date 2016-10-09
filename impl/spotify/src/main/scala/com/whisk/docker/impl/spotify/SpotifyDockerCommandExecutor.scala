@@ -71,12 +71,21 @@ class SpotifyDockerCommandExecutor(override val host: String, client: DockerClie
                   ContainerPort.parse(cPort) -> binds
               }
               .toMap
-            val addresses = Option(info.networkSettings().networks())
-              .map(_.asScala)
-              .getOrElse(Map.empty[String, AttachedNetwork])
-              .map(e => Option(e._2.ipAddress)).collect { case Some(ip) => ip }.toSeq
 
-            Future.successful(Some(InspectContainerResult(info.state().running(), ports, info.name(), addresses)))
+            val addresses: Iterable[String] = for {
+              networks <- Option(info.networkSettings().networks()).map(_.asScala).toSeq
+              (key, network) <- networks
+              ip <- Option(network.ipAddress)
+            } yield {
+              ip
+            }
+
+            Future.successful(
+                Some(
+                    InspectContainerResult(info.state().running(),
+                                           ports,
+                                           info.name(),
+                                           addresses.toSeq)))
           case None =>
             Future.failed(new Exception("can't extract ports"))
         }

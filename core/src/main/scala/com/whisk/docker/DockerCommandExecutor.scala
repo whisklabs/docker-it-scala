@@ -20,7 +20,10 @@ object ContainerPort {
 
 case class PortBinding(hostIp: String, hostPort: Int)
 
-case class InspectContainerResult(running: Boolean, ports: Map[ContainerPort, Seq[PortBinding]], name: String, ipAddresses: Seq[String])
+case class InspectContainerResult(running: Boolean,
+                                  ports: Map[ContainerPort, Seq[PortBinding]],
+                                  name: String,
+                                  ipAddresses: Seq[String])
 
 trait DockerCommandExecutor {
 

@@ -15,7 +15,6 @@ class DockerContainerManager(containers: Seq[DockerContainer], executor: DockerC
   private val dockerStatesMap: Map[DockerContainer, DockerContainerState] =
     containers.map(c => c -> new DockerContainerState(c))(collection.breakOut)
 
-
   val states = dockerStatesMap.values.toList
 
   def getContainerState(container: DockerContainer): DockerContainerState = {
@@ -39,25 +38,24 @@ class DockerContainerManager(containers: Seq[DockerContainer], executor: DockerC
   def initReadyAll(): Future[Seq[(DockerContainerState, Boolean)]] = {
     import DockerContainerManager._
 
-    @tailrec def initGraph(
-      graph: ContainerDependencyGraph, 
-      previousInits: Future[Seq[DockerContainerState]] = Future.successful(Seq.empty)
+    @tailrec
+    def initGraph(
+        graph: ContainerDependencyGraph,
+        previousInits: Future[Seq[DockerContainerState]] = Future.successful(Seq.empty)
     ): Future[Seq[DockerContainerState]] = {
-      val updatedInits = previousInits.flatMap{ prev =>
+      val updatedInits = previousInits.flatMap { prev =>
         Future.traverse(graph.containers.map(dockerStatesMap))(_.init()).map(prev ++ _)
       }
       if (graph.dependants.isEmpty) updatedInits else initGraph(graph.dependants.get, updatedInits)
     }
 
-    initGraph(buildDependencyGraph(containers))
-      .flatMap(Future.traverse(_){ c =>
-        c.isReady().map(c -> _)
-        .recover {
-          case e =>
-            log.error(e.getMessage, e)
-            c -> false
-        }
-      })
+    initGraph(buildDependencyGraph(containers)).flatMap(Future.traverse(_) { c =>
+      c.isReady().map(c -> _).recover {
+        case e =>
+          log.error(e.getMessage, e)
+          c -> false
+      }
+    })
   }
 
   def stopRmAll(): Future[Unit] = {
@@ -71,38 +69,41 @@ class DockerContainerManager(containers: Seq[DockerContainer], executor: DockerC
 }
 
 object DockerContainerManager {
-  case class ContainerDependencyGraph(containers: Seq[DockerContainer], dependants: Option[ContainerDependencyGraph] = None)
+  case class ContainerDependencyGraph(containers: Seq[DockerContainer],
+                                      dependants: Option[ContainerDependencyGraph] = None)
 
-  def buildDependencyGraph(containers: Seq[DockerContainer]): ContainerDependencyGraph = {    
-    @tailrec def buildDependencyGraph(graph: ContainerDependencyGraph): ContainerDependencyGraph = graph match {
-      case ContainerDependencyGraph(containers, dependants) =>
-        containers.partition(_.links.isEmpty) match {
-          case (containersWithoutLinks, Nil) => graph
-          case (containersWithoutLinks, containersWithLinks) => 
-            val linkedContainers = containers.foldLeft(Seq[DockerContainer]()) { 
-              case (links, container) => (links ++ container.links.map(_.container))
-            }
-            val (containersWithLinksAndLinked, containersWithLinksNotLinked) = 
-              containersWithLinks.partition(linkedContainers.contains)  
-            val (containersToBeLeftAtCurrentPosition, containersToBeMovedUpALevel) = 
-              dependants.map(_.containers).getOrElse(List.empty)
-              .partition(
-                _.links.map(_.container)
-                .exists(containersWithLinksNotLinked.contains)
-              )
-
-            buildDependencyGraph(
-              ContainerDependencyGraph(
-                containers = containersWithoutLinks ++ containersWithLinksAndLinked, 
-                dependants = Some(ContainerDependencyGraph(
-                  containers = containersWithLinksNotLinked ++ containersToBeMovedUpALevel, 
-                  dependants = dependants.map(_.copy(containers = containersToBeLeftAtCurrentPosition))
+  def buildDependencyGraph(containers: Seq[DockerContainer]): ContainerDependencyGraph = {
+    @tailrec def buildDependencyGraph(graph: ContainerDependencyGraph): ContainerDependencyGraph =
+      graph match {
+        case ContainerDependencyGraph(containers, dependants) =>
+          containers.partition(_.links.isEmpty) match {
+            case (containersWithoutLinks, Nil) => graph
+            case (containersWithoutLinks, containersWithLinks) =>
+              val linkedContainers = containers.foldLeft(Seq[DockerContainer]()) {
+                case (links, container) => (links ++ container.links.map(_.container))
+              }
+              val (containersWithLinksAndLinked, containersWithLinksNotLinked) =
+                containersWithLinks.partition(linkedContainers.contains)
+              val (containersToBeLeftAtCurrentPosition, containersToBeMovedUpALevel) = dependants
+                .map(_.containers)
+                .getOrElse(List.empty)
+                .partition(
+                    _.links.map(_.container).exists(containersWithLinksNotLinked.contains)
                 )
+
+              buildDependencyGraph(
+                  ContainerDependencyGraph(
+                      containers = containersWithoutLinks ++ containersWithLinksAndLinked,
+                      dependants = Some(
+                          ContainerDependencyGraph(
+                              containers = containersWithLinksNotLinked ++ containersToBeMovedUpALevel,
+                              dependants = dependants.map(
+                                  _.copy(containers = containersToBeLeftAtCurrentPosition))
+                          ))
+                  )
               )
-            )
-          )
-        }
-    }
+          }
+      }
 
     buildDependencyGraph(ContainerDependencyGraph(containers))
   }
