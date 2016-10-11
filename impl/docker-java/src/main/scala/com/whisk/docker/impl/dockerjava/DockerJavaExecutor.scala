@@ -156,7 +156,13 @@ class DockerJavaExecutor(override val host: String, client: DockerClient)
   }
 
   override def listImages()(implicit ec: ExecutionContext): Future[Set[String]] = {
-    Future(client.listImagesCmd().exec().asScala.flatMap(_.getRepoTags).toSet)
+    Future(
+        client
+          .listImagesCmd()
+          .exec()
+          .asScala
+          .flatMap(img => Option(img.getRepoTags).getOrElse(Array()))
+          .toSet)
   }
 
   override def pullImage(image: String)(implicit ec: ExecutionContext): Future[Unit] = {
