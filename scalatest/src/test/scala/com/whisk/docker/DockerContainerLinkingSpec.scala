@@ -1,17 +1,18 @@
 package com.whisk.docker
 
-import com.whisk.docker.scalatest.DockerTestKit
-import com.whisk.docker.impl.dockerjava._
 import org.scalatest._
-import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.time._
+import concurrent.ScalaFutures
+import time._
 
-class DockerContainerLinkingSpec extends FlatSpec 
+import impl.dockerjava._
+import impl.spotify._
+import scalatest.DockerTestKit
+
+abstract class DockerContainerLinkingSpec extends FlatSpec
   with Matchers
-  with DockerTestKit
-  with DockerKitDockerJava {
-     
-    val cmdExecutor = implicitly[DockerCommandExecutor]
+  with DockerTestKit {
+
+    lazy val cmdExecutor = implicitly[DockerCommandExecutor]
     implicit val pc = PatienceConfig(Span(20, Seconds), Span(1, Second))
 
     val pingName = "ping"
@@ -24,7 +25,7 @@ class DockerContainerLinkingSpec extends FlatSpec
       .withLinks(ContainerLink(pingService, pingAlias))
 
     override def dockerContainers = pingService :: pongService :: super.dockerContainers
- 
+
   "A DockerContainer" should "be linked to the specified containers upon start" in {
     val ping = cmdExecutor.inspectContainer(pingName)
     val pongPing = cmdExecutor.inspectContainer(s"$pongName/$pingAlias")
@@ -37,3 +38,6 @@ class DockerContainerLinkingSpec extends FlatSpec
     }
   }
 }
+
+class SpotifyDockerContainerLinkingSpec extends DockerContainerLinkingSpec with DockerKitSpotify
+class DockerJavaDockerContainerLinkingSpec extends DockerContainerLinkingSpec with DockerKitDockerJava
