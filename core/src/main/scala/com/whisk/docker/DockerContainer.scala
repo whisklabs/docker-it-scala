@@ -8,9 +8,7 @@ case class ContainerLink(container: DockerContainer, alias: String) {
 
 case class LogLineReceiver(withErr: Boolean, f: String => Unit)
 
-
 case class DockerPortMapping(hostPort: Option[Int] = None, address: String = "0.0.0.0")
-
 
 case class DockerContainer(image: String,
                            name: Option[String] = None,

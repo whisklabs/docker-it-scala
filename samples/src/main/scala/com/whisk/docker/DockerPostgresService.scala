@@ -16,7 +16,7 @@ trait DockerPostgresService extends DockerKit {
     .withPorts((PostgresAdvertisedPort, Some(PostgresExposedPort)))
     .withEnv(s"POSTGRES_USER=$PostgresUser", s"POSTGRES_PASSWORD=$PostgresPassword")
     .withReadyChecker(
-      new PostgresReadyChecker(PostgresUser, PostgresPassword, Some(PostgresExposedPort)).looped(15, 1 second)
+      new PostgresReadyChecker(PostgresUser, PostgresPassword, Some(PostgresExposedPort)).looped(15, 1.second)
     )
 
   abstract override def dockerContainers: List[DockerContainer] =

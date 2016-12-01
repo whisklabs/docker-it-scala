@@ -17,5 +17,6 @@ class MongodbServiceSpec
   "mongodb node" should "be ready with log line checker" in {
     isContainerReady(mongodbContainer).futureValue shouldBe true
     mongodbContainer.getPorts().futureValue.get(27017) should not be empty
+    mongodbContainer.getIpAddresses().futureValue should not be Seq.empty
   }
 }
