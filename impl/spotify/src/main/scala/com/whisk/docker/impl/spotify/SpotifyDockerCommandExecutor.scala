@@ -29,7 +29,16 @@ class SpotifyDockerCommandExecutor(override val host: String, client: DockerClie
         guestPort.toString -> Collections.singletonList(PortBinding.randomPort(address))
     }
 
-    val hostConfig = HostConfig.builder().portBindings(portBindings.asJava).build()
+    val hostConfig = {
+      val hostConfigBase = HostConfig
+        .builder()
+        .portBindings(portBindings.asJava)
+
+      val links = spec.links.map{ case ContainerLink(container, alias) => s"${container.name.get}:$alias"}
+
+      val hostConfigBuilder = if (links.isEmpty) hostConfigBase else hostConfigBase.links(links.asJava)
+      hostConfigBuilder.build()
+    }
 
     val builder = ContainerConfig
       .builder()
@@ -42,7 +51,9 @@ class SpotifyDockerCommandExecutor(override val host: String, client: DockerClie
 
     val containerConfig = spec.command.fold(builder)(c => builder.cmd(c: _*)).build()
 
-    val creation = Future(client.createContainer(containerConfig))
+    val creation = Future(
+      spec.name.fold(client.createContainer(containerConfig))(client.createContainer(containerConfig, _))
+    )
 
     creation.map(_.id)
   }
