@@ -3,12 +3,14 @@ lazy val commonSettings = Seq(
   organization := "com.whisk",
   version := "0.9.0-RC1",
   scalaVersion := "2.11.8",
-  crossScalaVersions := Seq("2.11.8", "2.10.5"),
+  crossScalaVersions := Seq("2.12.1", "2.11.8", "2.10.5"),
   scalacOptions ++= Seq("-feature", "-deprecation"),
   fork in Test := true,
   licenses +=("MIT", url("http://opensource.org/licenses/MIT")),
   sonatypeProfileName := "com.whisk",
   scalafmtConfig := Some(file(".scalafmt")),
+  // TODO Remove once this workaround no longer needed (https://github.com/sbt/sbt/issues/2786):
+  ivyScala := { ivyScala.value map {_.copy(overrideScalaVersion = sbtPlugin.value)} },
   pomExtra in Global := {
     <url>https://github.com/whisklabs/docker-it-scala</url>
       <scm>
@@ -79,19 +81,19 @@ lazy val scalatest =
       name := "docker-testkit-scalatest",
       libraryDependencies ++=
         Seq(
-          "org.scalatest" %% "scalatest" % "2.2.6",
+          "org.scalatest" %% "scalatest" % "3.0.1",
           "ch.qos.logback" % "logback-classic" % "1.1.7" % "test",
           "org.postgresql" % "postgresql" % "9.4.1210" % "test"))
     .dependsOn(core, testkitSpotifyImpl % "test", testkitDockerJavaImpl % "test", samples % "test")
 
 lazy val specs2 =
-  project
+   project
     .settings(commonSettings: _*)
     .settings(
       name := "docker-testkit-specs2",
       libraryDependencies ++=
         Seq(
-          "org.specs2" %% "specs2-core" % "3.6.4",
+          "org.specs2" %% "specs2-core" % "3.8.6",
           "ch.qos.logback" % "logback-classic" % "1.1.7" % "test",
           "org.postgresql" % "postgresql" % "9.4.1210" % "test"))
     .dependsOn(core, samples % "test", testkitDockerJavaImpl % "test")
@@ -103,8 +105,8 @@ lazy val config =
       name := "docker-testkit-config",
       libraryDependencies ++=
         Seq(
-          "net.ceedubs" %% "ficus" % "1.1.2",
-          "org.scalatest" %% "scalatest" % "2.2.6" % "test"),
+          "com.iheart" %% "ficus" % "1.4.0",
+          "org.scalatest" %% "scalatest" % "3.0.1" % "test"),
       publish := scalaVersion map {
         case x if x.startsWith("2.10") => {}
         case _ => publish.value
