@@ -55,6 +55,8 @@ class DockerJavaExecutor(override val host: String, client: DockerClient)
         )
         .withVolumes(volumeToBind.map(_._1): _*)
         .withBinds(volumeToBind.map(_._2): _*)
+        .withOption(spec.user) { case (config, user) => config.withUser(user) }
+        .withOption(spec.hostname) { case (config, hostName) => config.withHostName(hostName) }
 
       spec.name.map(tmpCmd.withName).getOrElse(tmpCmd)
     }
