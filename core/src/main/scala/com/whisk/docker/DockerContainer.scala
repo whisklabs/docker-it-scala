@@ -20,7 +20,9 @@ case class DockerContainer(image: String,
                            env: Seq[String] = Seq.empty,
                            readyChecker: DockerReadyChecker = DockerReadyChecker.Always,
                            volumeMappings: Seq[VolumeMapping] = Seq.empty,
-                           logLineReceiver: Option[LogLineReceiver] = None) {
+                           logLineReceiver: Option[LogLineReceiver] = None,
+                           user: Option[String] = None,
+                           hostname: Option[String] = None) {
 
   def withCommand(cmd: String*) = copy(command = Some(cmd))
 
@@ -39,4 +41,8 @@ case class DockerContainer(image: String,
 
   def withLogLineReceiver(logLineReceiver: LogLineReceiver) =
     copy(logLineReceiver = Some(logLineReceiver))
+
+  def withUser(user: String) = copy(user = Some(user))
+
+  def withHostname(hostname: String) = copy(hostname = Some(hostname))
 }

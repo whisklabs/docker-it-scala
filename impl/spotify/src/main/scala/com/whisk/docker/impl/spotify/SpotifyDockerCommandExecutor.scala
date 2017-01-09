@@ -40,6 +40,8 @@ class SpotifyDockerCommandExecutor(override val host: String, client: DockerClie
       hostConfigBuilder.build()
     }
 
+
+
     val builder = ContainerConfig
       .builder()
       .image(spec.image)
@@ -48,6 +50,8 @@ class SpotifyDockerCommandExecutor(override val host: String, client: DockerClie
       .tty(spec.tty)
       .attachStdin(spec.stdinOpen)
       .env(spec.env: _*)
+      .withOption(spec.user){ case (config, user) => config.user(user) }
+      .withOption(spec.hostname) { case (config, hostname) => config.hostname(hostname)}
 
     val containerConfig = spec.command.fold(builder)(c => builder.cmd(c: _*)).build()
 
