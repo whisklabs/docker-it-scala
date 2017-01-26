@@ -54,7 +54,7 @@ lazy val testkitSpotifyImpl =
     .settings(commonSettings: _*)
     .settings(
       name := "docker-testkit-impl-spotify",
-      libraryDependencies += "com.spotify" % "docker-client" % "6.1.1")
+      libraryDependencies += "com.spotify" % "docker-client" % "7.0.0")
     .dependsOn(core)
 
 lazy val testkitDockerJavaImpl =
@@ -63,7 +63,7 @@ lazy val testkitDockerJavaImpl =
     .settings(
       name := "docker-testkit-impl-docker-java",
       libraryDependencies ++=
-        Seq("com.github.docker-java" % "docker-java" % "3.0.6",
+        Seq("com.github.docker-java" % "docker-java" % "3.0.7",
             "com.google.code.findbugs" % "jsr305" % "3.0.1"))
     .dependsOn(core)
 
