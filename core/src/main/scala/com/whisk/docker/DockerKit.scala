@@ -44,7 +44,7 @@ trait DockerKit {
     Await.result(containerManager.pullImages(), PullImagesTimeout)
     val allRunning: Boolean = try {
       val future: Future[Boolean] =
-        containerManager.initReadyAll().map(_.map(_._2).forall(identity))
+        containerManager.initReadyAll(StartContainersTimeout).map(_.map(_._2).forall(identity))
       sys.addShutdownHook(
           containerManager.stopRmAll()
       )

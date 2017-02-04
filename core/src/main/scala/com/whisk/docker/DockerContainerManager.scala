@@ -3,8 +3,9 @@ package com.whisk.docker
 import org.slf4j.LoggerFactory
 
 import scala.annotation.tailrec
-
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.language.postfixOps
+import scala.concurrent.duration._
 
 class DockerContainerManager(containers: Seq[DockerContainer], executor: DockerCommandExecutor)(
     implicit ec: ExecutionContext) {
@@ -35,18 +36,25 @@ class DockerContainerManager(containers: Seq[DockerContainer], executor: DockerC
     }
   }
 
-  def initReadyAll(): Future[Seq[(DockerContainerState, Boolean)]] = {
+  def initReadyAll(containerStartTimeout: Duration): Future[Seq[(DockerContainerState, Boolean)]] = {
     import DockerContainerManager._
 
     @tailrec
-    def initGraph(
-        graph: ContainerDependencyGraph,
-        previousInits: Future[Seq[DockerContainerState]] = Future.successful(Seq.empty)
-    ): Future[Seq[DockerContainerState]] = {
-      val updatedInits = previousInits.flatMap { prev =>
+    def initGraph(graph: ContainerDependencyGraph,
+                  previousInits: Future[Seq[DockerContainerState]] = Future.successful(Seq.empty)
+                 ): Future[Seq[DockerContainerState]] = {
+      val initializedContainers = previousInits.flatMap { prev =>
         Future.traverse(graph.containers.map(dockerStatesMap))(_.init()).map(prev ++ _)
       }
-      if (graph.dependants.isEmpty) updatedInits else initGraph(graph.dependants.get, updatedInits)
+
+      graph.dependants match {
+        case None => initializedContainers
+        case Some(dependants) =>
+          val readyInits: Future[Seq[Future[Boolean]]] = initializedContainers.map(_.map(state => state.isReady()))
+          val simplifiedReadyInits: Future[Seq[Boolean]] = readyInits.flatMap(Future.sequence(_))
+          Await.result(simplifiedReadyInits, containerStartTimeout)
+          initGraph(dependants, initializedContainers)
+      }
     }
 
     initGraph(buildDependencyGraph(containers)).flatMap(Future.traverse(_) { c =>
