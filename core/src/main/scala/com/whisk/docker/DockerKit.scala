@@ -14,7 +14,7 @@ trait DockerKit {
   private lazy val log = LoggerFactory.getLogger(this.getClass)
 
   val PullImagesTimeout = 20.minutes
-  val StartContainersTimeout = 60.seconds
+  val StartContainersTimeout = 20.seconds
   val StopContainersTimeout = 10.seconds
 
   def dockerContainers: List[DockerContainer] = Nil

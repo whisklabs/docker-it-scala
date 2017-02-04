@@ -10,6 +10,8 @@ import scala.language.postfixOps
 
 class DependencyGraphReadyCheckSpec extends FlatSpec with Matchers with DockerKitSpotify {
 
+  override val StartContainersTimeout = 45 seconds
+
   private lazy val log = LoggerFactory.getLogger(this.getClass)
 
   val zookeeperContainer = DockerContainer("confluentinc/cp-zookeeper:3.1.2", name = Some("zookeeper"))
