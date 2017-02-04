@@ -39,6 +39,7 @@ class DockerContainerManager(containers: Seq[DockerContainer], executor: DockerC
   def initReadyAll(containerStartTimeout: Duration): Future[Seq[(DockerContainerState, Boolean)]] = {
     import DockerContainerManager._
 
+    @tailrec
     def initGraph(graph: ContainerDependencyGraph,
                   previousInits: Future[Seq[DockerContainerState]] = Future.successful(Seq.empty)
                  ): Future[Seq[DockerContainerState]] = {
