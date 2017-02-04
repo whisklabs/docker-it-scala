@@ -14,7 +14,7 @@ trait DockerKit {
   private lazy val log = LoggerFactory.getLogger(this.getClass)
 
   val PullImagesTimeout = 20.minutes
-  val StartContainersTimeout = 20.seconds
+  val StartContainersTimeout = 60.seconds
   val StopContainersTimeout = 10.seconds
 
   def dockerContainers: List[DockerContainer] = Nil
@@ -44,7 +44,7 @@ trait DockerKit {
     Await.result(containerManager.pullImages(), PullImagesTimeout)
     val allRunning: Boolean = try {
       val future: Future[Boolean] =
-        containerManager.initReadyAll().map(_.map(_._2).forall(identity))
+        containerManager.initReadyAll(StartContainersTimeout).map(_.map(_._2).forall(identity))
       sys.addShutdownHook(
           containerManager.stopRmAll()
       )
