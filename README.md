@@ -10,96 +10,68 @@ You can read about reasoning behind it at [Finely Distributed](https://finelydis
 
 ## Setup
 
-docker-it-scala utilises [docker-java](https://github.com/docker-java/docker-java)'s way of configuration in performing
-initialisation with default settings.
+docker-it-scala can work with two underlying libraries to communicate to docker engine through *REST API* or *unix socket*.
+- [Spotify's docker-client](https://github.com/spotify/docker-client) (used in Whisk)
+- [docker-java](https://github.com/docker-java/docker-java)
+
+*Note: there is no specific recommendation to use one of them, over the other, but we hear people using Spotify's one more often, so you might get better support for it*.
+
+There are separate artifacts available for these libraries:
+
+**Spotify's docker-client**
 
 ```scala
-import com.github.dockerjava.core.DockerClientConfig
+libraryDependencies ++= Seq(
+  "com.whisk" %% "docker-testkit-scalatest" % "0.9.0" % "test",
+  "com.whisk" %% "docker-testkit-impl-spotify" % "0.9.0" % "test")
+```
 
-trait DockerKit {
-  implicit val docker: Docker =
-    new Docker(DockerClientConfig.createDefaultConfigBuilder().build())
+**docker-java**
 
-  ...
+```scala
+libraryDependencies ++= Seq(
+  "com.whisk" %% "docker-testkit-scalatest" % "0.9.0" % "test",
+  "com.whisk" %% "docker-testkit-impl-docker-java" % "0.9.0" % "test")
+```
+
+You don't necessarily have to use `scalatest` dependency as demonstrated above.
+You can create your custom bindings into your test environment, whether you use different initialisation technique or different framework.
+Have a look at [this specific trait](https://github.com/whisklabs/docker-it-scala/blob/master/scalatest/src/main/scala/com/whisk/docker/scalatest/DockerTestKit.scala)
+
+
+### Overriding execution environment
+
+If you need to have custom setup for you environment, you need to override `dockerFactory` field,  providing `DockerClient` instance
+
+```scala
+import com.spotify.docker.client.{DefaultDockerClient, DockerClient}
+import com.whisk.docker.{DockerFactory, DockerKit}
+
+trait MyCustomDockerKitSpotify extends DockerKit {
+
+  private val client: DockerClient = DefaultDockerClient.fromEnv().build()
+
+  override implicit val dockerFactory: DockerFactory = new SpotifyDockerFactory(client)
 }
-```
-
-That makes it possible to configure it through enviroment variables
-
-### docker-machine setup
-
-Docker Toolbox 1.9 (maybe also before, came some time in 2015) contains the [`docker-machine`](https://docs.docker.com/machine/) command. With it, you get going simply by:
 
 ```
-docker-machine start default
-eval $(docker-machine env default)
-```
 
-<!-- I like having '$' in shell commands shown in documentation. However, left them out here for consistency with the rest of the README. AKa010216 -->
+Check [docker-client](https://github.com/spotify/docker-client) library project for configuration options.
 
-### Boot2docker setup
+### Configuration
 
-```
-export DOCKER_HOST=tcp://192.168.59.103:2376
-export DOCKER_CERT_PATH=/Users/<username>/.boot2docker/certs/boot2docker-vm
-export DOCKER_TLS_VERIFY=1
-```
+You should be able to provide configuration purely through environment variables.
 
-### Setup without SSL
+Examples:
 
 ```
 export DOCKER_HOST=tcp://127.0.0.1:2375
 ```
 
-### Docker for Mac setup
-
-Since version `0.9.0-M2` you can use implementation with Spotify's [docker-client](https://github.com/spotify/docker-client) in Docker for Mac setup as it works better with unix socket
- 
-```scala
-import com.spotify.docker.client.DefaultDockerClient
-import com.whisk.docker.impl.spotify.SpotifyDockerFactory
-import com.whisk.docker.{DockerFactory, DockerKit}
-
-trait MyDockerKit extends DockerKit {
-  override implicit val dockerFactory: DockerFactory =
-    new SpotifyDockerFactory(DefaultDockerClient.fromEnv().build())
-}
-```
-
-with
-
 ```
 export DOCKER_HOST=unix:///var/run/docker.sock
 ```
 
-## Dependency
-
-Artifacts are available for Scala 2.10 and 2.11
-
-Include a dependency on one of the testkits of your choice to get started.
-
-```scala
-libraryDependencies += "com.whisk" %% "docker-testkit-specs2" % "0.8.3" % "test"
-```
-
-```scala
-libraryDependencies += "com.whisk" %% "docker-testkit-scalatest" % "0.8.3" % "test"
-```
-
-If you want to configure via typesafe config (only for Scala 2.11), also include
-
-```scala
-libraryDependencies += "com.whisk" %% "docker-testkit-config" % "0.8.3" % "test"
-```
-
-
-### Unstable dependencies
-
-```scala
-libraryDependencies ++= Seq(
-  "com.whisk" %% "docker-testkit-scalatest" % "0.9.0-M3" % "test",
-  "com.whisk" %% "docker-testkit-impl-spotify" % "0.9.0-M3" % "test")
-```
 
 # Sample Services
 
@@ -119,6 +91,8 @@ Code based definitions and via `typesafe-config`.
 ## Code based definitions
 
 ```scala
+import com.whisk.docker.{DockerContainer, DockerKit, DockerReadyChecker}
+
 trait DockerMongodbService extends DockerKit {
 
   val DefaultMongodbPort = 27017
@@ -128,9 +102,12 @@ trait DockerMongodbService extends DockerKit {
     .withReadyChecker(DockerReadyChecker.LogLineContains("waiting for connections on port"))
     .withCommand("mongod", "--nojournal", "--smallfiles", "--syncdelay", "0")
 
-  abstract override def dockerContainers: List[DockerContainer] = mongodbContainer :: super.dockerContainers
+  abstract override def dockerContainers: List[DockerContainer] =
+    mongodbContainer :: super.dockerContainers
 }
 ```
+
+You can check [usage example](https://github.com/whisklabs/docker-it-scala/blob/master/scalatest/src/test/scala/com/whisk/docker/MongodbServiceSpec.scala)
 
 ## Typesafe Configuration
 
