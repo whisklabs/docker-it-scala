@@ -1,0 +1,10 @@
+#scala #docker #integration-testing
+
+## Highlights
+
+* introduce exectutor based on Spotify's [docker-client](https://github.com/spotify/docker-client)
+* separate docker exectutors library from core
+* support for unix-socket
+* support for linked containers (e.g. Zookeeper + Kafka)
+* support for Scala 2.12
+
