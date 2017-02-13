@@ -45,7 +45,7 @@ class DockerContainerState(spec: DockerContainer) {
   def init()(implicit docker: DockerCommandExecutor, ec: ExecutionContext): Future[this.type] = {
     for {
       s <- _id.init(docker.createContainer(spec))
-      _ <- Future(docker.startContainer(s))
+      _ <- docker.startContainer(s)
     } yield {
       spec.logLineReceiver.foreach {
         case LogLineReceiver(withErr, f) => docker.withLogStreamLines(s, withErr)(f)
