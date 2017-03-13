@@ -46,7 +46,7 @@ trait DockerKit {
       val future: Future[Boolean] =
         containerManager.initReadyAll(StartContainersTimeout).map(_.map(_._2).forall(identity))
       sys.addShutdownHook(
-          containerManager.stopRmAll()
+          Await.ready(containerManager.stopRmAll(), StopContainersTimeout)
       )
       Await.result(future, StartContainersTimeout)
     } catch {
