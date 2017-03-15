@@ -43,7 +43,11 @@ class SpotifyDockerCommandExecutor(override val host: String, client: DockerClie
 
       val hostConfigBuilder =
         if (links.isEmpty) hostConfigBase else hostConfigBase.links(links.asJava)
-      hostConfigBuilder.build()
+      hostConfigBuilder
+        .withOption(spec.networkMode) {
+          case (config, networkMode) => config.networkMode(networkMode)
+        }
+        .build()
     }
 
     val builder = ContainerConfig
