@@ -18,6 +18,7 @@ case class DockerContainer(image: String,
                            stdinOpen: Boolean = false,
                            links: Seq[ContainerLink] = Seq.empty,
                            env: Seq[String] = Seq.empty,
+                           networkMode: Option[String] = None,
                            readyChecker: DockerReadyChecker = DockerReadyChecker.Always,
                            volumeMappings: Seq[VolumeMapping] = Seq.empty,
                            logLineReceiver: Option[LogLineReceiver] = None,
@@ -36,6 +37,8 @@ case class DockerContainer(image: String,
   def withReadyChecker(checker: DockerReadyChecker) = copy(readyChecker = checker)
 
   def withEnv(env: String*) = copy(env = env)
+
+  def withNetworkMode(networkMode: String) = copy(networkMode = Some(networkMode))
 
   def withVolumes(volumeMappings: Seq[VolumeMapping]) = copy(volumeMappings = volumeMappings)
 

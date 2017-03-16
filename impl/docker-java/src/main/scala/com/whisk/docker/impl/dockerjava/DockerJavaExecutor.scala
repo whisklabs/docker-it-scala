@@ -37,6 +37,9 @@ class DockerJavaExecutor(override val host: String, client: DockerClient)
         .withTty(spec.tty)
         .withStdinOpen(spec.stdinOpen)
         .withEnv(spec.env: _*)
+        .withOption(spec.networkMode) {
+          case (config, networkMode) => config.withNetworkMode(networkMode)
+        }
         .withPortBindings(
             spec.bindPorts.foldLeft(new Ports()) {
               case (ps, (guestPort, DockerPortMapping(Some(hostPort), address))) =>
