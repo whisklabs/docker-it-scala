@@ -84,11 +84,11 @@ object DockerContainerManager {
     @tailrec def buildDependencyGraph(graph: ContainerDependencyGraph): ContainerDependencyGraph =
       graph match {
         case ContainerDependencyGraph(containers, dependants) =>
-          containers.partition(_.links.isEmpty) match {
+          containers.partition(_.dependencies.isEmpty) match {
             case (containersWithoutLinks, Nil) => graph
             case (containersWithoutLinks, containersWithLinks) =>
               val linkedContainers = containers.foldLeft(Seq[DockerContainer]()) {
-                case (links, container) => (links ++ container.links.map(_.container))
+                case (links, container) => (links ++ container.dependencies)
               }
               val (containersWithLinksAndLinked, containersWithLinksNotLinked) =
                 containersWithLinks.partition(linkedContainers.contains)
@@ -96,7 +96,7 @@ object DockerContainerManager {
                 .map(_.containers)
                 .getOrElse(List.empty)
                 .partition(
-                    _.links.map(_.container).exists(containersWithLinksNotLinked.contains)
+                    _.dependencies.exists(containersWithLinksNotLinked.contains)
                 )
 
               buildDependencyGraph(
