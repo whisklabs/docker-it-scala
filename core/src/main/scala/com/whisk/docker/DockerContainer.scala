@@ -17,6 +17,7 @@ case class DockerContainer(image: String,
                            tty: Boolean = false,
                            stdinOpen: Boolean = false,
                            links: Seq[ContainerLink] = Seq.empty,
+                           unlinkedDependencies: Seq[DockerContainer] = Seq.empty,
                            env: Seq[String] = Seq.empty,
                            networkMode: Option[String] = None,
                            readyChecker: DockerReadyChecker = DockerReadyChecker.Always,
@@ -33,6 +34,11 @@ case class DockerContainer(image: String,
   def withPortMapping(ps: (Int, DockerPortMapping)*) = copy(bindPorts = ps.toMap)
 
   def withLinks(links: ContainerLink*) = copy(links = links.toSeq)
+
+  def withUnlinkedDependencies(unlinkedDependencies: DockerContainer*) =
+    copy(unlinkedDependencies = unlinkedDependencies.toSeq)
+
+  def dependencies: Seq[DockerContainer] = links.map(_.container) ++ unlinkedDependencies
 
   def withReadyChecker(checker: DockerReadyChecker) = copy(readyChecker = checker)
 
