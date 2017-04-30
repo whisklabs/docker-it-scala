@@ -9,6 +9,7 @@ before_install:
 language: scala
 
 scala:
+  - 2.12.2
   - 2.11.8
 
 jdk:
