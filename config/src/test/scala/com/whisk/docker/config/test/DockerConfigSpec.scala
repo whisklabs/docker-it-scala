@@ -38,6 +38,7 @@ class DockerConfigSpec extends FlatSpec with Matchers with DockerKitConfig {
     configureDockerContainer("docker.mongodb") shouldBe mongodbExpected
 
     val elasticExpected = DockerContainer("elasticsearch:1.7.1")
+      .withEntrypoint("my", "custom", "entrypoint")
       .withPorts(9200 -> None, 9300 -> None)
       .withReadyChecker(
         DockerReadyChecker

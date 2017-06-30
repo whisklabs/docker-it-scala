@@ -23,48 +23,45 @@ class DockerJavaExecutor(override val host: String, client: DockerClient)
       (volume, new Bind(mapping.host, volume, AccessMode.fromBoolean(mapping.rw)))
     }
 
-    val baseCmd = {
-      val hostConfig = new com.github.dockerjava.api.model.HostConfig()
-      hostConfig
-        .withOption(spec.networkMode)({ case (config, value) => config.withNetworkMode(value) })
-        .withPortBindings(spec.bindPorts.foldLeft(new Ports()) {
-          case (ps, (guestPort, DockerPortMapping(Some(hostPort), address))) =>
-            ps.bind(ExposedPort.tcp(guestPort), Ports.Binding.bindPort(hostPort))
-            ps
-          case (ps, (guestPort, DockerPortMapping(None, address))) =>
-            ps.bind(ExposedPort.tcp(guestPort), Ports.Binding.empty())
-            ps
+    val hostConfig = new com.github.dockerjava.api.model.HostConfig()
+      .withOption(spec.networkMode)({ case (config, value) => config.withNetworkMode(value) })
+      .withPortBindings(spec.bindPorts.foldLeft(new Ports()) {
+        case (ps, (guestPort, DockerPortMapping(Some(hostPort), address))) =>
+          ps.bind(ExposedPort.tcp(guestPort), Ports.Binding.bindPort(hostPort))
+          ps
+        case (ps, (guestPort, DockerPortMapping(None, address))) =>
+          ps.bind(ExposedPort.tcp(guestPort), Ports.Binding.empty())
+          ps
+      })
+      .withLinks(
+        new Links(spec.links.map {
+          case ContainerLink(container, alias) =>
+            new Link(container.name.get, alias)
+        }: _*)
+      )
+      .withBinds(new Binds(volumeToBind.map(_._2): _*))
+
+    val cmd = client
+      .createContainerCmd(spec.image)
+      .withHostConfig(hostConfig)
+      .withPortSpecs(spec.bindPorts
+            .map({
+          case (guestPort, DockerPortMapping(Some(hostPort), address)) =>
+            s"$address:$hostPort:$guestPort"
+          case (guestPort, DockerPortMapping(None, address)) => s"$address::$guestPort"
         })
-        .withLinks(
-          new Links(spec.links.map {
-            case ContainerLink(container, alias) =>
-              new Link(container.name.get, alias)
-          }: _*)
-        )
-        .withBinds(new Binds(volumeToBind.map(_._2): _*))
+            .toSeq: _*)
+      .withExposedPorts(spec.bindPorts.keys.map(ExposedPort.tcp).toSeq: _*)
+      .withTty(spec.tty)
+      .withStdinOpen(spec.stdinOpen)
+      .withEnv(spec.env: _*)
+      .withVolumes(volumeToBind.map(_._1): _*)
+      .withOption(spec.user) { case (config, user) => config.withUser(user) }
+      .withOption(spec.hostname) { case (config, hostName) => config.withHostName(hostName) }
+      .withOption(spec.name) { case (config, name) => config.withName(name) }
+      .withOption(spec.command) { case (config, c) => config.withCmd(c: _*) }
+      .withOption(spec.entrypoint) { case (config, entrypoint) => config.withEntrypoint(entrypoint: _*) }
 
-      val tmpCmd = client
-        .createContainerCmd(spec.image)
-        .withHostConfig(hostConfig)
-        .withPortSpecs(spec.bindPorts
-          .map({
-            case (guestPort, DockerPortMapping(Some(hostPort), address)) =>
-              s"$address:$hostPort:$guestPort"
-            case (guestPort, DockerPortMapping(None, address)) => s"$address::$guestPort"
-          })
-          .toSeq: _*)
-        .withExposedPorts(spec.bindPorts.keys.map(ExposedPort.tcp).toSeq: _*)
-        .withTty(spec.tty)
-        .withStdinOpen(spec.stdinOpen)
-        .withEnv(spec.env: _*)
-        .withVolumes(volumeToBind.map(_._1): _*)
-        .withOption(spec.user) { case (config, user) => config.withUser(user) }
-        .withOption(spec.hostname) { case (config, hostName) => config.withHostName(hostName) }
-
-      spec.name.map(tmpCmd.withName).getOrElse(tmpCmd)
-    }
-
-    val cmd = spec.command.fold(baseCmd)(c => baseCmd.withCmd(c: _*))
     Future(cmd.exec()).map { resp =>
       if (resp.getId != null && resp.getId != "") {
         resp.getId

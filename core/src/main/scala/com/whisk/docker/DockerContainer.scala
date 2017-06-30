@@ -17,6 +17,7 @@ case class HostConfig(
 case class DockerContainer(image: String,
                            name: Option[String] = None,
                            command: Option[Seq[String]] = None,
+                           entrypoint: Option[Seq[String]] = None,
                            bindPorts: Map[Int, DockerPortMapping] = Map.empty,
                            tty: Boolean = false,
                            stdinOpen: Boolean = false,
@@ -32,6 +33,8 @@ case class DockerContainer(image: String,
                            hostConfig: Option[HostConfig] = None) {
 
   def withCommand(cmd: String*) = copy(command = Some(cmd))
+
+  def withEntrypoint(entrypoint: String*) = copy(entrypoint = Some(entrypoint))
 
   def withPorts(ps: (Int, Option[Int])*) =
     copy(bindPorts = ps.toMap.mapValues(hostPort => DockerPortMapping(hostPort)))
