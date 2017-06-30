@@ -30,6 +30,8 @@ case class DockerContainer(image: String,
                            logLineReceiver: Option[LogLineReceiver] = None,
                            user: Option[String] = None,
                            hostname: Option[String] = None,
+                           memory: Option[Long] = None,
+                           memoryReservation: Option[Long] = None,
                            hostConfig: Option[HostConfig] = None) {
 
   def withCommand(cmd: String*) = copy(command = Some(cmd))
@@ -63,5 +65,16 @@ case class DockerContainer(image: String,
 
   def withHostname(hostname: String) = copy(hostname = Some(hostname))
 
+  /**
+    * Set the hard limit on memory usage (in bytes)
+    */
+  def withMemory(memory: Long) = copy(memory = Some(memory))
+
+  /**
+    * Set the soft limit on memory usage (in bytes)
+    */
+  def withMemoryReservation(memoryReservation: Long) = copy(memoryReservation = Some(memoryReservation))
+
   def withHostConfig(hostConfig: HostConfig) = copy(hostConfig = Some(hostConfig))
+
 }

@@ -12,8 +12,7 @@ import com.spotify.docker.client.exceptions.ContainerNotFoundException
 import com.spotify.docker.client.messages.{
   ContainerConfig,
   HostConfig,
-  PortBinding,
-  AttachedNetwork
+  PortBinding
 }
 import com.spotify.docker.client.{DockerClient, LogMessage}
 import com.whisk.docker._
@@ -49,12 +48,12 @@ class SpotifyDockerCommandExecutor(override val host: String, client: DockerClie
       val hostConfigBuilder =
         if (links.isEmpty) hostConfigBase else hostConfigBase.links(links.asJava)
       hostConfigBuilder
-        .withOption(spec.networkMode) {
-          case (config, networkMode) => config.networkMode(networkMode)
-        }
         .withOption(spec.hostConfig.flatMap(_.tmpfs)) {
           case (config, value) => config.tmpfs(value.asJava)
         }
+        .withOption(spec.networkMode) { case (config, networkMode) => config.networkMode(networkMode) }
+        .withOption(spec.memory) { case (config, memory) => config.memory(memory) }
+        .withOption(spec.memoryReservation) { case (config, reservation) => config.memoryReservation(reservation) }
         .build()
     }
 

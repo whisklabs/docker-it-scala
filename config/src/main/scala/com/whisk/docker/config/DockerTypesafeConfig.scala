@@ -50,7 +50,9 @@ object DockerTypesafeConfig extends DockerKitDockerJava {
                           `environmental-variables`: Seq[String] = Seq.empty,
                           `port-maps`: Option[Map[String, DockerConfigPortMap]],
                           `ready-checker`: Option[DockerConfigReadyChecker],
-                          `volume-maps`: Seq[VolumeMapping] = Seq.empty) {
+                          `volume-maps`: Seq[VolumeMapping] = Seq.empty,
+                          memory: Option[Long],
+                          `memory-reservation`: Option[Long]) {
 
     def toDockerContainer(): DockerContainer = {
       val bindPorts = `port-maps`.fold(EmptyPortBindings) { _.values.map(_.asTuple).toMap } mapValues {
@@ -68,7 +70,9 @@ object DockerTypesafeConfig extends DockerKitDockerJava {
         bindPorts = bindPorts,
         env = `environmental-variables`,
         readyChecker = readyChecker,
-        volumeMappings = `volume-maps`
+        volumeMappings = `volume-maps`,
+        memory = memory,
+        memoryReservation = `memory-reservation`
       )
     }
   }

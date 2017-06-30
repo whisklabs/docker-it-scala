@@ -61,6 +61,10 @@ class DockerJavaExecutor(override val host: String, client: DockerClient)
       .withOption(spec.name) { case (config, name) => config.withName(name) }
       .withOption(spec.command) { case (config, c) => config.withCmd(c: _*) }
       .withOption(spec.entrypoint) { case (config, entrypoint) => config.withEntrypoint(entrypoint: _*) }
+      .withOption(spec.memory) { case (config, memory) => config.withMemory(memory) }
+      .withOption(spec.memoryReservation) { case (config, memoryReservation) =>
+        config.withHostConfig(config.getHostConfig.withMemoryReservation(memoryReservation))
+      }
 
     Future(cmd.exec()).map { resp =>
       if (resp.getId != null && resp.getId != "") {

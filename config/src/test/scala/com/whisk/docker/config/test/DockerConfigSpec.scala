@@ -40,6 +40,8 @@ class DockerConfigSpec extends FlatSpec with Matchers with DockerKitConfig {
     val elasticExpected = DockerContainer("elasticsearch:1.7.1")
       .withEntrypoint("my", "custom", "entrypoint")
       .withPorts(9200 -> None, 9300 -> None)
+      .withMemory(536870912)
+      .withMemoryReservation(268435456)
       .withReadyChecker(
         DockerReadyChecker
           .HttpResponseCode(9200, "/")
