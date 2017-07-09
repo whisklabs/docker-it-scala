@@ -41,8 +41,8 @@ class DockerContainerManager(containers: Seq[DockerContainer], executor: DockerC
 
     @tailrec
     def initGraph(graph: ContainerDependencyGraph,
-                  previousInits: Future[Seq[DockerContainerState]] = Future.successful(Seq.empty)
-                 ): Future[Seq[DockerContainerState]] = {
+                  previousInits: Future[Seq[DockerContainerState]] = Future.successful(Seq.empty))
+      : Future[Seq[DockerContainerState]] = {
       val initializedContainers = previousInits.flatMap { prev =>
         Future.traverse(graph.containers.map(dockerStatesMap))(_.init()).map(prev ++ _)
       }
@@ -50,7 +50,8 @@ class DockerContainerManager(containers: Seq[DockerContainer], executor: DockerC
       graph.dependants match {
         case None => initializedContainers
         case Some(dependants) =>
-          val readyInits: Future[Seq[Future[Boolean]]] = initializedContainers.map(_.map(state => state.isReady()))
+          val readyInits: Future[Seq[Future[Boolean]]] =
+            initializedContainers.map(_.map(state => state.isReady()))
           val simplifiedReadyInits: Future[Seq[Boolean]] = readyInits.flatMap(Future.sequence(_))
           Await.result(simplifiedReadyInits, containerStartTimeout)
           initGraph(dependants, initializedContainers)

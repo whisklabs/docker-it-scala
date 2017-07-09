@@ -10,6 +10,10 @@ case class LogLineReceiver(withErr: Boolean, f: String => Unit)
 
 case class DockerPortMapping(hostPort: Option[Int] = None, address: String = "0.0.0.0")
 
+case class HostConfig(
+    tmpfs: Option[Map[String, String]] = None
+)
+
 case class DockerContainer(image: String,
                            name: Option[String] = None,
                            command: Option[Seq[String]] = None,
@@ -24,7 +28,8 @@ case class DockerContainer(image: String,
                            volumeMappings: Seq[VolumeMapping] = Seq.empty,
                            logLineReceiver: Option[LogLineReceiver] = None,
                            user: Option[String] = None,
-                           hostname: Option[String] = None) {
+                           hostname: Option[String] = None,
+                           hostConfig: Option[HostConfig] = None) {
 
   def withCommand(cmd: String*) = copy(command = Some(cmd))
 
@@ -54,4 +59,6 @@ case class DockerContainer(image: String,
   def withUser(user: String) = copy(user = Some(user))
 
   def withHostname(hostname: String) = copy(hostname = Some(hostname))
+
+  def withHostConfig(hostConfig: HostConfig) = copy(hostConfig = Some(hostConfig))
 }
