@@ -24,8 +24,28 @@ class DockerJavaExecutor(override val host: String, client: DockerClient)
     }
 
     val baseCmd = {
+      val hostConfig = new com.github.dockerjava.api.model.HostConfig()
+      hostConfig
+        .withOption(spec.networkMode)({ case (config, value) => config.withNetworkMode(value) })
+        .withPortBindings(spec.bindPorts.foldLeft(new Ports()) {
+          case (ps, (guestPort, DockerPortMapping(Some(hostPort), address))) =>
+            ps.bind(ExposedPort.tcp(guestPort), Ports.Binding.bindPort(hostPort))
+            ps
+          case (ps, (guestPort, DockerPortMapping(None, address))) =>
+            ps.bind(ExposedPort.tcp(guestPort), Ports.Binding.empty())
+            ps
+        })
+        .withLinks(
+            new Links(spec.links.map {
+              case ContainerLink(container, alias) =>
+                new Link(container.name.get, alias)
+            }: _*)
+        )
+        .withBinds(new Binds(volumeToBind.map(_._2): _*))
+
       val tmpCmd = client
         .createContainerCmd(spec.image)
+        .withHostConfig(hostConfig)
         .withPortSpecs(spec.bindPorts
               .map({
             case (guestPort, DockerPortMapping(Some(hostPort), address)) =>
@@ -37,27 +57,7 @@ class DockerJavaExecutor(override val host: String, client: DockerClient)
         .withTty(spec.tty)
         .withStdinOpen(spec.stdinOpen)
         .withEnv(spec.env: _*)
-        .withOption(spec.networkMode) {
-          case (config, networkMode) => config.withNetworkMode(networkMode)
-        }
-        .withPortBindings(
-            spec.bindPorts.foldLeft(new Ports()) {
-              case (ps, (guestPort, DockerPortMapping(Some(hostPort), address))) =>
-                ps.bind(ExposedPort.tcp(guestPort), Ports.Binding.bindPort(hostPort))
-                ps
-              case (ps, (guestPort, DockerPortMapping(None, address))) =>
-                ps.bind(ExposedPort.tcp(guestPort), Ports.Binding.empty())
-                ps
-            }
-        )
-        .withLinks(
-            spec.links.map {
-              case ContainerLink(container, alias) =>
-                new Link(container.name.get, alias)
-            }.asJava
-        )
         .withVolumes(volumeToBind.map(_._1): _*)
-        .withBinds(volumeToBind.map(_._2): _*)
         .withOption(spec.user) { case (config, user) => config.withUser(user) }
         .withOption(spec.hostname) { case (config, hostName) => config.withHostName(hostName) }
 

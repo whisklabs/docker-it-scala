@@ -10,10 +10,10 @@ trait DockerNeo4jService extends DockerKit {
     .withPorts(DefaultNeo4jHttpPort -> None)
     .withEnv("NEO4J_AUTH=none")
     .withReadyChecker(
-      DockerReadyChecker
-        .HttpResponseCode(DefaultNeo4jHttpPort, "/db/data/")
-        .within(100.millis)
-        .looped(20, 1250.millis)
+        DockerReadyChecker
+          .HttpResponseCode(DefaultNeo4jHttpPort, "/db/data/")
+          .within(100.millis)
+          .looped(20, 1250.millis)
     )
 
   abstract override def dockerContainers: List[DockerContainer] =
