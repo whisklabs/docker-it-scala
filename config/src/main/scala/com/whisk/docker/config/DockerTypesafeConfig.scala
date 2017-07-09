@@ -36,9 +36,9 @@ object DockerTypesafeConfig extends DockerKitDockerJava {
     // log line checker takes priority
     def toReadyChecker = {
       (`log-line`, `http-response-code`) match {
-        case (None, None) => DockerReadyChecker.Always
+        case (None, None)     => DockerReadyChecker.Always
         case (None, Some(rr)) => httpResponseCodeReadyChecker(rr)
-        case (Some(ll), _) => DockerReadyChecker.LogLineContains(ll)
+        case (Some(ll), _)    => DockerReadyChecker.LogLineContains(ll)
       }
     }
   }
@@ -60,13 +60,13 @@ object DockerTypesafeConfig extends DockerKitDockerJava {
       val readyChecker = `ready-checker`.fold[DockerReadyChecker](AlwaysReady) { _.toReadyChecker }
 
       DockerContainer(
-          image = `image-name`,
-          name = `container-name`,
-          command = command,
-          bindPorts = bindPorts,
-          env = `environmental-variables`,
-          readyChecker = readyChecker,
-          volumeMappings = `volume-maps`
+        image = `image-name`,
+        name = `container-name`,
+        command = command,
+        bindPorts = bindPorts,
+        env = `environmental-variables`,
+        readyChecker = readyChecker,
+        volumeMappings = `volume-maps`
       )
     }
   }

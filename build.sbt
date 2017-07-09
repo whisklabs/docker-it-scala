@@ -1,3 +1,12 @@
+def latestScalafmt = "1.0.0-RC4"
+
+commands += Command.args("scalafmt", "Run scalafmt cli.") {
+  case (state, args) =>
+    val Right(scalafmt) =
+      org.scalafmt.bootstrap.ScalafmtBootstrap.fromVersion(latestScalafmt)
+    scalafmt.main("--non-interactive" +: args.toArray)
+    state
+}
 
 lazy val commonSettings = Seq(
   organization := "com.whisk",
@@ -6,11 +15,10 @@ lazy val commonSettings = Seq(
   crossScalaVersions := Seq("2.12.2", "2.11.11", "2.10.6"),
   scalacOptions ++= Seq("-feature", "-deprecation"),
   fork in Test := true,
-  licenses +=("MIT", url("http://opensource.org/licenses/MIT")),
+  licenses += ("MIT", url("http://opensource.org/licenses/MIT")),
   sonatypeProfileName := "com.whisk",
-  scalafmtConfig := Some(file(".scalafmt")),
   // TODO Remove once this workaround no longer needed (https://github.com/sbt/sbt/issues/2786):
-  ivyScala := { ivyScala.value map {_.copy(overrideScalaVersion = sbtPlugin.value)} },
+  ivyScala := { ivyScala.value map { _.copy(overrideScalaVersion = sbtPlugin.value) } },
   pomExtra in Global := {
     <url>https://github.com/whisklabs/docker-it-scala</url>
       <scm>
@@ -34,46 +42,44 @@ lazy val commonSettings = Seq(
 )
 
 lazy val root =
-  project.in(file("."))
+  project
+    .in(file("."))
     .settings(commonSettings: _*)
-    .settings(
-      publish := {},
-      publishLocal := {},
-      packagedArtifacts := Map.empty)
+    .settings(publish := {}, publishLocal := {}, packagedArtifacts := Map.empty)
     .aggregate(core, testkitSpotifyImpl, testkitDockerJavaImpl, config, scalatest, specs2, samples)
 
 lazy val core =
   project
     .settings(commonSettings: _*)
-    .settings(
-      name := "docker-testkit-core",
-      libraryDependencies += "org.slf4j" % "slf4j-api" % "1.7.22")
+    .settings(name := "docker-testkit-core",
+              libraryDependencies += "org.slf4j" % "slf4j-api" % "1.7.22")
 
 lazy val testkitSpotifyImpl =
-  project.in(file("impl/spotify"))
+  project
+    .in(file("impl/spotify"))
     .settings(commonSettings: _*)
-    .settings(
-      name := "docker-testkit-impl-spotify",
-      libraryDependencies ++=
-        Seq("com.spotify" % "docker-client" % "8.8.0",
-            "com.google.code.findbugs" % "jsr305" % "3.0.1"))
+    .settings(name := "docker-testkit-impl-spotify",
+              libraryDependencies ++=
+                Seq("com.spotify" % "docker-client" % "8.8.0",
+                    "com.google.code.findbugs" % "jsr305" % "3.0.1"))
     .dependsOn(core)
 
 lazy val testkitDockerJavaImpl =
-  project.in(file("impl/docker-java"))
+  project
+    .in(file("impl/docker-java"))
     .settings(commonSettings: _*)
     .settings(
       name := "docker-testkit-impl-docker-java",
       libraryDependencies ++=
         Seq("com.github.docker-java" % "docker-java" % "3.0.12",
-            "com.google.code.findbugs" % "jsr305" % "3.0.1"))
+            "com.google.code.findbugs" % "jsr305" % "3.0.1")
+    )
     .dependsOn(core)
 
 lazy val samples =
   project
     .settings(commonSettings: _*)
-    .settings(
-      name := "docker-testkit-samples")
+    .settings(name := "docker-testkit-samples")
     .dependsOn(core)
 
 lazy val scalatest =
@@ -82,22 +88,22 @@ lazy val scalatest =
     .settings(
       name := "docker-testkit-scalatest",
       libraryDependencies ++=
-        Seq(
-          "org.scalatest" %% "scalatest" % "3.0.3",
-          "ch.qos.logback" % "logback-classic" % "1.2.1" % "test",
-          "org.postgresql" % "postgresql" % "9.4.1210" % "test"))
+        Seq("org.scalatest" %% "scalatest" % "3.0.3",
+            "ch.qos.logback" % "logback-classic" % "1.2.1" % "test",
+            "org.postgresql" % "postgresql" % "9.4.1210" % "test")
+    )
     .dependsOn(core, testkitSpotifyImpl % "test", testkitDockerJavaImpl % "test", samples % "test")
 
 lazy val specs2 =
-   project
+  project
     .settings(commonSettings: _*)
     .settings(
       name := "docker-testkit-specs2",
       libraryDependencies ++=
-        Seq(
-          "org.specs2" %% "specs2-core" % "3.8.6",
-          "ch.qos.logback" % "logback-classic" % "1.2.1" % "test",
-          "org.postgresql" % "postgresql" % "9.4.1210" % "test"))
+        Seq("org.specs2" %% "specs2-core" % "3.8.6",
+            "ch.qos.logback" % "logback-classic" % "1.2.1" % "test",
+            "org.postgresql" % "postgresql" % "9.4.1210" % "test")
+    )
     .dependsOn(core, samples % "test", testkitDockerJavaImpl % "test")
 
 lazy val config =
@@ -106,12 +112,10 @@ lazy val config =
     .settings(
       name := "docker-testkit-config",
       libraryDependencies ++=
-        Seq(
-          "com.iheart" %% "ficus" % "1.4.1",
-          "org.scalatest" %% "scalatest" % "3.0.3" % "test"),
+        Seq("com.iheart" %% "ficus" % "1.4.1", "org.scalatest" %% "scalatest" % "3.0.3" % "test"),
       publish := scalaVersion map {
         case x if x.startsWith("2.10") => {}
-        case _ => publish.value
+        case _                         => publish.value
       }
     )
     .dependsOn(core, testkitDockerJavaImpl)

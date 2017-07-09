@@ -14,22 +14,28 @@ class DependencyGraphReadyCheckSpec extends FlatSpec with Matchers with DockerKi
 
   private lazy val log = LoggerFactory.getLogger(this.getClass)
 
-  val zookeeperContainer = DockerContainer("confluentinc/cp-zookeeper:3.1.2", name = Some("zookeeper"))
-    .withEnv("ZOOKEEPER_TICK_TIME=2000", "ZOOKEEPER_CLIENT_PORT=2181")
-    .withReadyChecker(DockerReadyChecker.LogLineContains("binding to port"))
+  val zookeeperContainer =
+    DockerContainer("confluentinc/cp-zookeeper:3.1.2", name = Some("zookeeper"))
+      .withEnv("ZOOKEEPER_TICK_TIME=2000", "ZOOKEEPER_CLIENT_PORT=2181")
+      .withReadyChecker(DockerReadyChecker.LogLineContains("binding to port"))
 
   val kafkaContainer = DockerContainer("confluentinc/cp-kafka:3.1.2", name = Some("kafka"))
-    .withEnv("KAFKA_BROKER_ID=1", "KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181",
-      "KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092")
+    .withEnv("KAFKA_BROKER_ID=1",
+             "KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181",
+             "KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092")
     .withLinks(ContainerLink(zookeeperContainer, "zookeeper"))
     .withReadyChecker(DockerReadyChecker.LogLineContains("[Kafka Server 1], started"))
 
-  val schemaRegistryContainer = DockerContainer("confluentinc/cp-schema-registry:3.1.2", name = Some("schema_registry"))
-    .withEnv("SCHEMA_REGISTRY_HOST_NAME=schema_registry", "SCHEMA_REGISTRY_KAFKASTORE_CONNECTION_URL=zookeeper:2181")
-    .withLinks(ContainerLink(zookeeperContainer, "zookeeper"), ContainerLink(kafkaContainer, "kafka"))
+  val schemaRegistryContainer = DockerContainer("confluentinc/cp-schema-registry:3.1.2",
+                                                name = Some("schema_registry"))
+    .withEnv("SCHEMA_REGISTRY_HOST_NAME=schema_registry",
+             "SCHEMA_REGISTRY_KAFKASTORE_CONNECTION_URL=zookeeper:2181")
+    .withLinks(ContainerLink(zookeeperContainer, "zookeeper"),
+               ContainerLink(kafkaContainer, "kafka"))
     .withReadyChecker(DockerReadyChecker.LogLineContains("Server started, listening for requests"))
 
-  override def dockerContainers = schemaRegistryContainer :: kafkaContainer :: zookeeperContainer :: super.dockerContainers
+  override def dockerContainers =
+    schemaRegistryContainer :: kafkaContainer :: zookeeperContainer :: super.dockerContainers
 
   "all containers except the leaves of the dependency graph" should "be ready after initialization" in {
     startAllOrFail()

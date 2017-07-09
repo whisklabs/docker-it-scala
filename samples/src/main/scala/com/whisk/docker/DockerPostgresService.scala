@@ -16,8 +16,8 @@ trait DockerPostgresService extends DockerKit {
     .withPorts((PostgresAdvertisedPort, Some(PostgresExposedPort)))
     .withEnv(s"POSTGRES_USER=$PostgresUser", s"POSTGRES_PASSWORD=$PostgresPassword")
     .withReadyChecker(
-        new PostgresReadyChecker(PostgresUser, PostgresPassword, Some(PostgresExposedPort))
-          .looped(15, 1.second)
+      new PostgresReadyChecker(PostgresUser, PostgresPassword, Some(PostgresExposedPort))
+        .looped(15, 1.second)
     )
 
   abstract override def dockerContainers: List[DockerContainer] =
@@ -32,7 +32,7 @@ class PostgresReadyChecker(user: String, password: String, port: Option[Int] = N
     container
       .getPorts()
       .map(ports =>
-            Try {
+        Try {
           Class.forName("org.postgresql.Driver")
           val url = s"jdbc:postgresql://${docker.host}:${port.getOrElse(ports.values.head)}/"
           Option(DriverManager.getConnection(url, user, password)).map(_.close).isDefined

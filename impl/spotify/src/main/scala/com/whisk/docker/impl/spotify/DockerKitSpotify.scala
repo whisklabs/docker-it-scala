@@ -6,5 +6,5 @@ import com.whisk.docker.{DockerFactory, DockerKit}
 trait DockerKitSpotify extends DockerKit {
 
   override implicit val dockerFactory: DockerFactory = new SpotifyDockerFactory(
-      DefaultDockerClient.fromEnv().build())
+    DefaultDockerClient.fromEnv().build())
 }

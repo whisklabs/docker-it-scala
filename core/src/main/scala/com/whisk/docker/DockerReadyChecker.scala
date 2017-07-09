@@ -32,11 +32,11 @@ trait DockerReadyChecker {
       val p = Promise[Boolean]()
       aF.map {
         case true => p.trySuccess(true)
-        case _ =>
+        case _    =>
       }
       bF.map {
         case true => p.trySuccess(true)
-        case _ =>
+        case _    =>
       }
       p.future
     }
@@ -69,9 +69,9 @@ object RetryUtils {
       implicit ec: ExecutionContext): Future[T] = {
     val bail = Promise[T]()
     withDelay(deadline.toMillis)(
-        bail
-          .tryCompleteWith(Future.failed(new TimeoutException(s"timed out after $deadline")))
-          .future)
+      bail
+        .tryCompleteWith(Future.failed(new TimeoutException(s"timed out after $deadline")))
+        .future)
     Future.firstCompletedOf(future :: bail.future :: Nil)
   }
 
@@ -85,7 +85,7 @@ object RetryUtils {
               Future.failed(e match {
                 case _: NoSuchElementException =>
                   new NoSuchElementException(
-                      s"Ready checker returned false after $attempts attempts, delayed $delay each")
+                    s"Ready checker returned false after $attempts attempts, delayed $delay each")
                 case _ => e
               })
             case n =>
@@ -113,7 +113,7 @@ object DockerReadyChecker {
       extends DockerReadyChecker {
     override def apply(container: DockerContainerState)(implicit docker: DockerCommandExecutor,
                                                         ec: ExecutionContext): Future[Boolean] = {
-      container.getPorts().map(_ (port)).flatMap { p =>
+      container.getPorts().map(_(port)).flatMap { p =>
         val url = new URL("http", host.getOrElse(docker.host), p, path)
         Future {
           val con = url.openConnection().asInstanceOf[HttpURLConnection]

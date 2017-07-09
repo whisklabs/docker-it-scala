@@ -12,7 +12,7 @@ trait BeforeAfterAllStopOnError extends SpecificationStructure with FragmentsFac
     super
       .map(fs)
       .prepend(
-          fragmentFactory.step(beforeAll()).stopOnError
+        fragmentFactory.step(beforeAll()).stopOnError
       )
       .append(fragmentFactory.step(afterAll()))
 }

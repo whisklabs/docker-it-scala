@@ -16,8 +16,8 @@ class CassandraServiceSpec
   implicit val pc = PatienceConfig(Span(20, Seconds), Span(1, Second))
 
   override implicit val dockerFactory: DockerFactory = new DockerJavaExecutorFactory(
-      new Docker(DefaultDockerClientConfig.createDefaultConfigBuilder().build(),
-                 factory = new NettyDockerCmdExecFactory()))
+    new Docker(DefaultDockerClientConfig.createDefaultConfigBuilder().build(),
+               factory = new NettyDockerCmdExecFactory()))
 
   "cassandra node" should "be ready with log line checker" in {
     isContainerReady(cassandraContainer).futureValue shouldBe true

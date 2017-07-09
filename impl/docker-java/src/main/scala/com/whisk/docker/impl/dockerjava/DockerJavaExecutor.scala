@@ -36,10 +36,10 @@ class DockerJavaExecutor(override val host: String, client: DockerClient)
             ps
         })
         .withLinks(
-            new Links(spec.links.map {
-              case ContainerLink(container, alias) =>
-                new Link(container.name.get, alias)
-            }: _*)
+          new Links(spec.links.map {
+            case ContainerLink(container, alias) =>
+              new Link(container.name.get, alias)
+          }: _*)
         )
         .withBinds(new Binds(volumeToBind.map(_._2): _*))
 
@@ -47,12 +47,12 @@ class DockerJavaExecutor(override val host: String, client: DockerClient)
         .createContainerCmd(spec.image)
         .withHostConfig(hostConfig)
         .withPortSpecs(spec.bindPorts
-              .map({
+          .map({
             case (guestPort, DockerPortMapping(Some(hostPort), address)) =>
               s"$address:$hostPort:$guestPort"
             case (guestPort, DockerPortMapping(None, address)) => s"$address::$guestPort"
           })
-              .toSeq: _*)
+          .toSeq: _*)
         .withExposedPorts(spec.bindPorts.keys.map(ExposedPort.tcp).toSeq: _*)
         .withTty(spec.tty)
         .withStdinOpen(spec.stdinOpen)
@@ -70,7 +70,7 @@ class DockerJavaExecutor(override val host: String, client: DockerClient)
         resp.getId
       } else {
         throw new RuntimeException(
-            s"Cannot run container ${spec.image}: ${resp.getWarnings.mkString(", ")}")
+          s"Cannot run container ${spec.image}: ${resp.getWarnings.mkString(", ")}")
       }
     }
   }
@@ -112,11 +112,15 @@ class DockerJavaExecutor(override val host: String, client: DockerClient)
                              name = result.getName,
                              ipAddresses = addresses.toSeq)
     })
-    RetryUtils.looped(future.flatMap {
-      case Some(x) if x.running => Future.successful(Some(x))
-      case None => Future.successful(None)
-      case _ => Future.failed(throw new Exception("container is not running"))
-    }, 5, FiniteDuration(2, TimeUnit.SECONDS))
+    RetryUtils.looped(
+      future.flatMap {
+        case Some(x) if x.running => Future.successful(Some(x))
+        case None                 => Future.successful(None)
+        case _                    => Future.failed(throw new Exception("container is not running"))
+      },
+      5,
+      FiniteDuration(2, TimeUnit.SECONDS)
+    )
   }
 
   override def withLogStreamLines(id: String, withErr: Boolean)(f: String => Unit)(
@@ -162,12 +166,12 @@ class DockerJavaExecutor(override val host: String, client: DockerClient)
 
   override def listImages()(implicit ec: ExecutionContext): Future[Set[String]] = {
     Future(
-        client
-          .listImagesCmd()
-          .exec()
-          .asScala
-          .flatMap(img => Option(img.getRepoTags).getOrElse(Array()))
-          .toSet)
+      client
+        .listImagesCmd()
+        .exec()
+        .asScala
+        .flatMap(img => Option(img.getRepoTags).getOrElse(Array()))
+        .toSet)
   }
 
   override def pullImage(image: String)(implicit ec: ExecutionContext): Future[Unit] = {

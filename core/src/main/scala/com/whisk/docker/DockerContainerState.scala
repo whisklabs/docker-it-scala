@@ -58,19 +58,19 @@ class DockerContainerState(spec: DockerContainer) {
   private def runReadyCheck()(implicit docker: DockerCommandExecutor,
                               ec: ExecutionContext): Future[Boolean] =
     _isReady.init(
-        (for {
-          r <- isRunning() if r
-          b <- spec.readyChecker(this) if b
-        } yield b) recoverWith {
-          case _: NoSuchElementException =>
-            log.error("Not ready: " + {
-              spec.image
-            })
-            Future.successful(false)
-          case e =>
-            log.error(e.getMessage, e)
-            Future.successful(false)
-        }
+      (for {
+        r <- isRunning() if r
+        b <- spec.readyChecker(this) if b
+      } yield b) recoverWith {
+        case _: NoSuchElementException =>
+          log.error("Not ready: " + {
+            spec.image
+          })
+          Future.successful(false)
+        case e =>
+          log.error(e.getMessage, e)
+          Future.successful(false)
+      }
     )
 
   protected def getRunningContainer()(
@@ -81,13 +81,13 @@ class DockerContainerState(spec: DockerContainer) {
   def getName()(implicit docker: DockerCommandExecutor, ec: ExecutionContext): Future[String] =
     getRunningContainer.flatMap {
       case Some(res) => Future.successful(res.name)
-      case None => Future.failed(new RuntimeException(s"Container ${spec.image} is not running"))
+      case None      => Future.failed(new RuntimeException(s"Container ${spec.image} is not running"))
     }
 
   def getIpAddresses()(implicit docker: DockerCommandExecutor,
                        ec: ExecutionContext): Future[Seq[String]] = getRunningContainer.flatMap {
     case Some(res) => Future.successful(res.ipAddresses)
-    case None => Future.failed(new RuntimeException(s"Container ${spec.image} is not running"))
+    case None      => Future.failed(new RuntimeException(s"Container ${spec.image} is not running"))
   }
 
   private val _ports = SinglePromise[Map[Int, Int]]
@@ -98,7 +98,7 @@ class DockerContainerState(spec: DockerContainer) {
       case None => Future.failed(new RuntimeException(s"Container ${spec.image} is not running"))
       case Some(c) =>
         val ports: Map[Int, Int] = c.ports.collect {
-          case (exposedPort, Seq(binding, _ *)) =>
+          case (exposedPort, Seq(binding, _*)) =>
             exposedPort.port -> binding.hostPort
         }
         Future.successful(ports)

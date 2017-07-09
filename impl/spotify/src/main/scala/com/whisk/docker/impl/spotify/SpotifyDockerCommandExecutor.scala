@@ -9,7 +9,12 @@ import java.util.function.Consumer
 import com.google.common.io.Closeables
 import com.spotify.docker.client.DockerClient.{AttachParameter, RemoveContainerParam}
 import com.spotify.docker.client.exceptions.ContainerNotFoundException
-import com.spotify.docker.client.messages.{ContainerConfig, HostConfig, PortBinding, AttachedNetwork}
+import com.spotify.docker.client.messages.{
+  ContainerConfig,
+  HostConfig,
+  PortBinding,
+  AttachedNetwork
+}
 import com.spotify.docker.client.{DockerClient, LogMessage}
 import com.whisk.docker._
 
@@ -67,8 +72,8 @@ class SpotifyDockerCommandExecutor(override val host: String, client: DockerClie
     val containerConfig = spec.command.fold(builder)(c => builder.cmd(c: _*)).build()
 
     val creation = Future(
-        spec.name.fold(client.createContainer(containerConfig))(
-            client.createContainer(containerConfig, _))
+      spec.name.fold(client.createContainer(containerConfig))(
+        client.createContainer(containerConfig, _))
     )
 
     creation.map(_.id)
@@ -82,44 +87,46 @@ class SpotifyDockerCommandExecutor(override val host: String, client: DockerClie
       implicit ec: ExecutionContext): Future[Option[InspectContainerResult]] = {
 
     def inspect() =
-      Future(client.inspectContainer(id)).flatMap { info =>
-        val networkPorts = Option(info.networkSettings().ports())
-        networkPorts match {
-          case Some(p) =>
-            val ports = info
-              .networkSettings()
-              .ports()
-              .asScala
-              .collect {
-                case (cPort, bindings) if Option(bindings).exists(!_.isEmpty) =>
-                  val binds = bindings.asScala
-                    .map(b => com.whisk.docker.PortBinding(b.hostIp(), b.hostPort().toInt))
-                    .toList
-                  ContainerPort.parse(cPort) -> binds
+      Future(client.inspectContainer(id))
+        .flatMap { info =>
+          val networkPorts = Option(info.networkSettings().ports())
+          networkPorts match {
+            case Some(p) =>
+              val ports = info
+                .networkSettings()
+                .ports()
+                .asScala
+                .collect {
+                  case (cPort, bindings) if Option(bindings).exists(!_.isEmpty) =>
+                    val binds = bindings.asScala
+                      .map(b => com.whisk.docker.PortBinding(b.hostIp(), b.hostPort().toInt))
+                      .toList
+                    ContainerPort.parse(cPort) -> binds
+                }
+                .toMap
+
+              val addresses: Iterable[String] = for {
+                networks <- Option(info.networkSettings().networks()).map(_.asScala).toSeq
+                (key, network) <- networks
+                ip <- Option(network.ipAddress)
+              } yield {
+                ip
               }
-              .toMap
 
-            val addresses: Iterable[String] = for {
-              networks <- Option(info.networkSettings().networks()).map(_.asScala).toSeq
-              (key, network) <- networks
-              ip <- Option(network.ipAddress)
-            } yield {
-              ip
-            }
-
-            Future.successful(
+              Future.successful(
                 Some(
-                    InspectContainerResult(info.state().running(),
-                                           ports,
-                                           info.name(),
-                                           addresses.toSeq)))
-          case None =>
-            Future.failed(new Exception("can't extract ports"))
+                  InspectContainerResult(info.state().running(),
+                                         ports,
+                                         info.name(),
+                                         addresses.toSeq)))
+            case None =>
+              Future.failed(new Exception("can't extract ports"))
+          }
         }
-      }.recover {
-        case t: ContainerNotFoundException =>
-          None
-      }
+        .recover {
+          case t: ContainerNotFoundException =>
+            None
+        }
 
     RetryUtils.looped(inspect(), attempts = 5, delay = FiniteDuration(1, TimeUnit.SECONDS))
   }
@@ -170,11 +177,11 @@ class SpotifyDockerCommandExecutor(override val host: String, client: DockerClie
 
   override def listImages()(implicit ec: ExecutionContext): Future[Set[String]] = {
     Future(
-        client
-          .listImages()
-          .asScala
-          .flatMap(img => Option(img.repoTags()).map(_.asScala).getOrElse(Seq.empty))
-          .toSet)
+      client
+        .listImages()
+        .asScala
+        .flatMap(img => Option(img.repoTags()).map(_.asScala).getOrElse(Seq.empty))
+        .toSet)
   }
 
   override def pullImage(image: String)(implicit ec: ExecutionContext): Future[Unit] = {
@@ -184,9 +191,9 @@ class SpotifyDockerCommandExecutor(override val host: String, client: DockerClie
   override def remove(id: String, force: Boolean, removeVolumes: Boolean)(
       implicit ec: ExecutionContext): Future[Unit] = {
     Future(
-        client.removeContainer(id,
-                               RemoveContainerParam.forceKill(force),
-                               RemoveContainerParam.removeVolumes(removeVolumes)))
+      client.removeContainer(id,
+                             RemoveContainerParam.forceKill(force),
+                             RemoveContainerParam.removeVolumes(removeVolumes)))
   }
 
   override def close(): Unit = {

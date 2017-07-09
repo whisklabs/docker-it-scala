@@ -12,7 +12,7 @@ class Neo4jServiceSpec extends FlatSpec with Matchers with DockerTestKit with Do
   implicit val pc = PatienceConfig(Span(20, Seconds), Span(1, Second))
 
   override implicit val dockerFactory: DockerFactory = new SpotifyDockerFactory(
-      DefaultDockerClient.fromEnv().build())
+    DefaultDockerClient.fromEnv().build())
 
   "neo4j container" should "be ready" in {
     isContainerReady(neo4jContainer).futureValue shouldBe true

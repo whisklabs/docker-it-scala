@@ -6,5 +6,5 @@ import com.whisk.docker.{DockerFactory, DockerKit}
 trait DockerKitDockerJava extends DockerKit {
 
   override implicit val dockerFactory: DockerFactory = new DockerJavaExecutorFactory(
-      new Docker(DefaultDockerClientConfig.createDefaultConfigBuilder().build()))
+    new Docker(DefaultDockerClientConfig.createDefaultConfigBuilder().build()))
 }

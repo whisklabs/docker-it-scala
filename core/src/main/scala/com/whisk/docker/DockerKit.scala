@@ -23,7 +23,7 @@ trait DockerKit {
   implicit lazy val dockerExecutionContext: ExecutionContext = {
     // using Math.max to prevent unexpected zero length of docker containers
     ExecutionContext.fromExecutor(
-        Executors.newFixedThreadPool(Math.max(1, dockerContainers.length * 2)))
+      Executors.newFixedThreadPool(Math.max(1, dockerContainers.length * 2)))
   }
   implicit lazy val dockerExecutor = dockerFactory.createExecutor()
 
@@ -46,7 +46,7 @@ trait DockerKit {
       val future: Future[Boolean] =
         containerManager.initReadyAll(StartContainersTimeout).map(_.map(_._2).forall(identity))
       sys.addShutdownHook(
-          Await.ready(containerManager.stopRmAll(), StopContainersTimeout)
+        Await.ready(containerManager.stopRmAll(), StopContainersTimeout)
       )
       Await.result(future, StartContainersTimeout)
     } catch {

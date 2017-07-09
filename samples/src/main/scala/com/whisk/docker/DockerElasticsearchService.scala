@@ -10,10 +10,10 @@ trait DockerElasticsearchService extends DockerKit {
   val elasticsearchContainer = DockerContainer("elasticsearch:1.7.1")
     .withPorts(DefaultElasticsearchHttpPort -> None, DefaultElasticsearchClientPort -> None)
     .withReadyChecker(
-        DockerReadyChecker
-          .HttpResponseCode(DefaultElasticsearchHttpPort, "/")
-          .within(100.millis)
-          .looped(20, 1250.millis)
+      DockerReadyChecker
+        .HttpResponseCode(DefaultElasticsearchHttpPort, "/")
+        .within(100.millis)
+        .looped(20, 1250.millis)
     )
 
   abstract override def dockerContainers: List[DockerContainer] =

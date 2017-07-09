@@ -97,19 +97,19 @@ object DockerContainerManager {
                 .map(_.containers)
                 .getOrElse(List.empty)
                 .partition(
-                    _.dependencies.exists(containersWithLinksNotLinked.contains)
+                  _.dependencies.exists(containersWithLinksNotLinked.contains)
                 )
 
               buildDependencyGraph(
-                  ContainerDependencyGraph(
-                      containers = containersWithoutLinks ++ containersWithLinksAndLinked,
-                      dependants = Some(
-                          ContainerDependencyGraph(
-                              containers = containersWithLinksNotLinked ++ containersToBeMovedUpALevel,
-                              dependants = dependants.map(
-                                  _.copy(containers = containersToBeLeftAtCurrentPosition))
-                          ))
-                  )
+                ContainerDependencyGraph(
+                  containers = containersWithoutLinks ++ containersWithLinksAndLinked,
+                  dependants = Some(
+                    ContainerDependencyGraph(
+                      containers = containersWithLinksNotLinked ++ containersToBeMovedUpALevel,
+                      dependants =
+                        dependants.map(_.copy(containers = containersToBeLeftAtCurrentPosition))
+                    ))
+                )
               )
           }
       }
