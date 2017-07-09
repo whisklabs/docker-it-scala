@@ -47,7 +47,7 @@ lazy val core =
     .settings(commonSettings: _*)
     .settings(
       name := "docker-testkit-core",
-      libraryDependencies += "org.slf4j" % "slf4j-api" % "1.7.21")
+      libraryDependencies += "org.slf4j" % "slf4j-api" % "1.7.22")
 
 lazy val testkitSpotifyImpl =
   project.in(file("impl/spotify"))
@@ -55,7 +55,7 @@ lazy val testkitSpotifyImpl =
     .settings(
       name := "docker-testkit-impl-spotify",
       libraryDependencies ++=
-        Seq("com.spotify" % "docker-client" % "8.4.0",
+        Seq("com.spotify" % "docker-client" % "8.8.0",
             "com.google.code.findbugs" % "jsr305" % "3.0.1"))
     .dependsOn(core)
 
@@ -65,7 +65,7 @@ lazy val testkitDockerJavaImpl =
     .settings(
       name := "docker-testkit-impl-docker-java",
       libraryDependencies ++=
-        Seq("com.github.docker-java" % "docker-java" % "3.0.9",
+        Seq("com.github.docker-java" % "docker-java" % "3.0.12",
             "com.google.code.findbugs" % "jsr305" % "3.0.1"))
     .dependsOn(core)
 
@@ -84,7 +84,7 @@ lazy val scalatest =
       libraryDependencies ++=
         Seq(
           "org.scalatest" %% "scalatest" % "3.0.3",
-          "ch.qos.logback" % "logback-classic" % "1.1.7" % "test",
+          "ch.qos.logback" % "logback-classic" % "1.2.1" % "test",
           "org.postgresql" % "postgresql" % "9.4.1210" % "test"))
     .dependsOn(core, testkitSpotifyImpl % "test", testkitDockerJavaImpl % "test", samples % "test")
 
@@ -96,7 +96,7 @@ lazy val specs2 =
       libraryDependencies ++=
         Seq(
           "org.specs2" %% "specs2-core" % "3.8.6",
-          "ch.qos.logback" % "logback-classic" % "1.1.7" % "test",
+          "ch.qos.logback" % "logback-classic" % "1.2.1" % "test",
           "org.postgresql" % "postgresql" % "9.4.1210" % "test"))
     .dependsOn(core, samples % "test", testkitDockerJavaImpl % "test")
 
@@ -107,7 +107,7 @@ lazy val config =
       name := "docker-testkit-config",
       libraryDependencies ++=
         Seq(
-          "com.iheart" %% "ficus" % "1.4.0",
+          "com.iheart" %% "ficus" % "1.4.1",
           "org.scalatest" %% "scalatest" % "3.0.3" % "test"),
       publish := scalaVersion map {
         case x if x.startsWith("2.10") => {}
