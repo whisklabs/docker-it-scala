@@ -1,7 +1,7 @@
 package com.whisk.docker.config
 
 import com.whisk.docker.impl.dockerjava.DockerKitDockerJava
-import com.whisk.docker.{DockerContainer, DockerPortMapping, DockerReadyChecker, VolumeMapping}
+import com.whisk.docker.{DockerContainer, DockerPortMapping, DockerReadyChecker, HostConfig, VolumeMapping}
 
 import scala.concurrent.duration._
 
@@ -46,10 +46,13 @@ object DockerTypesafeConfig extends DockerKitDockerJava {
   case class DockerConfig(`image-name`: String,
                           `container-name`: Option[String],
                           command: Option[Seq[String]],
+                          entrypoint: Option[Seq[String]],
                           `environmental-variables`: Seq[String] = Seq.empty,
                           `port-maps`: Option[Map[String, DockerConfigPortMap]],
                           `ready-checker`: Option[DockerConfigReadyChecker],
-                          `volume-maps`: Seq[VolumeMapping] = Seq.empty) {
+                          `volume-maps`: Seq[VolumeMapping] = Seq.empty,
+                          memory: Option[Long],
+                          `memory-reservation`: Option[Long]) {
 
     def toDockerContainer(): DockerContainer = {
       val bindPorts = `port-maps`.fold(EmptyPortBindings) { _.values.map(_.asTuple).toMap } mapValues {
@@ -59,14 +62,21 @@ object DockerTypesafeConfig extends DockerKitDockerJava {
 
       val readyChecker = `ready-checker`.fold[DockerReadyChecker](AlwaysReady) { _.toReadyChecker }
 
+      val hostConfig = HostConfig(
+        memory = memory,
+        memoryReservation = `memory-reservation`
+      )
+
       DockerContainer(
         image = `image-name`,
         name = `container-name`,
         command = command,
+        entrypoint = entrypoint,
         bindPorts = bindPorts,
         env = `environmental-variables`,
         readyChecker = readyChecker,
-        volumeMappings = `volume-maps`
+        volumeMappings = `volume-maps`,
+        hostConfig = Some(hostConfig)
       )
     }
   }
