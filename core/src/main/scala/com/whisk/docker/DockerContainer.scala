@@ -11,7 +11,19 @@ case class LogLineReceiver(withErr: Boolean, f: String => Unit)
 case class DockerPortMapping(hostPort: Option[Int] = None, address: String = "0.0.0.0")
 
 case class HostConfig(
-    tmpfs: Option[Map[String, String]] = None
+
+    tmpfs: Option[Map[String, String]] = None,
+
+    /**
+      * the hard limit on memory usage (in bytes)
+      */
+    memory: Option[Long] = None,
+
+    /**
+      * the soft limit on memory usage (in bytes)
+      */
+    memoryReservation: Option[Long] = None
+
 )
 
 case class DockerContainer(image: String,
@@ -30,8 +42,6 @@ case class DockerContainer(image: String,
                            logLineReceiver: Option[LogLineReceiver] = None,
                            user: Option[String] = None,
                            hostname: Option[String] = None,
-                           memory: Option[Long] = None,
-                           memoryReservation: Option[Long] = None,
                            hostConfig: Option[HostConfig] = None) {
 
   def withCommand(cmd: String*) = copy(command = Some(cmd))
@@ -64,16 +74,6 @@ case class DockerContainer(image: String,
   def withUser(user: String) = copy(user = Some(user))
 
   def withHostname(hostname: String) = copy(hostname = Some(hostname))
-
-  /**
-    * Set the hard limit on memory usage (in bytes)
-    */
-  def withMemory(memory: Long) = copy(memory = Some(memory))
-
-  /**
-    * Set the soft limit on memory usage (in bytes)
-    */
-  def withMemoryReservation(memoryReservation: Long) = copy(memoryReservation = Some(memoryReservation))
 
   def withHostConfig(hostConfig: HostConfig) = copy(hostConfig = Some(hostConfig))
 

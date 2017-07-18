@@ -1,7 +1,7 @@
 package com.whisk.docker.config
 
 import com.whisk.docker.impl.dockerjava.DockerKitDockerJava
-import com.whisk.docker.{DockerContainer, DockerPortMapping, DockerReadyChecker, VolumeMapping}
+import com.whisk.docker.{DockerContainer, DockerPortMapping, DockerReadyChecker, HostConfig, VolumeMapping}
 
 import scala.concurrent.duration._
 
@@ -62,6 +62,11 @@ object DockerTypesafeConfig extends DockerKitDockerJava {
 
       val readyChecker = `ready-checker`.fold[DockerReadyChecker](AlwaysReady) { _.toReadyChecker }
 
+      val hostConfig = HostConfig(
+        memory = memory,
+        memoryReservation = `memory-reservation`
+      )
+
       DockerContainer(
         image = `image-name`,
         name = `container-name`,
@@ -71,8 +76,7 @@ object DockerTypesafeConfig extends DockerKitDockerJava {
         env = `environmental-variables`,
         readyChecker = readyChecker,
         volumeMappings = `volume-maps`,
-        memory = memory,
-        memoryReservation = `memory-reservation`
+        hostConfig = Some(hostConfig)
       )
     }
   }
