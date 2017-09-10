@@ -1,24 +1,12 @@
-def latestScalafmt = "1.0.0-RC4"
-
-commands += Command.args("scalafmt", "Run scalafmt cli.") {
-  case (state, args) =>
-    val Right(scalafmt) =
-      org.scalafmt.bootstrap.ScalafmtBootstrap.fromVersion(latestScalafmt)
-    scalafmt.main("--non-interactive" +: args.toArray)
-    state
-}
-
 lazy val commonSettings = Seq(
   organization := "com.whisk",
   version := "0.9.4",
-  scalaVersion := "2.12.2",
-  crossScalaVersions := Seq("2.12.2", "2.11.11", "2.10.6"),
+  scalaVersion := "2.12.3",
+  crossScalaVersions := Seq("2.12.3", "2.11.11", "2.10.6"),
   scalacOptions ++= Seq("-feature", "-deprecation"),
   fork in Test := true,
   licenses += ("MIT", url("http://opensource.org/licenses/MIT")),
   sonatypeProfileName := "com.whisk",
-  // TODO Remove once this workaround no longer needed (https://github.com/sbt/sbt/issues/2786):
-  ivyScala := { ivyScala.value map { _.copy(overrideScalaVersion = sbtPlugin.value) } },
   pomExtra in Global := {
     <url>https://github.com/whisklabs/docker-it-scala</url>
       <scm>

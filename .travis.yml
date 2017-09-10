@@ -9,15 +9,15 @@ before_install:
 language: scala
 
 scala:
-  - 2.12.2
-  - 2.11.8
+  - 2.12.3
+  - 2.11.11
 
 jdk:
   - oraclejdk8
 
 script:
-  - sbt "scalatest/test-only com.whisk.docker.MongodbServiceSpec" #spotify executor
-  - sbt "scalatest/test-only com.whisk.docker.ElasticsearchServiceSpec"  #docker-java executor
+  - sbt "scalatest/testOnly com.whisk.docker.MongodbServiceSpec" #spotify executor
+  - sbt "scalatest/testOnly com.whisk.docker.ElasticsearchServiceSpec"  #docker-java executor
 
 cache:
   directories:
