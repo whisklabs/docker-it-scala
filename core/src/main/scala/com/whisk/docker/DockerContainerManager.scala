@@ -41,12 +41,6 @@ class DockerContainerManager(managedContainers: ManagedContainers,
         Future.unit
       case Some(checker) =>
         checker(container)(executor, executionContext)
-          .flatMap {
-            case false =>
-              Future.failed(new Exception("ready check failed"))
-            case true =>
-              Future.unit
-          }
     }
   }
 

@@ -48,8 +48,7 @@ lazy val core =
         "com.spotify" % "docker-client" % "8.9.0",
         "com.google.code.findbugs" % "jsr305" % "3.0.1",
         "org.scalatest" %% "scalatest" % "3.0.4",
-        "ch.qos.logback" % "logback-classic" % "1.2.3" % "test",
-        "org.postgresql" % "postgresql" % "9.4.1210" % "test"
+        "ch.qos.logback" % "logback-classic" % "1.2.3" % "test"
       )
     )
 
@@ -62,5 +61,11 @@ lazy val samples =
 lazy val tests =
   project
     .settings(commonSettings: _*)
-    .settings(name := "docker-testkit-tests")
+    .settings(
+      name := "docker-testkit-tests",
+      libraryDependencies ++= Seq(
+        "org.postgresql" % "postgresql" % "9.4.1210" % "test",
+        "mysql" % "mysql-connector-java" % "5.1.44" % "test"
+      )
+    )
     .dependsOn(core % "test", samples % "test")

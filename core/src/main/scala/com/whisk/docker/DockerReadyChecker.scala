@@ -1,15 +1,18 @@
 package com.whisk.docker
 
 import java.net.{HttpURLConnection, URL}
+import java.sql.DriverManager
 import java.util.{Timer, TimerTask}
 
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ExecutionContext, Future, Promise, TimeoutException}
 
+class FailFastCheckException(m: String) extends Exception(m)
+
 trait DockerReadyChecker {
 
   def apply(container: Container)(implicit docker: ContainerCommandExecutor,
-                                  ec: ExecutionContext): Future[Boolean]
+                                  ec: ExecutionContext): Future[Unit]
 
   def and(other: DockerReadyChecker)(implicit docker: ContainerCommandExecutor,
                                      ec: ExecutionContext) = {
@@ -20,26 +23,9 @@ trait DockerReadyChecker {
       for {
         a <- aF
         b <- bF
-      } yield a && b
-    }
-  }
-
-  def or(other: DockerReadyChecker)(implicit docker: ContainerCommandExecutor,
-                                    ec: ExecutionContext) = {
-    val s = this
-    DockerReadyChecker.F { container =>
-      val aF = s(container)
-      val bF = other(container)
-      val p = Promise[Boolean]()
-      aF.map {
-        case true => p.trySuccess(true)
-        case _    =>
+      } yield {
+        ()
       }
-      bF.map {
-        case true => p.trySuccess(true)
-        case _    =>
-      }
-      p.future
     }
   }
 
@@ -80,18 +66,11 @@ object RetryUtils {
       implicit ec: ExecutionContext): Future[T] = {
     def attempt(rest: Int): Future[T] = {
       future.recoverWith {
+        case e: FailFastCheckException => Future.failed(e)
+        case e if rest > 0 =>
+          withDelay(delay.toMillis)(attempt(rest - 1))
         case e =>
-          rest match {
-            case 0 =>
-              Future.failed(e match {
-                case _: NoSuchElementException =>
-                  new NoSuchElementException(
-                    s"Ready checker returned false after $attempts attempts, delayed $delay each")
-                case _ => e
-              })
-            case n =>
-              withDelay(delay.toMillis)(attempt(n - 1))
-          }
+          Future.failed(e)
       }
     }
 
@@ -103,8 +82,8 @@ object DockerReadyChecker {
 
   object Always extends DockerReadyChecker {
     override def apply(container: Container)(implicit docker: ContainerCommandExecutor,
-                                             ec: ExecutionContext): Future[Boolean] =
-      Future.successful(true)
+                                             ec: ExecutionContext): Future[Unit] =
+      Future.unit
   }
 
   case class HttpResponseCode(port: Int,
@@ -112,8 +91,9 @@ object DockerReadyChecker {
                               host: Option[String] = None,
                               code: Int = 200)
       extends DockerReadyChecker {
+
     override def apply(container: Container)(implicit docker: ContainerCommandExecutor,
-                                             ec: ExecutionContext): Future[Boolean] = {
+                                             ec: ExecutionContext): Future[Unit] = {
 
       val p = container.mappedPorts()(port)
       val url = new URL("http", host.getOrElse(docker.client.getHost), p, path)
@@ -121,10 +101,11 @@ object DockerReadyChecker {
         scala.concurrent.blocking {
           val con = url.openConnection().asInstanceOf[HttpURLConnection]
           try {
-            con.getResponseCode == code
+            if (con.getResponseCode != code)
+              throw new Exception("unexpected response code: " + con.getResponseCode)
           } catch {
             case e: java.net.ConnectException =>
-              false
+              throw e
           }
         }
       }
@@ -134,16 +115,17 @@ object DockerReadyChecker {
   case class LogLineContains(str: String) extends DockerReadyChecker {
 
     override def apply(container: Container)(implicit docker: ContainerCommandExecutor,
-                                             ec: ExecutionContext): Future[Boolean] = {
+                                             ec: ExecutionContext): Future[Unit] = {
       container.state() match {
         case ContainerState.Ready(_) =>
-          Future.successful(true)
+          Future.unit
         case state: ContainerState.HasId =>
           docker
             .withLogStreamLinesRequirement(state.id, withErr = true)(_.contains(str))
-            .map(_ => true)
+            .map(_ => ())
         case _ =>
-          Future.successful(false)
+          Future.failed(
+            new FailFastCheckException("can't initialise LogStream to container without Id"))
       }
     }
   }
@@ -152,10 +134,10 @@ object DockerReadyChecker {
       extends DockerReadyChecker {
 
     override def apply(container: Container)(implicit docker: ContainerCommandExecutor,
-                                             ec: ExecutionContext): Future[Boolean] = {
+                                             ec: ExecutionContext): Future[Unit] = {
       RetryUtils.runWithin(underlying(container), duration).recover {
         case _: TimeoutException =>
-          false
+          throw new FailFastCheckException("timeout exception")
       }
     }
   }
@@ -166,15 +148,58 @@ object DockerReadyChecker {
       extends DockerReadyChecker {
 
     override def apply(container: Container)(implicit docker: ContainerCommandExecutor,
-                                             ec: ExecutionContext): Future[Boolean] = {
-      RetryUtils.looped(underlying(container).filter(identity), attempts, delay)
+                                             ec: ExecutionContext): Future[Unit] = {
+
+      def attempt(attemptsLeft: Int): Future[Unit] = {
+        underlying(container)
+          .recoverWith {
+            case e: FailFastCheckException => Future.failed(e)
+            case e if attemptsLeft > 0 =>
+              RetryUtils.withDelay(delay.toMillis)(attempt(attemptsLeft - 1))
+            case e =>
+              Future.failed(e)
+          }
+      }
+
+      attempt(attempts)
     }
   }
 
-  case class F(f: Container => Future[Boolean]) extends DockerReadyChecker {
+  private[docker] case class F(f: Container => Future[Unit]) extends DockerReadyChecker {
     override def apply(container: Container)(implicit docker: ContainerCommandExecutor,
-                                             ec: ExecutionContext): Future[Boolean] =
+                                             ec: ExecutionContext): Future[Unit] =
       f(container)
+  }
+
+  case class Jdbc(driverClass: String,
+                  urlFunc: Int => String,
+                  user: String,
+                  password: String,
+                  port: Option[Int] = None)
+      extends DockerReadyChecker {
+
+    override def apply(container: Container)(implicit docker: ContainerCommandExecutor,
+                                             ec: ExecutionContext): Future[Unit] = {
+
+      Future(scala.concurrent.blocking {
+        try {
+          Class.forName(driverClass)
+          val p = port match {
+            case Some(v) => container.mappedPorts().apply(v)
+            case None    => container.mappedPorts().head._2
+          }
+          val url = urlFunc(p)
+          val connection = Option(DriverManager.getConnection(url, user, password))
+          connection.foreach(_.close())
+          if (connection.isEmpty) {
+            throw new Exception(s"can't establish jdbc connection to $url")
+          }
+        } catch {
+          case e: ClassNotFoundException =>
+            throw new FailFastCheckException(s"jdbc class $driverClass not found")
+        }
+      })
+    }
   }
 
 }

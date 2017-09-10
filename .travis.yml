@@ -5,6 +5,7 @@ services:
 before_install:
   - docker pull mongo:3.4.8
   - docker pull elasticsearch:1.7.1
+  - docker pull elasticsearch:1.7.1
 
 language: scala
 
