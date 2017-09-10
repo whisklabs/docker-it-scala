@@ -48,7 +48,7 @@ lazy val testkitSpotifyImpl =
     .settings(commonSettings: _*)
     .settings(name := "docker-testkit-impl-spotify",
               libraryDependencies ++=
-                Seq("com.spotify" % "docker-client" % "8.8.0",
+                Seq("com.spotify" % "docker-client" % "8.9.0",
                     "com.google.code.findbugs" % "jsr305" % "3.0.1"))
     .dependsOn(core)
 
@@ -59,7 +59,7 @@ lazy val testkitDockerJavaImpl =
     .settings(
       name := "docker-testkit-impl-docker-java",
       libraryDependencies ++=
-        Seq("com.github.docker-java" % "docker-java" % "3.0.12",
+        Seq("com.github.docker-java" % "docker-java" % "3.0.13",
             "com.google.code.findbugs" % "jsr305" % "3.0.1")
     )
     .dependsOn(core)
@@ -76,7 +76,7 @@ lazy val scalatest =
     .settings(
       name := "docker-testkit-scalatest",
       libraryDependencies ++=
-        Seq("org.scalatest" %% "scalatest" % "3.0.3",
+        Seq("org.scalatest" %% "scalatest" % "3.0.4",
             "ch.qos.logback" % "logback-classic" % "1.2.1" % "test",
             "org.postgresql" % "postgresql" % "9.4.1210" % "test")
     )
@@ -100,7 +100,10 @@ lazy val config =
     .settings(
       name := "docker-testkit-config",
       libraryDependencies ++=
-        Seq("com.iheart" %% "ficus" % "1.4.1", "org.scalatest" %% "scalatest" % "3.0.3" % "test"),
+        Seq(
+          "com.iheart" %% "ficus" % "1.4.1",
+          "org.scalatest" %% "scalatest" % "3.0.4" % "test"
+        ),
       publish := scalaVersion map {
         case x if x.startsWith("2.10") => {}
         case _                         => publish.value
