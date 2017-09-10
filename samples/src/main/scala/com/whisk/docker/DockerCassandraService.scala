@@ -1,12 +1,15 @@
 package com.whisk.docker
 
-trait DockerCassandraService extends DockerKit {
+import org.scalatest.Suite
+
+trait DockerCassandraService extends DockerTestKitForAll { self: Suite =>
 
   val DefaultCqlPort = 9042
 
-  val cassandraContainer = DockerContainer("whisk/cassandra:2.1.8")
-    .withPorts(DefaultCqlPort -> None)
+  val cassandraContainer = ContainerSpec("whisk/cassandra:2.1.8")
+    .withExposedPorts(DefaultCqlPort)
     .withReadyChecker(DockerReadyChecker.LogLineContains("Starting listening for CQL clients on"))
+    .toContainer
 
-  abstract override def dockerContainers = cassandraContainer :: super.dockerContainers
+  override val managedContainers = cassandraContainer.toManagedContainer
 }

@@ -8,10 +8,10 @@ import scala.concurrent.{ExecutionContext, Future, Promise, TimeoutException}
 
 trait DockerReadyChecker {
 
-  def apply(container: DockerContainerState)(implicit docker: DockerCommandExecutor,
-                                             ec: ExecutionContext): Future[Boolean]
+  def apply(container: Container)(implicit docker: ContainerCommandExecutor,
+                                  ec: ExecutionContext): Future[Boolean]
 
-  def and(other: DockerReadyChecker)(implicit docker: DockerCommandExecutor,
+  def and(other: DockerReadyChecker)(implicit docker: ContainerCommandExecutor,
                                      ec: ExecutionContext) = {
     val s = this
     DockerReadyChecker.F { container =>
@@ -24,7 +24,8 @@ trait DockerReadyChecker {
     }
   }
 
-  def or(other: DockerReadyChecker)(implicit docker: DockerCommandExecutor, ec: ExecutionContext) = {
+  def or(other: DockerReadyChecker)(implicit docker: ContainerCommandExecutor,
+                                    ec: ExecutionContext) = {
     val s = this
     DockerReadyChecker.F { container =>
       val aF = s(container)
@@ -101,8 +102,8 @@ object RetryUtils {
 object DockerReadyChecker {
 
   object Always extends DockerReadyChecker {
-    override def apply(container: DockerContainerState)(implicit docker: DockerCommandExecutor,
-                                                        ec: ExecutionContext): Future[Boolean] =
+    override def apply(container: Container)(implicit docker: ContainerCommandExecutor,
+                                             ec: ExecutionContext): Future[Boolean] =
       Future.successful(true)
   }
 
@@ -111,11 +112,13 @@ object DockerReadyChecker {
                               host: Option[String] = None,
                               code: Int = 200)
       extends DockerReadyChecker {
-    override def apply(container: DockerContainerState)(implicit docker: DockerCommandExecutor,
-                                                        ec: ExecutionContext): Future[Boolean] = {
-      container.getPorts().map(_(port)).flatMap { p =>
-        val url = new URL("http", host.getOrElse(docker.host), p, path)
-        Future {
+    override def apply(container: Container)(implicit docker: ContainerCommandExecutor,
+                                             ec: ExecutionContext): Future[Boolean] = {
+
+      val p = container.mappedPorts()(port)
+      val url = new URL("http", host.getOrElse(docker.client.getHost), p, path)
+      Future {
+        scala.concurrent.blocking {
           val con = url.openConnection().asInstanceOf[HttpURLConnection]
           try {
             con.getResponseCode == code
@@ -129,13 +132,18 @@ object DockerReadyChecker {
   }
 
   case class LogLineContains(str: String) extends DockerReadyChecker {
-    override def apply(container: DockerContainerState)(implicit docker: DockerCommandExecutor,
-                                                        ec: ExecutionContext): Future[Boolean] = {
-      for {
-        id <- container.id
-        _ <- docker.withLogStreamLinesRequirement(id, withErr = true)(_.contains(str))
-      } yield {
-        true
+
+    override def apply(container: Container)(implicit docker: ContainerCommandExecutor,
+                                             ec: ExecutionContext): Future[Boolean] = {
+      container.state() match {
+        case ContainerState.Ready(_) =>
+          Future.successful(true)
+        case state: ContainerState.HasId =>
+          docker
+            .withLogStreamLinesRequirement(state.id, withErr = true)(_.contains(str))
+            .map(_ => true)
+        case _ =>
+          Future.successful(false)
       }
     }
   }
@@ -143,8 +151,8 @@ object DockerReadyChecker {
   private[docker] case class TimeLimited(underlying: DockerReadyChecker, duration: FiniteDuration)
       extends DockerReadyChecker {
 
-    override def apply(container: DockerContainerState)(implicit docker: DockerCommandExecutor,
-                                                        ec: ExecutionContext): Future[Boolean] = {
+    override def apply(container: Container)(implicit docker: ContainerCommandExecutor,
+                                             ec: ExecutionContext): Future[Boolean] = {
       RetryUtils.runWithin(underlying(container), duration).recover {
         case _: TimeoutException =>
           false
@@ -157,15 +165,15 @@ object DockerReadyChecker {
                                     delay: FiniteDuration)
       extends DockerReadyChecker {
 
-    override def apply(container: DockerContainerState)(implicit docker: DockerCommandExecutor,
-                                                        ec: ExecutionContext): Future[Boolean] = {
+    override def apply(container: Container)(implicit docker: ContainerCommandExecutor,
+                                             ec: ExecutionContext): Future[Boolean] = {
       RetryUtils.looped(underlying(container).filter(identity), attempts, delay)
     }
   }
 
-  case class F(f: DockerContainerState => Future[Boolean]) extends DockerReadyChecker {
-    override def apply(container: DockerContainerState)(implicit docker: DockerCommandExecutor,
-                                                        ec: ExecutionContext): Future[Boolean] =
+  case class F(f: Container => Future[Boolean]) extends DockerReadyChecker {
+    override def apply(container: Container)(implicit docker: ContainerCommandExecutor,
+                                             ec: ExecutionContext): Future[Boolean] =
       f(container)
   }
 

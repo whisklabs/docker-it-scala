@@ -1,119 +1,127 @@
 package com.whisk.docker
 
+import java.util.concurrent.{ConcurrentHashMap, TimeUnit}
+
+import com.google.common.collect.ImmutableList
+import com.spotify.docker.client.messages.ContainerCreation
 import org.slf4j.LoggerFactory
 
-import scala.annotation.tailrec
 import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.collection.JavaConverters._
 import scala.language.postfixOps
-import scala.concurrent.duration._
 
-class DockerContainerManager(containers: Seq[DockerContainer], executor: DockerCommandExecutor)(
-    implicit ec: ExecutionContext) {
+trait ManagedContainers
+
+case class SingleContainer(container: Container) extends ManagedContainers
+
+case class ContainerGroup(containers: Seq[Container]) extends ManagedContainers {
+  require(containers.nonEmpty, "container group should be non-empty")
+}
+
+class DockerContainerManager(managedContainers: ManagedContainers,
+                             executor: ContainerCommandExecutor,
+                             dockerTestTimeouts: DockerTestTimeouts,
+                             executionContext: ExecutionContext) {
+
+  private implicit val ec: ExecutionContext = executionContext
 
   private lazy val log = LoggerFactory.getLogger(this.getClass)
-  private implicit val dockerExecutor = executor
 
-  private val dockerStatesMap: Map[DockerContainer, DockerContainerState] =
-    containers.map(c => c -> new DockerContainerState(c))(collection.breakOut)
+  private val registeredContainers = new ConcurrentHashMap[String, String]()
 
-  val states = dockerStatesMap.values.toList
-
-  def getContainerState(container: DockerContainer): DockerContainerState = {
-    dockerStatesMap(container)
-  }
-
-  def isReady(container: DockerContainer): Future[Boolean] = {
-    dockerStatesMap(container).isReady()
-  }
-
-  def pullImages(): Future[Seq[String]] = {
-    executor.listImages().flatMap { images =>
-      val imagesToPull: Seq[String] = containers.map(_.image).filterNot { image =>
-        val cImage = if (image.contains(":")) image else image + ":latest"
-        images(cImage)
-      }
-      Future.traverse(imagesToPull)(i => executor.pullImage(i)).map(_ => imagesToPull)
+  private def waitUntilReady(container: Container): Future[Unit] = {
+    container.spec.readyChecker match {
+      case None =>
+        Future.unit
+      case Some(checker) =>
+        checker(container)(executor, executionContext)
+          .flatMap {
+            case false =>
+              Future.failed(new Exception("ready check failed"))
+            case true =>
+              Future.unit
+          }
     }
   }
 
-  def initReadyAll(containerStartTimeout: Duration): Future[Seq[(DockerContainerState, Boolean)]] = {
-    import DockerContainerManager._
+  def printWarningsIfExist(creation: ContainerCreation): Unit = {
+    Option(creation.warnings())
+      .getOrElse(ImmutableList.of[String]())
+      .forEach(w => log.warn(s"creating container: $w"))
+  }
 
-    @tailrec
-    def initGraph(graph: ContainerDependencyGraph,
-                  previousInits: Future[Seq[DockerContainerState]] = Future.successful(Seq.empty))
-      : Future[Seq[DockerContainerState]] = {
-      val initializedContainers = previousInits.flatMap { prev =>
-        Future.traverse(graph.containers.map(dockerStatesMap))(_.init()).map(prev ++ _)
-      }
-
-      graph.dependants match {
-        case None => initializedContainers
-        case Some(dependants) =>
-          val readyInits: Future[Seq[Future[Boolean]]] =
-            initializedContainers.map(_.map(state => state.isReady()))
-          val simplifiedReadyInits: Future[Seq[Boolean]] = readyInits.flatMap(Future.sequence(_))
-          Await.result(simplifiedReadyInits, containerStartTimeout)
-          initGraph(dependants, initializedContainers)
-      }
+  //TODO log listeners
+  def startContainer(container: Container): Future[Unit] = {
+    val image = container.spec.image
+    val startTime = System.nanoTime()
+    log.debug("Starting container: {}", image)
+    for {
+      creation <- executor.createContainer(container.spec)
+      id = creation.id()
+      _ = registeredContainers.put(id, image)
+      _ = container.created(id)
+      _ = printWarningsIfExist(creation)
+      _ = log.info(s"starting container with id: $id")
+      _ <- executor.startContainer(id)
+      _ = container.starting(id)
+      _ = log.info(s"container is starting. id=$id")
+      runningContainer <- executor.runningContainer(id)
+      _ = log.debug(s"container entered running state. id=$id")
+      _ = container.running(runningContainer)
+      _ = log.debug(s"preparing to execute ready check for container")
+      res <- waitUntilReady(container)
+      _ = log.debug(s"container is ready. id=$id")
+    } yield {
+      container.ready(runningContainer)
+      val timeTaken = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startTime)
+      log.info(s"container $image is ready after ${timeTaken / 1000.0}s")
+      res
     }
 
-    initGraph(buildDependencyGraph(containers)).flatMap(Future.traverse(_) { c =>
-      c.isReady().map(c -> _).recover {
-        case e =>
-          log.error(e.getMessage, e)
-          c -> false
-      }
-    })
+  }
+
+  def start(): Unit = {
+    log.debug("Starting containers")
+    val containers: Seq[Container] = managedContainers match {
+      case SingleContainer(c) => Seq(c)
+      case ContainerGroup(cs) => cs
+      case _                  => throw new Exception("unsupported type of managed containers")
+    }
+
+    val startedContainersF = Future.traverse(containers)(startContainer)
+
+    sys.addShutdownHook(
+      stop()
+    )
+
+    try {
+      Await.result(startedContainersF, dockerTestTimeouts.init)
+    } catch {
+      case e: Exception =>
+        log.error("Exception during container initialization", e)
+        stop()
+        throw new RuntimeException("Cannot run all required containers")
+    }
+  }
+
+  def stop(): Unit = {
+    try {
+      Await.ready(stopRmAll(), dockerTestTimeouts.stop)
+    } catch {
+      case e: Throwable =>
+        log.error(e.getMessage, e)
+    }
   }
 
   def stopRmAll(): Future[Unit] = {
-    val future = Future.traverse(states)(_.remove(force = true, removeVolumes = true)).map(_ => ())
+    val future = Future.traverse(registeredContainers.asScala) {
+      case (cid, _) =>
+        executor.remove(cid, force = true, removeVolumes = true)
+    }
     future.onComplete { _ =>
       executor.close()
     }
-    future
+    future.map(_ => ())
   }
 
-}
-
-object DockerContainerManager {
-  case class ContainerDependencyGraph(containers: Seq[DockerContainer],
-                                      dependants: Option[ContainerDependencyGraph] = None)
-
-  def buildDependencyGraph(containers: Seq[DockerContainer]): ContainerDependencyGraph = {
-    @tailrec def buildDependencyGraph(graph: ContainerDependencyGraph): ContainerDependencyGraph =
-      graph match {
-        case ContainerDependencyGraph(containers, dependants) =>
-          containers.partition(_.dependencies.isEmpty) match {
-            case (containersWithoutLinks, Nil) => graph
-            case (containersWithoutLinks, containersWithLinks) =>
-              val linkedContainers = containers.foldLeft(Seq[DockerContainer]()) {
-                case (links, container) => (links ++ container.dependencies)
-              }
-              val (containersWithLinksAndLinked, containersWithLinksNotLinked) =
-                containersWithLinks.partition(linkedContainers.contains)
-              val (containersToBeLeftAtCurrentPosition, containersToBeMovedUpALevel) = dependants
-                .map(_.containers)
-                .getOrElse(List.empty)
-                .partition(
-                  _.dependencies.exists(containersWithLinksNotLinked.contains)
-                )
-
-              buildDependencyGraph(
-                ContainerDependencyGraph(
-                  containers = containersWithoutLinks ++ containersWithLinksAndLinked,
-                  dependants = Some(
-                    ContainerDependencyGraph(
-                      containers = containersWithLinksNotLinked ++ containersToBeMovedUpALevel,
-                      dependants =
-                        dependants.map(_.copy(containers = containersToBeLeftAtCurrentPosition))
-                    ))
-                )
-              )
-          }
-      }
-
-    buildDependencyGraph(ContainerDependencyGraph(containers))
-  }
 }

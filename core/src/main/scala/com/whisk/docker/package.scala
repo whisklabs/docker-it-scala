@@ -1,5 +1,9 @@
 package com.whisk
 
+import java.util.concurrent.atomic.AtomicBoolean
+
+import scala.concurrent.{Future, Promise}
+
 /**
   * General utility functions
   */
@@ -10,4 +14,24 @@ package object docker {
       case Some(x) => f(content, x)
     }
   }
+
+  private[docker] class SinglePromise[T] {
+    val promise: Promise[T] = Promise[T]()
+
+    def future: Future[T] = promise.future
+
+    val flag = new AtomicBoolean(false)
+
+    def init(f: => Future[T]): Future[T] = {
+      if (!flag.getAndSet(true)) {
+        promise.tryCompleteWith(f)
+      }
+      future
+    }
+  }
+
+  private[docker] object SinglePromise {
+    def apply[T] = new SinglePromise[T]
+  }
+
 }
