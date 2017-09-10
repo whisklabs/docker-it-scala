@@ -135,10 +135,7 @@ object DockerReadyChecker {
 
     override def apply(container: Container)(implicit docker: ContainerCommandExecutor,
                                              ec: ExecutionContext): Future[Unit] = {
-      RetryUtils.runWithin(underlying(container), duration).recover {
-        case _: TimeoutException =>
-          throw new FailFastCheckException("timeout exception")
-      }
+      RetryUtils.runWithin(underlying(container), duration)
     }
   }
 
