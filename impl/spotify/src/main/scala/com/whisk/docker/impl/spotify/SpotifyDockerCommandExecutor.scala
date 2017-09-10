@@ -12,8 +12,7 @@ import com.spotify.docker.client.exceptions.ContainerNotFoundException
 import com.spotify.docker.client.messages.{
   ContainerConfig,
   HostConfig,
-  PortBinding,
-  AttachedNetwork
+  PortBinding
 }
 import com.spotify.docker.client.{DockerClient, LogMessage}
 import com.whisk.docker._
@@ -55,10 +54,16 @@ class SpotifyDockerCommandExecutor(override val host: String, client: DockerClie
         .withOption(spec.hostConfig.flatMap(_.tmpfs)) {
           case (config, value) => config.tmpfs(value.asJava)
         }
+        .withOption(spec.hostConfig.flatMap(_.memory)) {
+          case (config, memory) => config.memory(memory)
+        }
+        .withOption(spec.hostConfig.flatMap(_.memoryReservation)) {
+          case (config, reservation) => config.memoryReservation(reservation)
+        }
         .build()
     }
 
-    val builder = ContainerConfig
+    val containerConfig = ContainerConfig
       .builder()
       .image(spec.image)
       .hostConfig(hostConfig)
@@ -68,8 +73,9 @@ class SpotifyDockerCommandExecutor(override val host: String, client: DockerClie
       .env(spec.env: _*)
       .withOption(spec.user) { case (config, user) => config.user(user) }
       .withOption(spec.hostname) { case (config, hostname) => config.hostname(hostname) }
-
-    val containerConfig = spec.command.fold(builder)(c => builder.cmd(c: _*)).build()
+      .withOption(spec.command) { case (config, command) => config.cmd(command: _*) }
+      .withOption(spec.entrypoint) { case (config, entrypoint) => config.entrypoint(entrypoint: _*) }
+      .build()
 
     val creation = Future(
       spec.name.fold(client.createContainer(containerConfig))(
