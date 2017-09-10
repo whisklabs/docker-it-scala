@@ -22,7 +22,13 @@ case class HostConfig(
     /**
       * the soft limit on memory usage (in bytes)
       */
-    memoryReservation: Option[Long] = None
+    memoryReservation: Option[Long] = None,
+
+    /**
+      * whether to run in privileged mode
+      */
+    privileged: Boolean = false
+
 
 )
 
