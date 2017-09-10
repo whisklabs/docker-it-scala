@@ -12,5 +12,5 @@ trait DockerMongodbService extends DockerTestKitForAll {
     .withReadyChecker(DockerReadyChecker.LogLineContains("waiting for connections on port"))
     .toContainer
 
-  override val managedContainers = mongodbContainer.toManagedContainer
+  override val managedContainers: ManagedContainers = mongodbContainer.toManagedContainer
 }

@@ -10,7 +10,7 @@ trait DockerElasticsearchService extends DockerTestKitForAll {
   val DefaultElasticsearchHttpPort = 9200
   val DefaultElasticsearchClientPort = 9300
 
-  val elasticsearchContainer = ContainerSpec("elasticsearch:1.7.1")
+  val elasticsearchContainer: Container = ContainerSpec("elasticsearch:1.7.1")
     .withExposedPorts(DefaultElasticsearchHttpPort, DefaultElasticsearchClientPort)
     .withReadyChecker(
       DockerReadyChecker
@@ -20,5 +20,5 @@ trait DockerElasticsearchService extends DockerTestKitForAll {
     )
     .toContainer
 
-  override val managedContainers = elasticsearchContainer.toManagedContainer
+  override val managedContainers: ManagedContainers = elasticsearchContainer.toManagedContainer
 }

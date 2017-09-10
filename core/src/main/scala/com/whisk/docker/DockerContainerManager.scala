@@ -19,6 +19,11 @@ case class ContainerGroup(containers: Seq[Container]) extends ManagedContainers 
   require(containers.nonEmpty, "container group should be non-empty")
 }
 
+object ContainerGroup {
+
+  def of(containers: Container*): ContainerGroup = ContainerGroup(containers)
+}
+
 class DockerContainerManager(managedContainers: ManagedContainers,
                              executor: ContainerCommandExecutor,
                              dockerTestTimeouts: DockerTestTimeouts,
