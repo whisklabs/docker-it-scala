@@ -46,8 +46,9 @@ class DockerContainerManager(managedContainers: ManagedContainers,
 
   private def printWarningsIfExist(creation: ContainerCreation): Unit = {
     Option(creation.warnings())
-      .getOrElse(ImmutableList.of[String]())
-      .forEach(w => log.warn(s"creating container: $w"))
+      .map(_.asScala.toList)
+      .getOrElse(Nil)
+      .foreach(w => log.warn(s"creating container: $w"))
   }
 
   private def ensureImage(image: String): Future[Unit] = {

@@ -86,9 +86,12 @@ class ContainerCommandExecutor(val client: DockerClient) {
       implicit ec: ExecutionContext): Unit = {
 
     logStreamFuture(id, withErr).foreach { stream =>
-      stream.forEachRemaining((t: LogMessage) => {
-        val str = StandardCharsets.US_ASCII.decode(t.content()).toString
-        f(s"[$id] $str")
+      stream.forEachRemaining(new java.util.function.Consumer[LogMessage] {
+
+        override def accept(t: LogMessage): Unit = {
+          val str = StandardCharsets.US_ASCII.decode(t.content()).toString
+          f(s"[$id] $str")
+        }
       })
     }
   }
@@ -99,11 +102,14 @@ class ContainerCommandExecutor(val client: DockerClient) {
     logStreamFuture(id, withErr).flatMap { stream =>
       val p = Promise[Unit]()
       Future {
-        stream.forEachRemaining((t: LogMessage) => {
-          val str = StandardCharsets.US_ASCII.decode(t.content()).toString
-          if (f(str)) {
-            p.trySuccess(())
-            Closeables.close(stream, true)
+        stream.forEachRemaining(new java.util.function.Consumer[LogMessage] {
+
+          override def accept(t: LogMessage): Unit = {
+            val str = StandardCharsets.US_ASCII.decode(t.content()).toString
+            if (f(str)) {
+              p.trySuccess(())
+              Closeables.close(stream, true)
+            }
           }
         })
       }
