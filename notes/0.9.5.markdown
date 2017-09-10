@@ -1,0 +1,10 @@
+#scala #docker #integration-testing
+
+## Highlights
+
+* extend `HostConfig` with `memory` and `memoryReservation` settings (credit [Chris Birchall](https://github.com/cb372))
+* allowing to override entrypoint (credit [Chris Birchall](https://github.com/cb372))
+* Spotify's [docker-client](https://github.com/spotify/docker-client) updated to 8.9.0
+* [docker-client](https://github.com/docker-java/docker-java) updated to 3.0.13
+* move project to sbt 1.x
+
