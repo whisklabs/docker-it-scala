@@ -67,7 +67,6 @@ class DockerContainerManager(managedContainers: ManagedContainers,
     val startTime = System.nanoTime()
     log.debug("Starting container: {}", image)
     for {
-      _ <- ensureImage(image)
       creation <- executor.createContainer(container.spec)
       id = creation.id()
       _ = registeredContainers.put(id, image)
@@ -99,6 +98,9 @@ class DockerContainerManager(managedContainers: ManagedContainers,
       case ContainerGroup(cs) => cs
       case _                  => throw new Exception("unsupported type of managed containers")
     }
+
+    val imagesF = Future.traverse(containers.map(_.spec.image))(ensureImage)
+    Await.result(imagesF, dockerTestTimeouts.pull)
 
     val startedContainersF = Future.traverse(containers)(startContainer)
 

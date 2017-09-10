@@ -6,6 +6,8 @@ import org.scalatest.FunSuite
 class ElasticsearchServiceTest extends FunSuite with DockerElasticsearchService {
 
   test("test container started") {
-    elasticsearchContainer.state().isInstanceOf[ContainerState.Ready]
+    assert(elasticsearchContainer.state().isInstanceOf[ContainerState.Ready],
+           "elasticsearch container is ready")
+    assert(elasticsearchContainer.mappedPorts().get(9200).nonEmpty, "elasticsearch port is exposed")
   }
 }
