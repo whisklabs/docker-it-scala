@@ -1,12 +1,14 @@
 lazy val commonSettings = Seq(
   organization := "com.whisk",
-  version := "0.9.4",
+  version := "0.9.5",
   scalaVersion := "2.12.3",
   crossScalaVersions := Seq("2.12.3", "2.11.11", "2.10.6"),
   scalacOptions ++= Seq("-feature", "-deprecation"),
   fork in Test := true,
   licenses += ("MIT", url("http://opensource.org/licenses/MIT")),
   sonatypeProfileName := "com.whisk",
+  publishMavenStyle := true,
+  publishTo := Some(Opts.resolver.sonatypeStaging),
   pomExtra in Global := {
     <url>https://github.com/whisklabs/docker-it-scala</url>
       <scm>
