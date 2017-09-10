@@ -3,6 +3,7 @@ package com.whisk.docker
 import java.util.concurrent.{ConcurrentHashMap, TimeUnit}
 
 import com.google.common.collect.ImmutableList
+import com.spotify.docker.client.exceptions.ImageNotFoundException
 import com.spotify.docker.client.messages.ContainerCreation
 import org.slf4j.LoggerFactory
 
@@ -44,10 +45,20 @@ class DockerContainerManager(managedContainers: ManagedContainers,
     }
   }
 
-  def printWarningsIfExist(creation: ContainerCreation): Unit = {
+  private def printWarningsIfExist(creation: ContainerCreation): Unit = {
     Option(creation.warnings())
       .getOrElse(ImmutableList.of[String]())
       .forEach(w => log.warn(s"creating container: $w"))
+  }
+
+  private def ensureImage(image: String): Future[Unit] = {
+    Future(scala.concurrent.blocking(executor.client.inspectImage(image)))
+      .map(_ => ())
+      .recoverWith {
+        case x: ImageNotFoundException =>
+          log.info(s"image [$image] not found. pulling...")
+          Future(scala.concurrent.blocking(executor.client.pull(image)))
+      }
   }
 
   //TODO log listeners
@@ -56,6 +67,7 @@ class DockerContainerManager(managedContainers: ManagedContainers,
     val startTime = System.nanoTime()
     log.debug("Starting container: {}", image)
     for {
+      _ <- ensureImage(image)
       creation <- executor.createContainer(container.spec)
       id = creation.id()
       _ = registeredContainers.put(id, image)

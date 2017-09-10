@@ -6,6 +6,7 @@ import java.util.concurrent.TimeUnit
 
 import com.google.common.io.Closeables
 import com.spotify.docker.client.DockerClient.{AttachParameter, RemoveContainerParam}
+import com.spotify.docker.client.exceptions.ImageNotFoundException
 import com.spotify.docker.client.messages._
 import com.spotify.docker.client.{DockerClient, LogMessage, LogStream}
 
@@ -74,15 +75,15 @@ class ContainerCommandExecutor(val client: DockerClient) {
   }
 
   private def logStreamFuture(id: String, withErr: Boolean)(
-      implicit docker: ContainerCommandExecutor,
+      implicit
       ec: ExecutionContext): Future[LogStream] = {
     val baseParams = List(AttachParameter.STDOUT, AttachParameter.STREAM, AttachParameter.LOGS)
     val logParams = if (withErr) AttachParameter.STDERR :: baseParams else baseParams
     Future(scala.concurrent.blocking(client.attachContainer(id, logParams: _*)))
   }
 
-  def withLogStreamLines(id: String, withErr: Boolean)(
-      f: String => Unit)(implicit docker: ContainerCommandExecutor, ec: ExecutionContext): Unit = {
+  def withLogStreamLines(id: String, withErr: Boolean)(f: String => Unit)(
+      implicit ec: ExecutionContext): Unit = {
 
     logStreamFuture(id, withErr).foreach { stream =>
       stream.forEachRemaining((t: LogMessage) => {
@@ -93,8 +94,7 @@ class ContainerCommandExecutor(val client: DockerClient) {
   }
 
   def withLogStreamLinesRequirement(id: String, withErr: Boolean)(f: (String) => Boolean)(
-      implicit docker: ContainerCommandExecutor,
-      ec: ExecutionContext): Future[Unit] = {
+      implicit ec: ExecutionContext): Future[Unit] = {
 
     logStreamFuture(id, withErr).flatMap { stream =>
       val p = Promise[Unit]()
