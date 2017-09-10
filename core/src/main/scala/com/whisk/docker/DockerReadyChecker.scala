@@ -83,7 +83,7 @@ object DockerReadyChecker {
   object Always extends DockerReadyChecker {
     override def apply(container: Container)(implicit docker: ContainerCommandExecutor,
                                              ec: ExecutionContext): Future[Unit] =
-      Future.unit
+      Future.successful(())
   }
 
   case class HttpResponseCode(port: Int,
@@ -118,7 +118,7 @@ object DockerReadyChecker {
                                              ec: ExecutionContext): Future[Unit] = {
       container.state() match {
         case ContainerState.Ready(_) =>
-          Future.unit
+          Future.successful(())
         case state: ContainerState.HasId =>
           docker
             .withLogStreamLinesRequirement(state.id, withErr = true)(_.contains(str))

@@ -38,7 +38,7 @@ class DockerContainerManager(managedContainers: ManagedContainers,
   private def waitUntilReady(container: Container): Future[Unit] = {
     container.spec.readyChecker match {
       case None =>
-        Future.unit
+        Future.successful(())
       case Some(checker) =>
         checker(container)(executor, executionContext)
     }
