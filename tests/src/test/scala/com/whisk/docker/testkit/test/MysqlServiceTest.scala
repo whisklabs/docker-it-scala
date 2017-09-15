@@ -7,6 +7,6 @@ class MysqlServiceTest extends FunSuite with DockerMysqlService {
 
   test("test container started") {
     assert(mysqlContainer.state().isInstanceOf[ContainerState.Ready], "mysql is ready")
-    assert(mysqlContainer.mappedPorts().get(MysqlAdvertisedPort).nonEmpty, "mysql port exposed")
+    assert(mysqlContainer.mappedPortOpt(MysqlAdvertisedPort).nonEmpty, "mysql port exposed")
   }
 }

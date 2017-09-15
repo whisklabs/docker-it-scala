@@ -102,5 +102,13 @@ class Container(val spec: ContainerSpec) {
     }
   }
 
+  def mappedPort(port: Int): Int = {
+    mappedPorts().apply(port)
+  }
+
+  def mappedPortOpt(port: Int): Option[Int] = {
+    mappedPorts().get(port)
+  }
+
   def toManagedContainer: SingleContainer = SingleContainer(this)
 }

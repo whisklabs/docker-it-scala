@@ -13,9 +13,9 @@ class MultiContainerTest
   test("both containers should be ready") {
     assert(elasticsearchContainer.state().isInstanceOf[ContainerState.Ready],
            "elasticsearch container is ready")
-    assert(elasticsearchContainer.mappedPorts().get(9200).nonEmpty, "elasticsearch port is exposed")
+    assert(elasticsearchContainer.mappedPortOpt(9200).nonEmpty, "elasticsearch port is exposed")
 
     assert(mongodbContainer.state().isInstanceOf[ContainerState.Ready], "mongodb is ready")
-    assert(mongodbContainer.mappedPorts().get(27017).nonEmpty, "port 2017 is exposed")
+    assert(mongodbContainer.mappedPortOpt(27017).nonEmpty, "port 2017 is exposed")
   }
 }

@@ -8,6 +8,6 @@ class ElasticsearchServiceTest extends FunSuite with DockerElasticsearchService 
   test("test container started") {
     assert(elasticsearchContainer.state().isInstanceOf[ContainerState.Ready],
            "elasticsearch container is ready")
-    assert(elasticsearchContainer.mappedPorts().get(9200).nonEmpty, "elasticsearch port is exposed")
+    assert(elasticsearchContainer.mappedPortOpt(9200).nonEmpty, "elasticsearch port is exposed")
   }
 }

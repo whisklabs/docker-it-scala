@@ -7,8 +7,7 @@ class PostgresServiceTest extends FunSuite with DockerPostgresService {
 
   test("test container started") {
     assert(postgresContainer.state().isInstanceOf[ContainerState.Ready], "postgres is ready")
-    assert(
-      postgresContainer.mappedPorts().get(PostgresAdvertisedPort) === Some(PostgresExposedPort),
-      "postgres port exposed")
+    assert(postgresContainer.mappedPortOpt(PostgresAdvertisedPort) === Some(PostgresExposedPort),
+           "postgres port exposed")
   }
 }
