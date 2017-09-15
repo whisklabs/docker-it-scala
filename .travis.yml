@@ -5,6 +5,7 @@ services:
 before_install:
   - docker pull mongo:3.0.6
   - docker pull elasticsearch:1.7.1
+  - docker pull spotify/kafka
 
 language: scala
 
@@ -18,6 +19,7 @@ jdk:
 script:
   - sbt "scalatest/testOnly com.whisk.docker.MongodbServiceSpec" #spotify executor
   - sbt "scalatest/testOnly com.whisk.docker.ElasticsearchServiceSpec"  #docker-java executor
+  - sbt "scalatest/testOnly com.whisk.docker.KafkaServiceSpec" #spotify
 
 cache:
   directories:

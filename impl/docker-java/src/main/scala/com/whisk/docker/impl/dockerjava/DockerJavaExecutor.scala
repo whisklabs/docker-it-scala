@@ -51,12 +51,12 @@ class DockerJavaExecutor(override val host: String, client: DockerClient)
       .createContainerCmd(spec.image)
       .withHostConfig(hostConfig)
       .withPortSpecs(spec.bindPorts
-            .map({
+        .map({
           case (guestPort, DockerPortMapping(Some(hostPort), address)) =>
             s"$address:$hostPort:$guestPort"
           case (guestPort, DockerPortMapping(None, address)) => s"$address::$guestPort"
         })
-            .toSeq: _*)
+        .toSeq: _*)
       .withExposedPorts(spec.bindPorts.keys.map(ExposedPort.tcp).toSeq: _*)
       .withTty(spec.tty)
       .withStdinOpen(spec.stdinOpen)
@@ -66,7 +66,9 @@ class DockerJavaExecutor(override val host: String, client: DockerClient)
       .withOption(spec.hostname) { case (config, hostName) => config.withHostName(hostName) }
       .withOption(spec.name) { case (config, name) => config.withName(name) }
       .withOption(spec.command) { case (config, c) => config.withCmd(c: _*) }
-      .withOption(spec.entrypoint) { case (config, entrypoint) => config.withEntrypoint(entrypoint: _*) }
+      .withOption(spec.entrypoint) {
+        case (config, entrypoint) => config.withEntrypoint(entrypoint: _*)
+      }
 
     Future(cmd.exec()).map { resp =>
       if (resp.getId != null && resp.getId != "") {

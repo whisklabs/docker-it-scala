@@ -11,19 +11,15 @@ case class LogLineReceiver(withErr: Boolean, f: String => Unit)
 case class DockerPortMapping(hostPort: Option[Int] = None, address: String = "0.0.0.0")
 
 case class HostConfig(
-
     tmpfs: Option[Map[String, String]] = None,
-
     /**
       * the hard limit on memory usage (in bytes)
       */
     memory: Option[Long] = None,
-
     /**
       * the soft limit on memory usage (in bytes)
       */
     memoryReservation: Option[Long] = None
-
 )
 
 case class DockerContainer(image: String,

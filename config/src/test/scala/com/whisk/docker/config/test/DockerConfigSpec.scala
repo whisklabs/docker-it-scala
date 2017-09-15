@@ -16,8 +16,7 @@ class DockerConfigSpec extends FlatSpec with Matchers with DockerKitConfig {
 
     val cassandraExpected = DockerContainer("whisk/cassandra:2.1.8")
       .withPorts(9042 -> None)
-      .withReadyChecker(
-        DockerReadyChecker.LogLineContains("Starting listening for CQL clients on"))
+      .withReadyChecker(DockerReadyChecker.LogLineContains("Starting listening for CQL clients on"))
       .withVolumes(volumes)
 
     configureDockerContainer("docker.cassandra") shouldBe cassandraExpected

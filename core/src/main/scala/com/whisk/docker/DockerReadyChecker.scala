@@ -24,7 +24,8 @@ trait DockerReadyChecker {
     }
   }
 
-  def or(other: DockerReadyChecker)(implicit docker: DockerCommandExecutor, ec: ExecutionContext) = {
+  def or(other: DockerReadyChecker)(implicit docker: DockerCommandExecutor,
+                                    ec: ExecutionContext) = {
     val s = this
     DockerReadyChecker.F { container =>
       val aF = s(container)

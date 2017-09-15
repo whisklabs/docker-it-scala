@@ -9,11 +9,7 @@ import java.util.function.Consumer
 import com.google.common.io.Closeables
 import com.spotify.docker.client.DockerClient.{AttachParameter, RemoveContainerParam}
 import com.spotify.docker.client.exceptions.ContainerNotFoundException
-import com.spotify.docker.client.messages.{
-  ContainerConfig,
-  HostConfig,
-  PortBinding
-}
+import com.spotify.docker.client.messages.{ContainerConfig, HostConfig, PortBinding}
 import com.spotify.docker.client.{DockerClient, LogMessage}
 import com.whisk.docker._
 
@@ -74,7 +70,9 @@ class SpotifyDockerCommandExecutor(override val host: String, client: DockerClie
       .withOption(spec.user) { case (config, user) => config.user(user) }
       .withOption(spec.hostname) { case (config, hostname) => config.hostname(hostname) }
       .withOption(spec.command) { case (config, command) => config.cmd(command: _*) }
-      .withOption(spec.entrypoint) { case (config, entrypoint) => config.entrypoint(entrypoint: _*) }
+      .withOption(spec.entrypoint) {
+        case (config, entrypoint) => config.entrypoint(entrypoint: _*)
+      }
       .build()
 
     val creation = Future(
