@@ -1,6 +1,6 @@
-package com.whisk.docker.test
+package com.whisk.docker.testkit.test
 
-import com.whisk.docker.{ContainerState, DockerPostgresService}
+import com.whisk.docker.testkit.{ContainerState, DockerPostgresService}
 import org.scalatest.FunSuite
 
 class PostgresServiceTest extends FunSuite with DockerPostgresService {

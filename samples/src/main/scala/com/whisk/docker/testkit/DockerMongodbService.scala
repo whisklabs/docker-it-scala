@@ -1,5 +1,6 @@
-package com.whisk.docker
+package com.whisk.docker.testkit
 
+import com.whisk.docker.testkit.scalatest.DockerTestKitForAll
 import org.scalatest.Suite
 
 trait DockerMongodbService extends DockerTestKitForAll {

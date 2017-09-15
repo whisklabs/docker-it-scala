@@ -1,4 +1,4 @@
-package com.whisk.docker
+package com.whisk.docker.testkit
 
 import java.util.concurrent.atomic.AtomicReference
 

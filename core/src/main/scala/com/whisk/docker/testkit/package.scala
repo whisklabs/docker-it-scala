@@ -1,4 +1,4 @@
-package com.whisk
+package com.whisk.docker
 
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -7,7 +7,7 @@ import scala.concurrent.{Future, Promise}
 /**
   * General utility functions
   */
-package object docker {
+package object testkit {
   implicit class OptionalOps[A](val content: A) extends AnyVal {
     def withOption[B](optional: Option[B])(f: (A, B) => A): A = optional match {
       case None    => content

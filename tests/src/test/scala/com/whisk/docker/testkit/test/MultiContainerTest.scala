@@ -1,11 +1,6 @@
-package com.whisk.docker.test
+package com.whisk.docker.testkit.test
 
-import com.whisk.docker.{
-  ContainerGroup,
-  ContainerState,
-  DockerElasticsearchService,
-  DockerMongodbService
-}
+import com.whisk.docker.testkit._
 import org.scalatest.FunSuite
 
 class MultiContainerTest

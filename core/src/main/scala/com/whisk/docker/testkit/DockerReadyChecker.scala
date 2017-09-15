@@ -1,4 +1,4 @@
-package com.whisk.docker
+package com.whisk.docker.testkit
 
 import java.net.{HttpURLConnection, URL}
 import java.sql.DriverManager

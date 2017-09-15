@@ -1,6 +1,6 @@
-package com.whisk.docker.test
+package com.whisk.docker.testkit.test
 
-import com.whisk.docker.{ContainerState, DockerMysqlService}
+import com.whisk.docker.testkit.{ContainerState, DockerMysqlService}
 import org.scalatest.FunSuite
 
 class MysqlServiceTest extends FunSuite with DockerMysqlService {

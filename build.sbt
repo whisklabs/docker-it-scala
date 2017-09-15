@@ -36,7 +36,7 @@ lazy val root =
     .in(file("."))
     .settings(commonSettings: _*)
     .settings(publish := {}, publishLocal := {}, packagedArtifacts := Map.empty)
-    .aggregate(core, samples)
+    .aggregate(core, scalatest, samples)
 
 lazy val core =
   project
@@ -47,16 +47,26 @@ lazy val core =
         "org.slf4j" % "slf4j-api" % "1.7.25",
         "com.spotify" % "docker-client" % "8.9.0",
         "com.google.code.findbugs" % "jsr305" % "3.0.1",
+      )
+    )
+
+lazy val scalatest =
+  project
+    .settings(commonSettings: _*)
+    .settings(
+      name := "docker-testkit-scalatest",
+      libraryDependencies ++= Seq(
         "org.scalatest" %% "scalatest" % "3.0.4",
         "ch.qos.logback" % "logback-classic" % "1.2.3" % "test"
       )
     )
+    .dependsOn(core)
 
 lazy val samples =
   project
     .settings(commonSettings: _*)
     .settings(name := "docker-testkit-samples")
-    .dependsOn(core)
+    .dependsOn(core, scalatest)
 
 lazy val tests =
   project
@@ -68,4 +78,4 @@ lazy val tests =
         "mysql" % "mysql-connector-java" % "5.1.44" % "test"
       )
     )
-    .dependsOn(core % "test", samples % "test")
+    .dependsOn(core, scalatest, samples % "test")

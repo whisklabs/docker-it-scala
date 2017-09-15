@@ -1,8 +1,7 @@
-package com.whisk.docker
+package com.whisk.docker.testkit
 
 import java.util.concurrent.{ConcurrentHashMap, TimeUnit}
 
-import com.google.common.collect.ImmutableList
 import com.spotify.docker.client.exceptions.ImageNotFoundException
 import com.spotify.docker.client.messages.ContainerCreation
 import org.slf4j.LoggerFactory

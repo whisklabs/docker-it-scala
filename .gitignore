@@ -1,3 +1,4 @@
 target/
 project/sbt-launch-*.jar
 .idea/
+.DS_Store

@@ -1,4 +1,4 @@
-package com.whisk.docker
+package com.whisk.docker.testkit
 
 object PortProtocol extends Enumeration {
   val TCP, UDP = Value

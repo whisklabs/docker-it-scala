@@ -1,6 +1,6 @@
-package com.whisk.docker.test
+package com.whisk.docker.testkit.test
 
-import com.whisk.docker.{ContainerState, DockerMongodbService}
+import com.whisk.docker.testkit.{ContainerState, DockerMongodbService}
 import org.scalatest.FunSuite
 
 class MongodbServiceTest extends FunSuite with DockerMongodbService {

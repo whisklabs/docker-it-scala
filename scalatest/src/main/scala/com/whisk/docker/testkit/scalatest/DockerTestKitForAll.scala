@@ -1,8 +1,9 @@
-package com.whisk.docker
+package com.whisk.docker.testkit.scalatest
 
 import java.util.concurrent.ForkJoinPool
 
 import com.spotify.docker.client.{DefaultDockerClient, DockerClient}
+import com.whisk.docker.testkit._
 import org.scalatest.{Args, Status, Suite, SuiteMixin}
 
 import scala.concurrent.ExecutionContext

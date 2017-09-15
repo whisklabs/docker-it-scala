@@ -1,6 +1,6 @@
-package com.whisk.docker.test
+package com.whisk.docker.testkit.test
 
-import com.whisk.docker.{ContainerState, DockerElasticsearchService}
+import com.whisk.docker.testkit.{ContainerState, DockerElasticsearchService}
 import org.scalatest.FunSuite
 
 class ElasticsearchServiceTest extends FunSuite with DockerElasticsearchService {
