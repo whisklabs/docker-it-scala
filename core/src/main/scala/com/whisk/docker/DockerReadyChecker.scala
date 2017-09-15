@@ -11,36 +11,14 @@ trait DockerReadyChecker {
   def apply(container: DockerContainerState)(implicit docker: DockerCommandExecutor,
                                              ec: ExecutionContext): Future[Boolean]
 
-  def and(other: DockerReadyChecker)(implicit docker: DockerCommandExecutor,
-                                     ec: ExecutionContext) = {
-    val s = this
-    DockerReadyChecker.F { container =>
-      val aF = s(container)
-      val bF = other(container)
-      for {
-        a <- aF
-        b <- bF
-      } yield a && b
-    }
+  @deprecated("this method will be removed. Use DockerReadyChecker.And(a, b)", "0.9.6")
+  def and(other: DockerReadyChecker): DockerReadyChecker = {
+    DockerReadyChecker.And(this, other)
   }
 
-  def or(other: DockerReadyChecker)(implicit docker: DockerCommandExecutor,
-                                    ec: ExecutionContext) = {
-    val s = this
-    DockerReadyChecker.F { container =>
-      val aF = s(container)
-      val bF = other(container)
-      val p = Promise[Boolean]()
-      aF.map {
-        case true => p.trySuccess(true)
-        case _    =>
-      }
-      bF.map {
-        case true => p.trySuccess(true)
-        case _    =>
-      }
-      p.future
-    }
+  @deprecated("this method will be removed. Use DockerReadyChecker.Or(a, b)", "0.9.6")
+  def or(other: DockerReadyChecker): DockerReadyChecker = {
+    DockerReadyChecker.Or(this, other)
   }
 
   def within(duration: FiniteDuration): DockerReadyChecker = {
@@ -100,6 +78,36 @@ object RetryUtils {
 }
 
 object DockerReadyChecker {
+
+  case class And(r1: DockerReadyChecker, r2: DockerReadyChecker) extends DockerReadyChecker {
+    override def apply(container: DockerContainerState)(implicit docker: DockerCommandExecutor,
+                                                        ec: ExecutionContext): Future[Boolean] = {
+      val aF = r1(container)
+      val bF = r2(container)
+      for {
+        a <- aF
+        b <- bF
+      } yield a && b
+    }
+  }
+
+  case class Or(r1: DockerReadyChecker, r2: DockerReadyChecker) extends DockerReadyChecker {
+    override def apply(container: DockerContainerState)(implicit docker: DockerCommandExecutor,
+                                                        ec: ExecutionContext): Future[Boolean] = {
+      val aF = r1(container)
+      val bF = r2(container)
+      val p = Promise[Boolean]()
+      aF.map {
+        case true => p.trySuccess(true)
+        case _    =>
+      }
+      bF.map {
+        case true => p.trySuccess(true)
+        case _    =>
+      }
+      p.future
+    }
+  }
 
   object Always extends DockerReadyChecker {
     override def apply(container: DockerContainerState)(implicit docker: DockerCommandExecutor,
