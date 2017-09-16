@@ -65,7 +65,12 @@ lazy val scalatest =
 lazy val samples =
   project
     .settings(commonSettings: _*)
-    .settings(name := "docker-testkit-samples")
+    .settings(
+      name := "docker-testkit-samples",
+      libraryDependencies ++= Seq(
+        "org.apache.kafka" % "kafka-clients" % "0.11.0.1"
+      )
+    )
     .dependsOn(core, scalatest)
 
 lazy val tests =
