@@ -14,21 +14,6 @@ trait DockerReadyChecker {
   def apply(container: BaseContainer)(implicit docker: ContainerCommandExecutor,
                                       ec: ExecutionContext): Future[Unit]
 
-  def and(other: DockerReadyChecker)(implicit docker: ContainerCommandExecutor,
-                                     ec: ExecutionContext) = {
-    val s = this
-    DockerReadyChecker.F { container =>
-      val aF = s(container)
-      val bF = other(container)
-      for {
-        a <- aF
-        b <- bF
-      } yield {
-        ()
-      }
-    }
-  }
-
   def within(duration: FiniteDuration): DockerReadyChecker = {
     DockerReadyChecker.TimeLimited(this, duration)
   }
@@ -79,6 +64,21 @@ object RetryUtils {
 }
 
 object DockerReadyChecker {
+
+  case class And(r1: DockerReadyChecker, r2: DockerReadyChecker) extends DockerReadyChecker {
+
+    override def apply(container: BaseContainer)(implicit docker: ContainerCommandExecutor,
+                                                 ec: ExecutionContext): Future[Unit] = {
+      val aF = r1(container)
+      val bF = r2(container)
+      for {
+        a <- aF
+        b <- bF
+      } yield {
+        ()
+      }
+    }
+  }
 
   object Always extends DockerReadyChecker {
     override def apply(container: BaseContainer)(implicit docker: ContainerCommandExecutor,
