@@ -20,7 +20,6 @@ trait DockerPostgresService extends DockerTestKitForAll { self: Suite =>
       DockerReadyChecker
         .Jdbc(
           driverClass = "org.postgresql.Driver",
-          urlFunc = port => s"jdbc:postgresql://${dockerClient.getHost}:$port/",
           user = PostgresUser,
           password = PostgresPassword
         )

@@ -11,8 +11,8 @@ class FailFastCheckException(m: String) extends Exception(m)
 
 trait DockerReadyChecker {
 
-  def apply(container: Container)(implicit docker: ContainerCommandExecutor,
-                                  ec: ExecutionContext): Future[Unit]
+  def apply(container: BaseContainer)(implicit docker: ContainerCommandExecutor,
+                                      ec: ExecutionContext): Future[Unit]
 
   def and(other: DockerReadyChecker)(implicit docker: ContainerCommandExecutor,
                                      ec: ExecutionContext) = {
@@ -81,8 +81,8 @@ object RetryUtils {
 object DockerReadyChecker {
 
   object Always extends DockerReadyChecker {
-    override def apply(container: Container)(implicit docker: ContainerCommandExecutor,
-                                             ec: ExecutionContext): Future[Unit] =
+    override def apply(container: BaseContainer)(implicit docker: ContainerCommandExecutor,
+                                                 ec: ExecutionContext): Future[Unit] =
       Future.successful(())
   }
 
@@ -92,8 +92,8 @@ object DockerReadyChecker {
                               code: Int = 200)
       extends DockerReadyChecker {
 
-    override def apply(container: Container)(implicit docker: ContainerCommandExecutor,
-                                             ec: ExecutionContext): Future[Unit] = {
+    override def apply(container: BaseContainer)(implicit docker: ContainerCommandExecutor,
+                                                 ec: ExecutionContext): Future[Unit] = {
 
       val p = container.mappedPorts()(port)
       val url = new URL("http", host.getOrElse(docker.client.getHost), p, path)
@@ -114,8 +114,8 @@ object DockerReadyChecker {
 
   case class LogLineContains(str: String) extends DockerReadyChecker {
 
-    override def apply(container: Container)(implicit docker: ContainerCommandExecutor,
-                                             ec: ExecutionContext): Future[Unit] = {
+    override def apply(container: BaseContainer)(implicit docker: ContainerCommandExecutor,
+                                                 ec: ExecutionContext): Future[Unit] = {
       container.state() match {
         case ContainerState.Ready(_) =>
           Future.successful(())
@@ -133,8 +133,8 @@ object DockerReadyChecker {
   private[docker] case class TimeLimited(underlying: DockerReadyChecker, duration: FiniteDuration)
       extends DockerReadyChecker {
 
-    override def apply(container: Container)(implicit docker: ContainerCommandExecutor,
-                                             ec: ExecutionContext): Future[Unit] = {
+    override def apply(container: BaseContainer)(implicit docker: ContainerCommandExecutor,
+                                                 ec: ExecutionContext): Future[Unit] = {
       RetryUtils.runWithin(underlying(container), duration)
     }
   }
@@ -144,8 +144,8 @@ object DockerReadyChecker {
                                     delay: FiniteDuration)
       extends DockerReadyChecker {
 
-    override def apply(container: Container)(implicit docker: ContainerCommandExecutor,
-                                             ec: ExecutionContext): Future[Unit] = {
+    override def apply(container: BaseContainer)(implicit docker: ContainerCommandExecutor,
+                                                 ec: ExecutionContext): Future[Unit] = {
 
       def attempt(attemptsLeft: Int): Future[Unit] = {
         underlying(container)
@@ -162,30 +162,42 @@ object DockerReadyChecker {
     }
   }
 
-  private[docker] case class F(f: Container => Future[Unit]) extends DockerReadyChecker {
-    override def apply(container: Container)(implicit docker: ContainerCommandExecutor,
-                                             ec: ExecutionContext): Future[Unit] =
+  private[docker] case class F(f: BaseContainer => Future[Unit]) extends DockerReadyChecker {
+    override def apply(container: BaseContainer)(implicit docker: ContainerCommandExecutor,
+                                                 ec: ExecutionContext): Future[Unit] =
       f(container)
   }
 
   case class Jdbc(driverClass: String,
-                  urlFunc: Int => String,
                   user: String,
                   password: String,
+                  database: Option[String] = None,
                   port: Option[Int] = None)
       extends DockerReadyChecker {
 
-    override def apply(container: Container)(implicit docker: ContainerCommandExecutor,
-                                             ec: ExecutionContext): Future[Unit] = {
+    private val driverLower = driverClass.toLowerCase
+    private[Jdbc] val dbms: String = if (driverLower.contains("mysql")) {
+      "mysql"
+    } else if (driverLower.contains("postgres")) {
+      "postgresql"
+    } else {
+      throw new IllegalArgumentException("unsupported database for ready check")
+    }
+
+    override def apply(container: BaseContainer)(implicit docker: ContainerCommandExecutor,
+                                                 ec: ExecutionContext): Future[Unit] = {
 
       Future(scala.concurrent.blocking {
         try {
           Class.forName(driverClass)
           val p = port match {
-            case Some(v) => container.mappedPorts().apply(v)
+            case Some(v) => container.mappedPort(v)
             case None    => container.mappedPorts().head._2
           }
-          val url = urlFunc(p)
+
+          val url = "jdbc:" + dbms + "://" + docker.client.getHost + ":" + p + "/" + database
+            .getOrElse("")
+
           val connection = Option(DriverManager.getConnection(url, user, password))
           connection.foreach(_.close())
           if (connection.isEmpty) {

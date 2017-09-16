@@ -12,15 +12,15 @@ import scala.language.postfixOps
 
 trait ManagedContainers
 
-case class SingleContainer(container: Container) extends ManagedContainers
+case class SingleContainer(container: BaseContainer) extends ManagedContainers
 
-case class ContainerGroup(containers: Seq[Container]) extends ManagedContainers {
+case class ContainerGroup(containers: Seq[BaseContainer]) extends ManagedContainers {
   require(containers.nonEmpty, "container group should be non-empty")
 }
 
 object ContainerGroup {
 
-  def of(containers: Container*): ContainerGroup = ContainerGroup(containers)
+  def of(containers: BaseContainer*): ContainerGroup = ContainerGroup(containers)
 }
 
 class DockerContainerManager(managedContainers: ManagedContainers,
@@ -34,7 +34,7 @@ class DockerContainerManager(managedContainers: ManagedContainers,
 
   private val registeredContainers = new ConcurrentHashMap[String, String]()
 
-  private def waitUntilReady(container: Container): Future[Unit] = {
+  private def waitUntilReady(container: BaseContainer): Future[Unit] = {
     container.spec.readyChecker match {
       case None =>
         Future.successful(())
@@ -61,7 +61,7 @@ class DockerContainerManager(managedContainers: ManagedContainers,
   }
 
   //TODO log listeners
-  def startContainer(container: Container): Future[Unit] = {
+  def startContainer(container: BaseContainer): Future[Unit] = {
     val image = container.spec.image
     val startTime = System.nanoTime()
     log.debug("Starting container: {}", image)
@@ -92,7 +92,7 @@ class DockerContainerManager(managedContainers: ManagedContainers,
 
   def start(): Unit = {
     log.debug("Starting containers")
-    val containers: Seq[Container] = managedContainers match {
+    val containers: Seq[BaseContainer] = managedContainers match {
       case SingleContainer(c) => Seq(c)
       case ContainerGroup(cs) => cs
       case _                  => throw new Exception("unsupported type of managed containers")
