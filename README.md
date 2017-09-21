@@ -158,6 +158,7 @@ trait DockerMongodbService extends DockerKitConfig {
 - `ready-checker` optional structure
   - `log-line` optional (String)
   - `http-response-code`
+    - `code` optional (Int - defaults to `200`)
     - `port` required (Int)
 	- `path` optional (String - defaults to `/`)
 	- `within` optional (Int)
