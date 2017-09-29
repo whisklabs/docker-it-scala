@@ -149,6 +149,25 @@ object DockerReadyChecker {
     }
   }
 
+  final case class LogLineContainsMultiple(str: String, count: Int) extends DockerReadyChecker {
+    override def apply(container: DockerContainerState)(implicit docker: DockerCommandExecutor, ec: ExecutionContext): Future[Boolean] = {
+      var counter = 0 // Forgive me
+      for {
+        id <- container.id
+        _ <- docker.withLogStreamLinesRequirement(id, withErr = true)(s => {
+          Option(s).filter(_.contains(str)) match {
+            case Some(_) => counter += 1
+            case None => ()
+          }
+
+          counter >= count
+        })
+      } yield {
+        true
+      }
+    }
+  }
+
   private[docker] case class TimeLimited(underlying: DockerReadyChecker, duration: FiniteDuration)
       extends DockerReadyChecker {
 
