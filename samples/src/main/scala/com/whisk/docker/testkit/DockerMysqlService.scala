@@ -20,7 +20,7 @@ class MysqlContainer(image: String) extends BaseContainer {
           .Jdbc(
             driverClass = "com.mysql.jdbc.Driver",
             user = User,
-            password = Password,
+            password = Some(Password),
             database = Some(Database)
           )
           .looped(25, 1.second)

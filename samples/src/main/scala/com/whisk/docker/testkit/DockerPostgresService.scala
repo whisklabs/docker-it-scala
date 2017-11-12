@@ -21,7 +21,7 @@ trait DockerPostgresService extends DockerTestKitForAll { self: Suite =>
         .Jdbc(
           driverClass = "org.postgresql.Driver",
           user = PostgresUser,
-          password = PostgresPassword
+          password = Some(PostgresPassword)
         )
         .looped(15, 1.second)
     )

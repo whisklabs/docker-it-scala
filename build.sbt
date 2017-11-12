@@ -1,8 +1,8 @@
 lazy val commonSettings = Seq(
   organization := "com.whisk",
   version := "0.10.0-wip",
-  scalaVersion := "2.12.3",
-  crossScalaVersions := Seq("2.12.3", "2.11.11"),
+  scalaVersion := "2.12.4",
+  crossScalaVersions := Seq("2.12.4", "2.11.11"),
   scalacOptions ++= Seq("-feature", "-deprecation"),
   fork in Test := true,
   licenses += ("MIT", url("http://opensource.org/licenses/MIT")),
@@ -45,7 +45,7 @@ lazy val core =
       name := "docker-testkit-core",
       libraryDependencies ++= Seq(
         "org.slf4j" % "slf4j-api" % "1.7.25",
-        "com.spotify" % "docker-client" % "8.9.0",
+        "com.spotify" % "docker-client" % "8.9.1",
         "com.google.code.findbugs" % "jsr305" % "3.0.1",
       )
     )

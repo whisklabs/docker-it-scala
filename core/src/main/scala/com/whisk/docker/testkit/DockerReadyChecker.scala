@@ -170,7 +170,7 @@ object DockerReadyChecker {
 
   case class Jdbc(driverClass: String,
                   user: String,
-                  password: String,
+                  password: Option[String],
                   database: Option[String] = None,
                   port: Option[Int] = None)
       extends DockerReadyChecker {
@@ -198,7 +198,7 @@ object DockerReadyChecker {
           val url = "jdbc:" + dbms + "://" + docker.client.getHost + ":" + p + "/" + database
             .getOrElse("")
 
-          val connection = Option(DriverManager.getConnection(url, user, password))
+          val connection = Option(DriverManager.getConnection(url, user, password.orNull))
           connection.foreach(_.close())
           if (connection.isEmpty) {
             throw new Exception(s"can't establish jdbc connection to $url")
