@@ -1,6 +1,6 @@
 lazy val commonSettings = Seq(
   organization := "com.whisk",
-  version := "0.10.0-wip",
+  version := "0.10.0-beta3",
   scalaVersion := "2.12.4",
   crossScalaVersions := Seq("2.12.4", "2.11.11"),
   scalacOptions ++= Seq("-feature", "-deprecation"),
@@ -45,7 +45,7 @@ lazy val core =
       name := "docker-testkit-core",
       libraryDependencies ++= Seq(
         "org.slf4j" % "slf4j-api" % "1.7.25",
-        "com.spotify" % "docker-client" % "8.9.1",
+        "com.spotify" % "docker-client" % "8.9.2",
         "com.google.code.findbugs" % "jsr305" % "3.0.1",
       )
     )
@@ -74,7 +74,7 @@ lazy val tests =
     .settings(
       name := "docker-testkit-tests",
       libraryDependencies ++= Seq(
-        "org.postgresql" % "postgresql" % "9.4.1210" % "test",
+        "org.postgresql" % "postgresql" % "42.1.4" % "test",
         "mysql" % "mysql-connector-java" % "5.1.44" % "test"
       )
     )
