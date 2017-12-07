@@ -5,12 +5,12 @@ services:
 before_install:
   - docker pull mongo:3.4.8
   - docker pull elasticsearch:1.7.1
-  - docker pull elasticsearch:1.7.1
+  - docker pull postgres:9.6.5
 
 language: scala
 
 scala:
-  - 2.12.3
+  - 2.12.4
   - 2.11.11
 
 jdk:
