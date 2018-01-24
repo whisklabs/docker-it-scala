@@ -38,7 +38,8 @@ case class DockerContainer(image: String,
                            logLineReceiver: Option[LogLineReceiver] = None,
                            user: Option[String] = None,
                            hostname: Option[String] = None,
-                           hostConfig: Option[HostConfig] = None) {
+                           hostConfig: Option[HostConfig] = None,
+                           privileged: Option[Boolean] = Some(false)) {
 
   def withCommand(cmd: String*) = copy(command = Some(cmd))
 
@@ -72,5 +73,7 @@ case class DockerContainer(image: String,
   def withHostname(hostname: String) = copy(hostname = Some(hostname))
 
   def withHostConfig(hostConfig: HostConfig) = copy(hostConfig = Some(hostConfig))
+
+  def withPrivileged(privileged: Boolean) = copy(privileged = Some(privileged))
 
 }
