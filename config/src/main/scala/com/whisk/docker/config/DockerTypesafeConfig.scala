@@ -57,7 +57,8 @@ object DockerTypesafeConfig extends DockerKitDockerJava {
                           `ready-checker`: Option[DockerConfigReadyChecker],
                           `volume-maps`: Seq[VolumeMapping] = Seq.empty,
                           memory: Option[Long],
-                          `memory-reservation`: Option[Long]) {
+                          `memory-reservation`: Option[Long],
+                          `extra-hosts`: Option[Seq[String]]) {
 
     def toDockerContainer(): DockerContainer = {
       val bindPorts = `port-maps`.fold(EmptyPortBindings) { _.values.map(_.asTuple).toMap } mapValues {
@@ -67,10 +68,14 @@ object DockerTypesafeConfig extends DockerKitDockerJava {
 
       val readyChecker = `ready-checker`.fold[DockerReadyChecker](AlwaysReady) { _.toReadyChecker }
 
-      val hostConfig = HostConfig(
-        memory = memory,
-        memoryReservation = `memory-reservation`
-      )
+      val hostConfig =
+        Option(memory.getOrElse(`memory-reservation`.getOrElse(`extra-hosts`.getOrElse(null)))).map(_ =>
+          HostConfig(
+            memory = memory,
+            memoryReservation = `memory-reservation`,
+            extraHosts = `extra-hosts`
+          )
+        )
 
       DockerContainer(
         image = `image-name`,
@@ -81,7 +86,7 @@ object DockerTypesafeConfig extends DockerKitDockerJava {
         env = `environmental-variables`,
         readyChecker = readyChecker,
         volumeMappings = `volume-maps`,
-        hostConfig = Some(hostConfig)
+        hostConfig = hostConfig
       )
     }
   }

@@ -19,7 +19,11 @@ case class HostConfig(
     /**
       * the soft limit on memory usage (in bytes)
       */
-    memoryReservation: Option[Long] = None
+    memoryReservation: Option[Long] = None,
+    /**
+      * extra hosts string
+      */
+    extraHosts: Option[Seq[String]] = None
 )
 
 case class DockerContainer(image: String,

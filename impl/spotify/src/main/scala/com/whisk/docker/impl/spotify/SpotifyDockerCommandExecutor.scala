@@ -56,6 +56,9 @@ class SpotifyDockerCommandExecutor(override val host: String, client: DockerClie
         .withOption(spec.hostConfig.flatMap(_.memoryReservation)) {
           case (config, reservation) => config.memoryReservation(reservation)
         }
+        .withOption(spec.hostConfig.flatMap(_.extraHosts)) {
+          case (config, extraHosts) => config.extraHosts(extraHosts: _*)
+        }
         .build()
     }
 
