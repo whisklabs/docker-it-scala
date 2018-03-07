@@ -46,6 +46,9 @@ class DockerJavaExecutor(override val host: String, client: DockerClient)
       .withOption(spec.hostConfig.flatMap(_.memoryReservation)) {
         case (config, memoryReservation) => config.withMemoryReservation(memoryReservation)
       }
+      .withOption(spec.hostConfig.flatMap(_.extraHosts)) {
+        case (config, extraHosts) => config.withExtraHosts(extraHosts.toArray)
+      }
 
     val cmd = client
       .createContainerCmd(spec.image)
