@@ -28,6 +28,7 @@ class ContainerCommandExecutor(val client: DockerClient) {
       HostConfig
         .builder()
         .portBindings(portBindings.asJava)
+        .binds(spec.volumeBindings:_*)
         .build()
 
     val containerConfig = ContainerConfig
