@@ -1,11 +1,13 @@
 package com.whisk.docker.testkit
 
 import com.spotify.docker.client.messages.PortBinding
+import com.spotify.docker.client.messages.HostConfig.Bind
 
 case class ContainerSpec(image: String,
                          name: Option[String] = None,
                          command: Option[Seq[String]] = None,
                          portBindings: Map[Int, PortBinding] = Map.empty,
+                         volumeBindings: Seq[Bind] = Seq.empty,
                          env: Seq[String] = Seq.empty,
                          readyChecker: Option[DockerReadyChecker] = None) {
 
@@ -18,6 +20,8 @@ case class ContainerSpec(image: String,
   }
 
   def withPortBindings(ps: (Int, PortBinding)*): ContainerSpec = copy(portBindings = ps.toMap)
+
+  def withVolumeBindings(vs: Seq[Bind]*): ContainerSpec = copy(volumeBindings = vs.flatten)
 
   def withReadyChecker(checker: DockerReadyChecker): ContainerSpec =
     copy(readyChecker = Some(checker))
