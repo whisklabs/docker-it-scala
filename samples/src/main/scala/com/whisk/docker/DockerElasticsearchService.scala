@@ -3,6 +3,7 @@ package com.whisk.docker
 import scala.concurrent.duration._
 
 trait DockerElasticsearchService extends DockerKit {
+  override val StartContainersTimeout = 60.seconds
 
   val DefaultElasticsearchHttpPort = 9200
   val DefaultElasticsearchClientPort = 9300
@@ -11,7 +12,7 @@ trait DockerElasticsearchService extends DockerKit {
     .withPortMapping(
       DefaultElasticsearchHttpPort -> DockerPortMapping(Some(DefaultElasticsearchHttpPort)),
       DefaultElasticsearchClientPort -> DockerPortMapping(Some(DefaultElasticsearchClientPort)))
-    .withEnv("discovery.type=single-node")
+    .withEnv("discovery.type=single-node", "xpack.security.enabled=false")
     .withReadyChecker(
       DockerReadyChecker
         .HttpResponseCode(DefaultElasticsearchHttpPort, "/", Some("0.0.0.0"))
