@@ -39,7 +39,7 @@ case class DockerContainer(image: String,
                            user: Option[String] = None,
                            hostname: Option[String] = None,
                            hostConfig: Option[HostConfig] = None,
-                           privileged: Option[Boolean] = None) {
+                           privileged: Boolean = false) {
 
   def withCommand(cmd: String*) = copy(command = Some(cmd))
 
@@ -73,7 +73,5 @@ case class DockerContainer(image: String,
   def withHostname(hostname: String) = copy(hostname = Some(hostname))
 
   def withHostConfig(hostConfig: HostConfig) = copy(hostConfig = Some(hostConfig))
-
-  def withPrivileged(privileged: Boolean) = copy(privileged = Some(privileged))
 
 }
