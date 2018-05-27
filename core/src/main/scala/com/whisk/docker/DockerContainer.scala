@@ -39,7 +39,7 @@ case class DockerContainer(image: String,
                            user: Option[String] = None,
                            hostname: Option[String] = None,
                            hostConfig: Option[HostConfig] = None,
-                           privileged: Option[Boolean] = Some(false)) {
+                           privileged: Option[Boolean] = None) {
 
   def withCommand(cmd: String*) = copy(command = Some(cmd))
 

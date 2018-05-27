@@ -69,7 +69,7 @@ class DockerJavaExecutor(override val host: String, client: DockerClient)
       .withOption(spec.entrypoint) {
         case (config, entrypoint) => config.withEntrypoint(entrypoint: _*)
       }
-      .withPrivileged(spec.privileged.get)
+      .withPrivileged(spec.privileged.getOrElse(false))
 
     Future(cmd.exec()).map { resp =>
       if (resp.getId != null && resp.getId != "") {
