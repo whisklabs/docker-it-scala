@@ -12,7 +12,7 @@ trait DockerElasticsearchService extends DockerTestKitForAll {
 
   val DefaultElasticsearchHttpPort = 9200
   val DefaultElasticsearchClientPort = 9300
-  val EsClusterName = UUID.randomUUID().toString
+  val EsClusterName: String = UUID.randomUUID().toString
 
   protected val elasticsearchContainer =
     ContainerSpec("docker.elastic.co/elasticsearch/elasticsearch:6.2.4")

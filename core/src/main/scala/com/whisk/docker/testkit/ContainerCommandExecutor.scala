@@ -1,16 +1,13 @@
 package com.whisk.docker.testkit
 
 import java.nio.charset.StandardCharsets
-import java.util.Collections
 import java.util.concurrent.TimeUnit
 
 import com.google.common.io.Closeables
 import com.spotify.docker.client.DockerClient.{AttachParameter, RemoveContainerParam}
-import com.spotify.docker.client.exceptions.ImageNotFoundException
 import com.spotify.docker.client.messages._
 import com.spotify.docker.client.{DockerClient, LogMessage, LogStream}
 
-import scala.collection.JavaConverters._
 import scala.concurrent.{ExecutionContext, Future, Promise}
 
 class StartFailedException(msg: String) extends Exception(msg)
@@ -19,28 +16,7 @@ class ContainerCommandExecutor(val client: DockerClient) {
 
   def createContainer(spec: ContainerSpec)(
       implicit ec: ExecutionContext): Future[ContainerCreation] = {
-
-    val portBindings: Map[String, java.util.List[PortBinding]] = spec.portBindings.map {
-      case (guestPort, binding) =>
-        guestPort.toString -> Collections.singletonList(binding)
-    }
-    val hostConfig =
-      HostConfig
-        .builder()
-        .portBindings(portBindings.asJava)
-        .binds(spec.volumeBindings: _*)
-        .build()
-
-    val containerConfig = ContainerConfig
-      .builder()
-      .image(spec.image)
-      .hostConfig(hostConfig)
-      .exposedPorts(spec.portBindings.keySet.map(_.toString).asJava)
-      .env(spec.env: _*)
-      .withOption(spec.command) { case (config, command) => config.cmd(command: _*) }
-      .build()
-
-    Future(scala.concurrent.blocking(client.createContainer(containerConfig, spec.name.orNull)))
+    Future(scala.concurrent.blocking(client.createContainer(spec.containerConfig(), spec.name.orNull)))
   }
 
   def startContainer(id: String)(implicit ec: ExecutionContext): Future[Unit] = {
@@ -97,7 +73,7 @@ class ContainerCommandExecutor(val client: DockerClient) {
     }
   }
 
-  def withLogStreamLinesRequirement(id: String, withErr: Boolean)(f: (String) => Boolean)(
+  def withLogStreamLinesRequirement(id: String, withErr: Boolean)(f: String => Boolean)(
       implicit ec: ExecutionContext): Future[Unit] = {
 
     logStreamFuture(id, withErr).flatMap { stream =>

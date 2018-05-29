@@ -1,32 +1,79 @@
 package com.whisk.docker.testkit
 
-import com.spotify.docker.client.messages.PortBinding
+import java.util.Collections
+
+import com.spotify.docker.client.messages.{ContainerConfig, HostConfig, PortBinding}
 import com.spotify.docker.client.messages.HostConfig.Bind
 
-case class ContainerSpec(image: String,
-                         name: Option[String] = None,
-                         command: Option[Seq[String]] = None,
-                         portBindings: Map[Int, PortBinding] = Map.empty,
-                         volumeBindings: Seq[Bind] = Seq.empty,
-                         env: Seq[String] = Seq.empty,
-                         readyChecker: Option[DockerReadyChecker] = None) {
+import scala.collection.JavaConverters._
 
-  def withCommand(cmd: String*): ContainerSpec = copy(command = Some(cmd))
+case class ContainerSpec(image: String) {
 
-  def withExposedPorts(ports: Int*): ContainerSpec = {
-    val binds: Map[Int, PortBinding] =
-      ports.map(p => p -> PortBinding.randomPort("0.0.0.0"))(collection.breakOut) //TODO check
-    copy(portBindings = binds)
+  private val builder: ContainerConfig.Builder = ContainerConfig.builder().image(image)
+  private val hostConfigBuilder: HostConfig.Builder = HostConfig.builder()
+
+  private var _readyChecker: Option[DockerReadyChecker] = None
+  private var _name: Option[String] = None
+
+  def withCommand(cmd: String*): ContainerSpec = {
+    builder.cmd(cmd: _*)
+    this
   }
 
-  def withPortBindings(ps: (Int, PortBinding)*): ContainerSpec = copy(portBindings = ps.toMap)
+  def withExposedPorts(ports: Int*): ContainerSpec = {
+    val binds: Seq[(Int, PortBinding)] =
+      ports.map(p => p -> PortBinding.randomPort("0.0.0.0"))(collection.breakOut)
+    withPortBindings(binds: _*)
+  }
 
-  def withVolumeBindings(vs: Seq[Bind]*): ContainerSpec = copy(volumeBindings = vs.flatten)
+  def withPortBindings(ps: (Int, PortBinding)*): ContainerSpec = {
+    val binds: Map[String, java.util.List[PortBinding]] = ps.map {
+      case (guestPort, binding) =>
+        guestPort.toString -> Collections.singletonList(binding)
+    }(collection.breakOut)
 
-  def withReadyChecker(checker: DockerReadyChecker): ContainerSpec =
-    copy(readyChecker = Some(checker))
+    hostConfigBuilder.portBindings(binds.asJava)
+    builder.exposedPorts(binds.keySet.asJava)
+    this
+  }
 
-  def withEnv(env: String*): ContainerSpec = copy(env = env)
+  def withVolumeBindings(vs: Bind*): ContainerSpec = {
+    hostConfigBuilder.binds(vs: _*)
+    this
+  }
+
+  def withReadyChecker(checker: DockerReadyChecker): ContainerSpec = {
+    _readyChecker = Some(checker)
+    this
+  }
+
+  def withName(name: String): ContainerSpec = {
+    _name = Some(name)
+    this
+  }
+
+  def withEnv(env: String*): ContainerSpec = {
+    builder.env(env: _*)
+    this
+  }
+
+  def withConfiguration(withBuilder: ContainerConfig.Builder => ContainerConfig.Builder): ContainerSpec = {
+    withBuilder(builder)
+    this
+  }
+
+  def withHostConfiguration(withBuilder: HostConfig.Builder => HostConfig.Builder): ContainerSpec = {
+    withBuilder(hostConfigBuilder)
+    this
+  }
+
+  def name: Option[String] = _name
+
+  def readyChecker: Option[DockerReadyChecker] = _readyChecker
+
+  def containerConfig(): ContainerConfig = {
+    builder.hostConfig(hostConfigBuilder.build()).build()
+  }
 
   def toContainer: Container = new Container(this)
 
