@@ -45,7 +45,7 @@ lazy val core =
       name := "docker-testkit-core",
       libraryDependencies ++= Seq(
         "org.slf4j" % "slf4j-api" % "1.7.25",
-        "com.spotify" % "docker-client" % "8.10.0",
+        "com.spotify" % "docker-client" % "8.11.5",
         "com.google.code.findbugs" % "jsr305" % "3.0.1",
       )
     )
