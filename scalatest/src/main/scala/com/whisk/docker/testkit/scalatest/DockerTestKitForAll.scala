@@ -22,10 +22,12 @@ trait DockerTestKitForAll extends SuiteMixin { self: Suite =>
   implicit lazy val dockerExecutor: ContainerCommandExecutor =
     new ContainerCommandExecutor(dockerClient)
 
-  lazy val containerManager = new DockerContainerManager(managedContainers,
-                                                         dockerExecutor,
-                                                         dockerTestTimeouts,
-                                                         dockerExecutionContext)
+  lazy val containerManager = new DockerContainerManager(
+    managedContainers,
+    dockerExecutor,
+    dockerTestTimeouts,
+    dockerExecutionContext
+  )
 
   abstract override def run(testName: Option[String], args: Args): Status = {
     containerManager.start()

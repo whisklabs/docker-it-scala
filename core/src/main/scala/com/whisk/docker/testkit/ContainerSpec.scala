@@ -57,12 +57,16 @@ case class ContainerSpec(image: String) {
     this
   }
 
-  def withConfiguration(withBuilder: ContainerConfig.Builder => ContainerConfig.Builder): ContainerSpec = {
+  def withConfiguration(
+      withBuilder: ContainerConfig.Builder => ContainerConfig.Builder
+  ): ContainerSpec = {
     withBuilder(builder)
     this
   }
 
-  def withHostConfiguration(withBuilder: HostConfig.Builder => HostConfig.Builder): ContainerSpec = {
+  def withHostConfiguration(
+      withBuilder: HostConfig.Builder => HostConfig.Builder
+  ): ContainerSpec = {
     withBuilder(hostConfigBuilder)
     this
   }

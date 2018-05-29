@@ -23,10 +23,12 @@ object ContainerGroup {
   def of(containers: BaseContainer*): ContainerGroup = ContainerGroup(containers)
 }
 
-class DockerContainerManager(managedContainers: ManagedContainers,
-                             executor: ContainerCommandExecutor,
-                             dockerTestTimeouts: DockerTestTimeouts,
-                             executionContext: ExecutionContext) {
+class DockerContainerManager(
+    managedContainers: ManagedContainers,
+    executor: ContainerCommandExecutor,
+    dockerTestTimeouts: DockerTestTimeouts,
+    executionContext: ExecutionContext
+) {
 
   private implicit val ec: ExecutionContext = executionContext
 

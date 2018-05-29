@@ -14,9 +14,12 @@ class StartFailedException(msg: String) extends Exception(msg)
 
 class ContainerCommandExecutor(val client: DockerClient) {
 
-  def createContainer(spec: ContainerSpec)(
-      implicit ec: ExecutionContext): Future[ContainerCreation] = {
-    Future(scala.concurrent.blocking(client.createContainer(spec.containerConfig(), spec.name.orNull)))
+  def createContainer(
+      spec: ContainerSpec
+  )(implicit ec: ExecutionContext): Future[ContainerCreation] = {
+    Future(
+      scala.concurrent.blocking(client.createContainer(spec.containerConfig(), spec.name.orNull))
+    )
   }
 
   def startContainer(id: String)(implicit ec: ExecutionContext): Future[Unit] = {
@@ -53,14 +56,16 @@ class ContainerCommandExecutor(val client: DockerClient) {
 
   private def logStreamFuture(id: String, withErr: Boolean)(
       implicit
-      ec: ExecutionContext): Future[LogStream] = {
+      ec: ExecutionContext
+  ): Future[LogStream] = {
     val baseParams = List(AttachParameter.STDOUT, AttachParameter.STREAM, AttachParameter.LOGS)
     val logParams = if (withErr) AttachParameter.STDERR :: baseParams else baseParams
     Future(scala.concurrent.blocking(client.attachContainer(id, logParams: _*)))
   }
 
-  def withLogStreamLines(id: String, withErr: Boolean)(f: String => Unit)(
-      implicit ec: ExecutionContext): Unit = {
+  def withLogStreamLines(id: String, withErr: Boolean)(
+      f: String => Unit
+  )(implicit ec: ExecutionContext): Unit = {
 
     logStreamFuture(id, withErr).foreach { stream =>
       stream.forEachRemaining(new java.util.function.Consumer[LogMessage] {
@@ -73,8 +78,9 @@ class ContainerCommandExecutor(val client: DockerClient) {
     }
   }
 
-  def withLogStreamLinesRequirement(id: String, withErr: Boolean)(f: String => Boolean)(
-      implicit ec: ExecutionContext): Future[Unit] = {
+  def withLogStreamLinesRequirement(id: String, withErr: Boolean)(
+      f: String => Boolean
+  )(implicit ec: ExecutionContext): Future[Unit] = {
 
     logStreamFuture(id, withErr).flatMap { stream =>
       val p = Promise[Unit]()
@@ -95,12 +101,17 @@ class ContainerCommandExecutor(val client: DockerClient) {
   }
 
   def remove(id: String, force: Boolean, removeVolumes: Boolean)(
-      implicit ec: ExecutionContext): Future[Unit] = {
+      implicit ec: ExecutionContext
+  ): Future[Unit] = {
     Future(
       scala.concurrent.blocking(
-        client.removeContainer(id,
-                               RemoveContainerParam.forceKill(force),
-                               RemoveContainerParam.removeVolumes(removeVolumes))))
+        client.removeContainer(
+          id,
+          RemoveContainerParam.forceKill(force),
+          RemoveContainerParam.removeVolumes(removeVolumes)
+        )
+      )
+    )
   }
 
   def close(): Unit = {

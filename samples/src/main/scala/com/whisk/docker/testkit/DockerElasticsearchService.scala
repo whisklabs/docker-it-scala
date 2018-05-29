@@ -30,7 +30,8 @@ trait DockerElasticsearchService extends DockerTestKitForAll {
         DockerReadyChecker
           .HttpResponseCode(DefaultElasticsearchHttpPort, "/")
           .within(100.millis)
-          .looped(20, 1250.millis))
+          .looped(20, 1250.millis)
+      )
       .toContainer
 
   override val managedContainers: ManagedContainers = elasticsearchContainer.toManagedContainer

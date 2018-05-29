@@ -1,8 +1,8 @@
 lazy val commonSettings = Seq(
   organization := "com.whisk",
   version := "0.10.0-beta5",
-  scalaVersion := "2.12.4",
-  crossScalaVersions := Seq("2.12.4", "2.11.11"),
+  scalaVersion := "2.12.6",
+  crossScalaVersions := Seq("2.12.4", "2.11.12"),
   scalacOptions ++= Seq("-feature", "-deprecation"),
   fork in Test := true,
   licenses += ("MIT", url("http://opensource.org/licenses/MIT")),
