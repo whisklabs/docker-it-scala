@@ -4,8 +4,9 @@ services:
 
 before_install:
   - docker pull mongo:3.4.8
-  - docker pull elasticsearch:1.7.1
+  - docker pull docker.elastic.co/elasticsearch/elasticsearch:6.2.4
   - docker pull postgres:9.6.5
+  - docker pull quay.io/whisk/fastboot-mysql:5.7.19
 
 language: scala
 
