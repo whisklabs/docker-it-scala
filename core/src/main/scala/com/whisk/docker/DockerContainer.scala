@@ -38,7 +38,8 @@ case class DockerContainer(image: String,
                            logLineReceiver: Option[LogLineReceiver] = None,
                            user: Option[String] = None,
                            hostname: Option[String] = None,
-                           hostConfig: Option[HostConfig] = None) {
+                           hostConfig: Option[HostConfig] = None,
+                           privileged: Boolean = false) {
 
   def withCommand(cmd: String*) = copy(command = Some(cmd))
 
