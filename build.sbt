@@ -58,15 +58,10 @@ lazy val testkitSpotifyShadedImpl =
   project
     .in(file("impl/spotify"))
     .settings(commonSettings: _*)
-    .settings(name := "docker-testkit-impl-spotify",
+    .settings(name := "docker-testkit-impl-spotify-shaded",
               libraryDependencies ++=
                 Seq("com.spotify" % "docker-client" % "8.11.5" classifier "shaded",
                     "com.google.code.findbugs" % "jsr305" % "3.0.1"),
-              artifactClassifier := Some("shaded"),
-              artifact in makePom := {
-                val art = (artifact in makePom).value
-                art.withClassifier(Some("shaded"))
-              },
               target := baseDirectory.value / "target-shaded"
               )
     .dependsOn(core)
