@@ -1,8 +1,8 @@
 lazy val commonSettings = Seq(
   organization := "com.whisk",
-  version := "0.10.0-beta6",
-  scalaVersion := "2.12.6",
-  crossScalaVersions := Seq("2.12.4", "2.11.12"),
+  version := "0.10.0-beta7",
+  scalaVersion := "2.12.8",
+  crossScalaVersions := Seq("2.12.8", "2.11.12"),
   scalacOptions ++= Seq("-feature", "-deprecation"),
   fork in Test := true,
   licenses += ("MIT", url("http://opensource.org/licenses/MIT")),
@@ -36,7 +36,7 @@ lazy val root =
     .in(file("."))
     .settings(commonSettings: _*)
     .settings(publish := {}, publishLocal := {}, packagedArtifacts := Map.empty)
-    .aggregate(core, scalatest, samples)
+    .aggregate(core, scalatest, samples, coreShaded)
 
 lazy val core =
   project
@@ -45,7 +45,7 @@ lazy val core =
       name := "docker-testkit-core",
       libraryDependencies ++= Seq(
         "org.slf4j" % "slf4j-api" % "1.7.25",
-        "com.spotify" % "docker-client" % "8.11.5",
+        "com.spotify" % "docker-client" % "8.15.2",
         "com.google.code.findbugs" % "jsr305" % "3.0.1",
       )
     )
@@ -79,3 +79,15 @@ lazy val tests =
       )
     )
     .dependsOn(core, scalatest, samples % "test")
+
+
+lazy val coreShaded =
+  project
+    .in(file("core"))
+    .settings(commonSettings: _*)
+    .settings(name := "docker-testkit-core-shaded",
+      libraryDependencies ++=
+        Seq("com.spotify" % "docker-client" % "8.15.2" classifier "shaded",
+          "com.google.code.findbugs" % "jsr305" % "3.0.1"),
+      target := baseDirectory.value / "target-shaded"
+    )
