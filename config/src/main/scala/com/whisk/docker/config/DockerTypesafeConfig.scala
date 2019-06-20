@@ -60,10 +60,10 @@ object DockerTypesafeConfig extends DockerKitDockerJava {
                           `memory-reservation`: Option[Long]) {
 
     def toDockerContainer(): DockerContainer = {
-      val bindPorts = `port-maps`.fold(EmptyPortBindings) { _.values.map(_.asTuple).toMap } mapValues {
-        maybeHostPort =>
-          DockerPortMapping(maybeHostPort)
-      }
+      val bindPorts = `port-maps`.fold(EmptyPortBindings) { _.values.map(_.asTuple).toMap }.toSeq.map {
+        case (internalPort, maybeHostPort) =>
+          internalPort -> DockerPortMapping(maybeHostPort)
+      }.toMap
 
       val readyChecker = `ready-checker`.fold[DockerReadyChecker](AlwaysReady) { _.toReadyChecker }
 
