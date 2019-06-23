@@ -45,7 +45,7 @@ case class DockerContainer(image: String,
   def withEntrypoint(entrypoint: String*) = copy(entrypoint = Some(entrypoint))
 
   def withPorts(ps: (Int, Option[Int])*) =
-    copy(bindPorts = ps.toMap.mapValues(hostPort => DockerPortMapping(hostPort)))
+    copy(bindPorts = ps.map { case (internalPort, hostPort) => internalPort -> DockerPortMapping(hostPort) }.toMap)
 
   def withPortMapping(ps: (Int, DockerPortMapping)*) = copy(bindPorts = ps.toMap)
 

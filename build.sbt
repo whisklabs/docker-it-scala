@@ -1,8 +1,8 @@
 lazy val commonSettings = Seq(
   organization := "com.whisk",
-  version := "0.9.8",
-  scalaVersion := "2.12.3",
-  crossScalaVersions := Seq("2.12.3", "2.11.11", "2.10.6"),
+  version := "0.9.9",
+  scalaVersion := "2.13.0",
+  crossScalaVersions := Seq("2.13.0", "2.12.8", "2.11.12"),
   scalacOptions ++= Seq("-feature", "-deprecation"),
   fork in Test := true,
   licenses += ("MIT", url("http://opensource.org/licenses/MIT")),
@@ -90,7 +90,7 @@ lazy val scalatest =
     .settings(
       name := "docker-testkit-scalatest",
       libraryDependencies ++=
-        Seq("org.scalatest" %% "scalatest" % "3.0.4",
+        Seq("org.scalatest" %% "scalatest" % "3.0.8",
             "ch.qos.logback" % "logback-classic" % "1.2.1" % "test",
             "org.postgresql" % "postgresql" % "9.4.1210" % "test")
     )
@@ -102,7 +102,7 @@ lazy val specs2 =
     .settings(
       name := "docker-testkit-specs2",
       libraryDependencies ++=
-        Seq("org.specs2" %% "specs2-core" % "3.8.6",
+        Seq("org.specs2" %% "specs2-core" % "4.5.1",
             "ch.qos.logback" % "logback-classic" % "1.2.1" % "test",
             "org.postgresql" % "postgresql" % "9.4.1210" % "test")
     )
@@ -115,12 +115,8 @@ lazy val config =
       name := "docker-testkit-config",
       libraryDependencies ++=
         Seq(
-          "com.iheart" %% "ficus" % "1.4.1",
-          "org.scalatest" %% "scalatest" % "3.0.4" % "test"
-        ),
-      publish := scalaVersion map {
-        case x if x.startsWith("2.10") => {}
-        case _                         => publish.value
-      }
+          "com.iheart" %% "ficus" % "1.4.7",
+          "org.scalatest" %% "scalatest" % "3.0.8" % "test"
+        )
     )
     .dependsOn(core, testkitDockerJavaImpl)

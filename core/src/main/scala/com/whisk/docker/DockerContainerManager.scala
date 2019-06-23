@@ -14,7 +14,7 @@ class DockerContainerManager(containers: Seq[DockerContainer], executor: DockerC
   private implicit val dockerExecutor = executor
 
   private val dockerStatesMap: Map[DockerContainer, DockerContainerState] =
-    containers.map(c => c -> new DockerContainerState(c))(collection.breakOut)
+    containers.map(c => c -> new DockerContainerState(c)).toMap
 
   val states = dockerStatesMap.values.toList
 

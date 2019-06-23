@@ -23,16 +23,16 @@ There are separate artifacts available for these libraries:
 
 ```scala
 libraryDependencies ++= Seq(
-  "com.whisk" %% "docker-testkit-scalatest" % "0.9.8" % "test",
-  "com.whisk" %% "docker-testkit-impl-spotify" % "0.9.8" % "test")
+  "com.whisk" %% "docker-testkit-scalatest" % "0.9.9" % "test",
+  "com.whisk" %% "docker-testkit-impl-spotify" % "0.9.9" % "test")
 ```
 
 **docker-java**
 
 ```scala
 libraryDependencies ++= Seq(
-  "com.whisk" %% "docker-testkit-scalatest" % "0.9.8" % "test",
-  "com.whisk" %% "docker-testkit-impl-docker-java" % "0.9.8" % "test")
+  "com.whisk" %% "docker-testkit-scalatest" % "0.9.9" % "test",
+  "com.whisk" %% "docker-testkit-impl-docker-java" % "0.9.9" % "test")
 ```
 
 You don't necessarily have to use `scalatest` dependency as demonstrated above.
