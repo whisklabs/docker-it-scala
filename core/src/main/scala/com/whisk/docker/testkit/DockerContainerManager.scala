@@ -129,7 +129,7 @@ class DockerContainerManager(
   }
 
   def stopRmAll(): Future[Unit] = {
-    val future = Future.traverse(registeredContainers.asScala) {
+    val future = Future.traverse(registeredContainers.asScala.toSeq) {
       case (cid, _) =>
         executor.remove(cid, force = true, removeVolumes = true)
     }

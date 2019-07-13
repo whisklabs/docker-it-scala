@@ -22,7 +22,7 @@ case class ContainerSpec(image: String) {
 
   def withExposedPorts(ports: Int*): ContainerSpec = {
     val binds: Seq[(Int, PortBinding)] =
-      ports.map(p => p -> PortBinding.randomPort("0.0.0.0"))(collection.breakOut)
+      ports.map(p => p -> PortBinding.randomPort("0.0.0.0")).toSeq
     withPortBindings(binds: _*)
   }
 
@@ -30,7 +30,7 @@ case class ContainerSpec(image: String) {
     val binds: Map[String, java.util.List[PortBinding]] = ps.map {
       case (guestPort, binding) =>
         guestPort.toString -> Collections.singletonList(binding)
-    }(collection.breakOut)
+    }.toMap
 
     hostConfigBuilder.portBindings(binds.asJava)
     builder.exposedPorts(binds.keySet.asJava)

@@ -1,8 +1,8 @@
 lazy val commonSettings = Seq(
   organization := "com.whisk",
   version := "0.10.0-beta7",
-  scalaVersion := "2.12.8",
-  crossScalaVersions := Seq("2.12.8", "2.11.12"),
+  scalaVersion := "2.13.0",
+  crossScalaVersions := Seq("2.13.0", "2.12.8", "2.11.12"),
   scalacOptions ++= Seq("-feature", "-deprecation"),
   fork in Test := true,
   licenses += ("MIT", url("http://opensource.org/licenses/MIT")),
@@ -56,7 +56,7 @@ lazy val scalatest =
     .settings(
       name := "docker-testkit-scalatest",
       libraryDependencies ++= Seq(
-        "org.scalatest" %% "scalatest" % "3.0.4",
+        "org.scalatest" %% "scalatest" % "3.0.8",
         "ch.qos.logback" % "logback-classic" % "1.2.3" % "test"
       )
     )
