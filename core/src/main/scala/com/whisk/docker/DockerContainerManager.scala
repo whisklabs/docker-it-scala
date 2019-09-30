@@ -26,7 +26,8 @@ class DockerContainerManager(containers: Seq[DockerContainer], executor: DockerC
     dockerStatesMap(container).isReady()
   }
 
-  def pullImages(): Future[Seq[String]] = {
+  def pullImages(timeout: Duration): Future[Seq[String]] = {
+    implicit val tout = timeout
     executor.listImages().flatMap { images =>
       val imagesToPull: Seq[String] = containers.map(_.image).filterNot { image =>
         val cImage = if (image.contains(":")) image else image + ":latest"
@@ -40,10 +41,13 @@ class DockerContainerManager(containers: Seq[DockerContainer], executor: DockerC
       containerStartTimeout: Duration): Future[Seq[(DockerContainerState, Boolean)]] = {
     import DockerContainerManager._
 
+    implicit val timeout = containerStartTimeout
+
     @tailrec
     def initGraph(graph: ContainerDependencyGraph,
                   previousInits: Future[Seq[DockerContainerState]] = Future.successful(Seq.empty))
       : Future[Seq[DockerContainerState]] = {
+
       val initializedContainers = previousInits.flatMap { prev =>
         Future.traverse(graph.containers.map(dockerStatesMap))(_.init()).map(prev ++ _)
       }
@@ -54,6 +58,7 @@ class DockerContainerManager(containers: Seq[DockerContainer], executor: DockerC
           val readyInits: Future[Seq[Future[Boolean]]] =
             initializedContainers.map(_.map(state => state.isReady()))
           val simplifiedReadyInits: Future[Seq[Boolean]] = readyInits.flatMap(Future.sequence(_))
+
           Await.result(simplifiedReadyInits, containerStartTimeout)
           initGraph(dependants, initializedContainers)
       }
@@ -68,7 +73,8 @@ class DockerContainerManager(containers: Seq[DockerContainer], executor: DockerC
     })
   }
 
-  def stopRmAll(): Future[Unit] = {
+  def stopRmAll(timeout: Duration): Future[Unit] = {
+    implicit val tout = timeout
     val future = Future.traverse(states)(_.remove(force = true, removeVolumes = true)).map(_ => ())
     future.onComplete { _ =>
       executor.close()
