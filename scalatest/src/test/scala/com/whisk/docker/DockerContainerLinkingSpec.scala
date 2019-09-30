@@ -7,11 +7,13 @@ import time._
 import impl.dockerjava._
 import impl.spotify._
 import scalatest.DockerTestKit
+import scala.concurrent.duration.Duration
 
 abstract class DockerContainerLinkingSpec extends FlatSpec with Matchers with DockerTestKit {
 
   lazy val cmdExecutor = implicitly[DockerCommandExecutor]
   implicit val pc = PatienceConfig(Span(20, Seconds), Span(1, Second))
+  implicit val defaultOpsTimeout: Duration = Duration.Inf
 
   val pingName = "ping"
   val pongName = "pong"
