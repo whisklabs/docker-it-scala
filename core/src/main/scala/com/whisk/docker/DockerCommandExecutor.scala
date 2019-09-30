@@ -1,5 +1,6 @@
 package com.whisk.docker
 
+import scala.concurrent.duration.Duration
 import scala.concurrent.{ExecutionContext, Future}
 
 object PortProtocol extends Enumeration {
@@ -29,28 +30,28 @@ trait DockerCommandExecutor {
 
   def host: String
 
-  def createContainer(spec: DockerContainer)(implicit ec: ExecutionContext): Future[String]
+  def createContainer(spec: DockerContainer)(implicit ec: ExecutionContext, timeout: Duration): Future[String]
 
-  def startContainer(id: String)(implicit ec: ExecutionContext): Future[Unit]
+  def startContainer(id: String)(implicit ec: ExecutionContext, timeout: Duration): Future[Unit]
 
   def inspectContainer(id: String)(
-      implicit ec: ExecutionContext): Future[Option[InspectContainerResult]]
+      implicit ec: ExecutionContext, timeout: Duration): Future[Option[InspectContainerResult]]
 
   def withLogStreamLines(id: String, withErr: Boolean)(f: String => Unit)(
       implicit docker: DockerCommandExecutor,
-      ec: ExecutionContext
+      ec: ExecutionContext, timeout: Duration
   ): Unit
 
   def withLogStreamLinesRequirement(id: String, withErr: Boolean)(f: String => Boolean)(
       implicit docker: DockerCommandExecutor,
-      ec: ExecutionContext): Future[Unit]
+      ec: ExecutionContext, timeout: Duration): Future[Unit]
 
-  def listImages()(implicit ec: ExecutionContext): Future[Set[String]]
+  def listImages()(implicit ec: ExecutionContext, timeout: Duration): Future[Set[String]]
 
-  def pullImage(image: String)(implicit ec: ExecutionContext): Future[Unit]
+  def pullImage(image: String)(implicit ec: ExecutionContext, timeout: Duration): Future[Unit]
 
   def remove(id: String, force: Boolean = true, removeVolumes: Boolean = true)(
-      implicit ec: ExecutionContext): Future[Unit]
+      implicit ec: ExecutionContext, timeout: Duration): Future[Unit]
 
   def close(): Unit
 }

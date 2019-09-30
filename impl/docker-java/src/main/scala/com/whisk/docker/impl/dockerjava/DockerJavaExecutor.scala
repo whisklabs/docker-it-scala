@@ -4,20 +4,20 @@ import java.util.concurrent.TimeUnit
 
 import com.github.dockerjava.api.DockerClient
 import com.github.dockerjava.api.exception.NotFoundException
-import com.github.dockerjava.api.model.{PortBinding => _, ContainerPort => _, _}
+import com.github.dockerjava.api.model.{ContainerPort => _, PortBinding => _, _}
 import com.github.dockerjava.core.command.{LogContainerResultCallback, PullImageResultCallback}
 import com.google.common.io.Closeables
 import com.whisk.docker._
 
 import scala.collection.JavaConverters._
-import scala.concurrent.duration.FiniteDuration
+import scala.concurrent.duration.{Duration, FiniteDuration}
 import scala.concurrent.{ExecutionContext, Future, Promise}
 
 class DockerJavaExecutor(override val host: String, client: DockerClient)
     extends DockerCommandExecutor {
 
   override def createContainer(spec: DockerContainer)(
-      implicit ec: ExecutionContext): Future[String] = {
+      implicit ec: ExecutionContext, timeout: Duration): Future[String] = {
     val volumeToBind: Seq[(Volume, Bind)] = spec.volumeMappings.map { mapping =>
       val volume: Volume = new Volume(mapping.container)
       (volume, new Bind(mapping.host, volume, AccessMode.fromBoolean(mapping.rw)))
@@ -70,7 +70,7 @@ class DockerJavaExecutor(override val host: String, client: DockerClient)
         case (config, entrypoint) => config.withEntrypoint(entrypoint: _*)
       }
 
-    Future(cmd.exec()).map { resp =>
+    PerishableFuture(cmd.exec()).map { resp =>
       if (resp.getId != null && resp.getId != "") {
         resp.getId
       } else {
@@ -80,13 +80,13 @@ class DockerJavaExecutor(override val host: String, client: DockerClient)
     }
   }
 
-  override def startContainer(id: String)(implicit ec: ExecutionContext): Future[Unit] = {
-    Future(client.startContainerCmd(id).exec()).map(_ => ())
+  override def startContainer(id: String)(implicit ec: ExecutionContext, timeout: Duration): Future[Unit] = {
+    PerishableFuture(client.startContainerCmd(id).exec()).map(_ => ())
   }
 
   override def inspectContainer(id: String)(
-      implicit ec: ExecutionContext): Future[Option[InspectContainerResult]] = {
-    val resp = Future(Some(client.inspectContainerCmd(id).exec())).recover {
+      implicit ec: ExecutionContext, timeout: Duration): Future[Option[InspectContainerResult]] = {
+    val resp = PerishableFuture(Some(client.inspectContainerCmd(id).exec())).recover {
       case x: NotFoundException => None
     }
     val future = resp.map(_.map { result =>
@@ -130,7 +130,7 @@ class DockerJavaExecutor(override val host: String, client: DockerClient)
 
   override def withLogStreamLines(id: String, withErr: Boolean)(f: String => Unit)(
       implicit docker: DockerCommandExecutor,
-      ec: ExecutionContext
+      ec: ExecutionContext, timeout: Duration
   ): Unit = {
     val cmd =
       client.logContainerCmd(id).withStdOut(true).withStdErr(withErr).withFollowStream(true)
@@ -145,7 +145,7 @@ class DockerJavaExecutor(override val host: String, client: DockerClient)
 
   override def withLogStreamLinesRequirement(id: String, withErr: Boolean)(f: String => Boolean)(
       implicit docker: DockerCommandExecutor,
-      ec: ExecutionContext): Future[Unit] = {
+      ec: ExecutionContext, timeout: Duration): Future[Unit] = {
 
     val cmd =
       client.logContainerCmd(id).withStdOut(true).withStdErr(withErr).withFollowStream(true)
@@ -169,8 +169,8 @@ class DockerJavaExecutor(override val host: String, client: DockerClient)
     }
   }
 
-  override def listImages()(implicit ec: ExecutionContext): Future[Set[String]] = {
-    Future(
+  override def listImages()(implicit ec: ExecutionContext, timeout: Duration): Future[Set[String]] = {
+    PerishableFuture(
       client
         .listImagesCmd()
         .exec()
@@ -179,13 +179,13 @@ class DockerJavaExecutor(override val host: String, client: DockerClient)
         .toSet)
   }
 
-  override def pullImage(image: String)(implicit ec: ExecutionContext): Future[Unit] = {
-    Future(client.pullImageCmd(image).exec(new PullImageResultCallback()).awaitSuccess())
+  override def pullImage(image: String)(implicit ec: ExecutionContext, timeout: Duration): Future[Unit] = {
+    PerishableFuture(client.pullImageCmd(image).exec(new PullImageResultCallback()).awaitSuccess())
   }
 
   override def remove(id: String, force: Boolean, removeVolumes: Boolean)(
-      implicit ec: ExecutionContext): Future[Unit] = {
-    Future(client.removeContainerCmd(id).withForce(force).withRemoveVolumes(true).exec())
+      implicit ec: ExecutionContext, timeout: Duration): Future[Unit] = {
+    PerishableFuture(client.removeContainerCmd(id).withForce(force).withRemoveVolumes(true).exec())
   }
 
   override def close(): Unit = Closeables.close(client, true)
