@@ -4,6 +4,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 import org.slf4j.LoggerFactory
 
+import scala.concurrent.duration.Duration
 import scala.concurrent.{ExecutionContext, Future, Promise}
 
 class DockerContainerState(spec: DockerContainer) {
@@ -39,10 +40,11 @@ class DockerContainerState(spec: DockerContainer) {
 
   def isReady(): Future[Boolean] = _isReady.future
 
-  def isRunning()(implicit docker: DockerCommandExecutor, ec: ExecutionContext): Future[Boolean] =
+  def isRunning()(implicit docker: DockerCommandExecutor, ec: ExecutionContext, timeout: Duration): Future[Boolean] = {
     getRunningContainer().map(_.isDefined)
+  }
 
-  def init()(implicit docker: DockerCommandExecutor, ec: ExecutionContext): Future[this.type] = {
+  def init()(implicit docker: DockerCommandExecutor, ec: ExecutionContext, timeout: Duration): Future[this.type] = {
     for {
       s <- _id.init(docker.createContainer(spec))
       _ <- docker.startContainer(s)
@@ -56,7 +58,8 @@ class DockerContainerState(spec: DockerContainer) {
   }
 
   private def runReadyCheck()(implicit docker: DockerCommandExecutor,
-                              ec: ExecutionContext): Future[Boolean] =
+                              ec: ExecutionContext, timeout: Duration): Future[Boolean] = {
+
     _isReady.init(
       (for {
         r <- isRunning() if r
@@ -72,20 +75,21 @@ class DockerContainerState(spec: DockerContainer) {
           Future.successful(false)
       }
     )
+  }
 
   protected def getRunningContainer()(
       implicit docker: DockerCommandExecutor,
-      ec: ExecutionContext): Future[Option[InspectContainerResult]] =
+      ec: ExecutionContext, timeout: Duration): Future[Option[InspectContainerResult]] =
     id.flatMap(docker.inspectContainer)
 
-  def getName()(implicit docker: DockerCommandExecutor, ec: ExecutionContext): Future[String] =
+  def getName()(implicit docker: DockerCommandExecutor, ec: ExecutionContext, timeout: Duration): Future[String] =
     getRunningContainer.flatMap {
       case Some(res) => Future.successful(res.name)
       case None      => Future.failed(new RuntimeException(s"Container ${spec.image} is not running"))
     }
 
   def getIpAddresses()(implicit docker: DockerCommandExecutor,
-                       ec: ExecutionContext): Future[Seq[String]] = getRunningContainer.flatMap {
+                       ec: ExecutionContext, timeout: Duration): Future[Seq[String]] = getRunningContainer.flatMap {
     case Some(res) => Future.successful(res.ipAddresses)
     case None      => Future.failed(new RuntimeException(s"Container ${spec.image} is not running"))
   }
@@ -93,7 +97,7 @@ class DockerContainerState(spec: DockerContainer) {
   private val _ports = SinglePromise[Map[Int, Int]]
 
   def getPorts()(implicit docker: DockerCommandExecutor,
-                 ec: ExecutionContext): Future[Map[Int, Int]] = {
+                 ec: ExecutionContext, timeout: Duration): Future[Map[Int, Int]] = {
     def portsFuture: Future[Map[Int, Int]] = getRunningContainer().flatMap {
       case None => Future.failed(new RuntimeException(s"Container ${spec.image} is not running"))
       case Some(c) =>
@@ -108,6 +112,6 @@ class DockerContainerState(spec: DockerContainer) {
 
   def remove(force: Boolean = true, removeVolumes: Boolean = true)(
       implicit docker: DockerCommandExecutor,
-      ec: ExecutionContext): Future[Unit] =
+      ec: ExecutionContext, timeout: Duration): Future[Unit] =
     id.flatMap(x => docker.remove(x, force, removeVolumes))
 }
