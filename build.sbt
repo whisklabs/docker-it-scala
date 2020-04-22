@@ -108,6 +108,19 @@ lazy val specs2 =
     )
     .dependsOn(core, samples % "test", testkitDockerJavaImpl % "test")
 
+lazy val munit =
+  project
+    .settings(commonSettings: _*)
+    .settings(
+      name := "docker-testkit-munit",
+      testFrameworks += new TestFramework("munit.Framework"),
+      libraryDependencies ++=
+        Seq("org.scalameta" %% "munit" % "0.7.3",
+            "ch.qos.logback" % "logback-classic" % "1.2.1" % "test",
+            "org.postgresql" % "postgresql" % "9.4.1210" % "test")
+    )
+    .dependsOn(core, testkitSpotifyImpl % "test", testkitDockerJavaImpl % "test", samples % "test")
+
 lazy val config =
   project
     .settings(commonSettings: _*)
