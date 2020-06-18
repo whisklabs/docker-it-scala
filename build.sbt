@@ -73,7 +73,7 @@ lazy val testkitDockerJavaImpl =
     .settings(
       name := "docker-testkit-impl-docker-java",
       libraryDependencies ++=
-        Seq("com.github.docker-java" % "docker-java" % "3.0.13",
+        Seq("com.github.docker-java" % "docker-java" % "3.2.3",
             "com.google.code.findbugs" % "jsr305" % "3.0.1")
     )
     .dependsOn(core)
