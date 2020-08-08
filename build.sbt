@@ -45,7 +45,7 @@ lazy val core =
       name := "docker-testkit-core",
       libraryDependencies ++= Seq(
         "org.slf4j" % "slf4j-api" % "1.7.25",
-        "com.spotify" % "docker-client" % "8.15.2",
+        "com.spotify" % "docker-client" % "8.16.0",
         "com.google.code.findbugs" % "jsr305" % "3.0.1",
       )
     )
@@ -56,7 +56,7 @@ lazy val scalatest =
     .settings(
       name := "docker-testkit-scalatest",
       libraryDependencies ++= Seq(
-        "org.scalatest" %% "scalatest" % "3.0.8",
+        "org.scalatest" %% "scalatest" % "3.1.2",
         "ch.qos.logback" % "logback-classic" % "1.2.3" % "test"
       )
     )
@@ -87,7 +87,7 @@ lazy val coreShaded =
     .settings(commonSettings: _*)
     .settings(name := "docker-testkit-core-shaded",
       libraryDependencies ++=
-        Seq("com.spotify" % "docker-client" % "8.15.2" classifier "shaded",
+        Seq("com.spotify" % "docker-client" % "8.16.0" classifier "shaded",
           "com.google.code.findbugs" % "jsr305" % "3.0.1"),
       target := baseDirectory.value / "target-shaded"
     )
