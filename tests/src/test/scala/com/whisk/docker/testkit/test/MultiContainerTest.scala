@@ -1,10 +1,10 @@
 package com.whisk.docker.testkit.test
 
 import com.whisk.docker.testkit._
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 
 class MultiContainerTest
-    extends FunSuite
+    extends AnyFunSuite
     with DockerElasticsearchService
     with DockerMongodbService {
 

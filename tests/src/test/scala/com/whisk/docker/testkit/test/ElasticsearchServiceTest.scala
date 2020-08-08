@@ -1,9 +1,9 @@
 package com.whisk.docker.testkit.test
 
 import com.whisk.docker.testkit.{ContainerState, DockerElasticsearchService}
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 
-class ElasticsearchServiceTest extends FunSuite with DockerElasticsearchService {
+class ElasticsearchServiceTest extends AnyFunSuite with DockerElasticsearchService {
 
   test("test container started") {
     assert(elasticsearchContainer.state().isInstanceOf[ContainerState.Ready],

@@ -1,9 +1,9 @@
 package com.whisk.docker.testkit.test
 
 import com.whisk.docker.testkit.{ContainerState, DockerPostgresService}
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 
-class PostgresServiceTest extends FunSuite with DockerPostgresService {
+class PostgresServiceTest extends AnyFunSuite with DockerPostgresService {
 
   test("test container started") {
     assert(postgresContainer.state().isInstanceOf[ContainerState.Ready], "postgres is ready")

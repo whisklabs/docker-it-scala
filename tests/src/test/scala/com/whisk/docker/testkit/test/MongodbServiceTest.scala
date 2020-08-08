@@ -1,9 +1,9 @@
 package com.whisk.docker.testkit.test
 
 import com.whisk.docker.testkit.{ContainerState, DockerMongodbService}
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 
-class MongodbServiceTest extends FunSuite with DockerMongodbService {
+class MongodbServiceTest extends AnyFunSuite with DockerMongodbService {
 
   test("test container started") {
     assert(mongodbContainer.state().isInstanceOf[ContainerState.Ready], "mongodb is ready")
