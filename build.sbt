@@ -1,6 +1,6 @@
 lazy val commonSettings = Seq(
   organization := "com.whisk",
-  version := "0.10.0-beta8",
+  version := "0.10.0-beta9",
   scalaVersion := "2.13.3",
   crossScalaVersions := Seq("2.13.3", "2.12.12", "2.11.12"),
   scalacOptions ++= Seq("-feature", "-deprecation"),
