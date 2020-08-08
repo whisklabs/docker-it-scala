@@ -54,8 +54,7 @@ class ContainerCommandExecutor(val client: DockerClient) {
     attempt(10)
   }
 
-  private def logStreamFuture(id: String, withErr: Boolean)(
-      implicit
+  private def logStreamFuture(id: String, withErr: Boolean)(implicit
       ec: ExecutionContext
   ): Future[LogStream] = {
     val baseParams = List(AttachParameter.STDOUT, AttachParameter.STREAM, AttachParameter.LOGS)
@@ -100,8 +99,8 @@ class ContainerCommandExecutor(val client: DockerClient) {
     }
   }
 
-  def remove(id: String, force: Boolean, removeVolumes: Boolean)(
-      implicit ec: ExecutionContext
+  def remove(id: String, force: Boolean, removeVolumes: Boolean)(implicit
+      ec: ExecutionContext
   ): Future[Unit] = {
     Future(
       scala.concurrent.blocking(

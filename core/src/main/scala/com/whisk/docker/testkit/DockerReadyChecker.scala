@@ -29,17 +29,20 @@ object RetryUtils {
   def withDelay[T](delay: Long)(f: => Future[T]): Future[T] = {
     val timer = new Timer()
     val promise = Promise[T]()
-    timer.schedule(new TimerTask {
-      override def run(): Unit = {
-        promise.completeWith(f)
-        timer.cancel()
-      }
-    }, delay)
+    timer.schedule(
+      new TimerTask {
+        override def run(): Unit = {
+          promise.completeWith(f)
+          timer.cancel()
+        }
+      },
+      delay
+    )
     promise.future
   }
 
-  def runWithin[T](future: => Future[T], deadline: FiniteDuration)(
-      implicit ec: ExecutionContext
+  def runWithin[T](future: => Future[T], deadline: FiniteDuration)(implicit
+      ec: ExecutionContext
   ): Future[T] = {
     val bail = Promise[T]()
     withDelay(deadline.toMillis)(
@@ -50,8 +53,8 @@ object RetryUtils {
     Future.firstCompletedOf(future :: bail.future :: Nil)
   }
 
-  def looped[T](future: => Future[T], attempts: Int, delay: FiniteDuration)(
-      implicit ec: ExecutionContext
+  def looped[T](future: => Future[T], attempts: Int, delay: FiniteDuration)(implicit
+      ec: ExecutionContext
   ): Future[T] = {
     def attempt(rest: Int): Future[T] = {
       future.recoverWith {
