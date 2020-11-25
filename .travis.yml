@@ -10,7 +10,7 @@ before_install:
 language: scala
 
 scala:
-  - 2.13.0
+  - 2.13.4
   - 2.12.8
   - 2.11.12
 
