@@ -42,7 +42,7 @@ Have a look at [this specific trait](https://github.com/whisklabs/docker-it-scal
 
 ### Overriding execution environment
 
-If you need to have custom setup for you environment, you need to override `dockerFactory` field,  providing `DockerClient` instance
+If you need to have a custom environment setup, you need to override `dockerFactory` field,  providing `DockerClient` instance
 
 ```scala
 import com.spotify.docker.client.{DefaultDockerClient, DockerClient}
