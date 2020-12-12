@@ -3,6 +3,7 @@ package com.whisk.docker
 import java.sql.DriverManager
 
 import scala.concurrent.ExecutionContext
+import scala.concurrent.duration.Duration
 import scala.util.Try
 
 trait DockerPostgresService extends DockerKit {
@@ -28,7 +29,7 @@ class PostgresReadyChecker(user: String, password: String, port: Option[Int] = N
     extends DockerReadyChecker {
 
   override def apply(container: DockerContainerState)(implicit docker: DockerCommandExecutor,
-                                                      ec: ExecutionContext) =
+                                                      ec: ExecutionContext, timeout: Duration) =
     container
       .getPorts()
       .map(ports =>

@@ -41,28 +41,28 @@ trait DockerKit {
   }
 
   def startAllOrFail(): Unit = {
-    Await.result(containerManager.pullImages(), PullImagesTimeout)
-    val allRunning: Boolean = try {
+    Await.result(containerManager.pullImages(PullImagesTimeout), PullImagesTimeout)
+    val allRunning: Boolean = {
       val future: Future[Boolean] =
-        containerManager.initReadyAll(StartContainersTimeout).map(_.map(_._2).forall(identity))
+        containerManager.initReadyAll(StartContainersTimeout).map(_.map(_._2).forall(identity)).recover {
+          case e: Exception =>
+            log.error("Exception during container initialization", e)
+            false
+        }
       sys.addShutdownHook(
-        Await.ready(containerManager.stopRmAll(), StopContainersTimeout)
+        Await.ready(containerManager.stopRmAll(StopContainersTimeout), StopContainersTimeout)
       )
       Await.result(future, StartContainersTimeout)
-    } catch {
-      case e: Exception =>
-        log.error("Exception during container initialization", e)
-        false
     }
     if (!allRunning) {
-      Await.ready(containerManager.stopRmAll(), StopContainersTimeout)
+      Await.ready(containerManager.stopRmAll(StopContainersTimeout), StopContainersTimeout)
       throw new RuntimeException("Cannot run all required containers")
     }
   }
 
   def stopAllQuietly(): Unit = {
     try {
-      Await.ready(containerManager.stopRmAll(), StopContainersTimeout)
+      Await.ready(containerManager.stopRmAll(StopContainersTimeout), StopContainersTimeout)
     } catch {
       case e: Throwable =>
         log.error(e.getMessage, e)
