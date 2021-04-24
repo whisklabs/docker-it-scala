@@ -154,6 +154,9 @@ trait DockerMongodbService extends DockerKitConfig {
 ### Fields
 
 - `image-name` required  (String)
+- `container-name` optional (String)
+- `command` optional (Array of Strings)
+- `entrypoint` optional (Array of Strings)
 - `environmental-variables` optional (Array of Strings)
 - `ready-checker` optional structure
   - `log-line` optional (String)
@@ -173,6 +176,8 @@ trait DockerMongodbService extends DockerKitConfig {
   - `container` required (String)
   - `host`      required (String)
   - `rw`        optional (Boolean - default:false)
+- `memory` optional (Long)
+- `memory-reservation` optional (Long)
 
 # Testkit
 
