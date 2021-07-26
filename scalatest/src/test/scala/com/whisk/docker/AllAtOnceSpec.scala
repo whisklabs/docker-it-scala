@@ -2,10 +2,11 @@ package com.whisk.docker
 
 import com.whisk.docker.impl.spotify.DockerKitSpotify
 import org.scalatest.time.{Second, Seconds, Span}
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
 class AllAtOnceSpec
-    extends FlatSpec
+    extends AnyFlatSpec
     with Matchers
     with DockerKitSpotify
     with DockerElasticsearchService

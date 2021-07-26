@@ -4,10 +4,11 @@ import com.spotify.docker.client.DefaultDockerClient
 import com.whisk.docker.impl.spotify.SpotifyDockerFactory
 import com.whisk.docker.scalatest.DockerTestKit
 import org.scalatest.time.{Second, Seconds, Span}
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
 class PostgresServiceSpec
-    extends FlatSpec
+    extends AnyFlatSpec
     with Matchers
     with DockerTestKit
     with DockerPostgresService {

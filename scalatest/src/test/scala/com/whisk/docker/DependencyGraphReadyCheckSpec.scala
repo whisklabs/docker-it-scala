@@ -1,14 +1,15 @@
 package com.whisk.docker
 
 import com.whisk.docker.impl.spotify.DockerKitSpotify
-import org.scalatest.{FlatSpec, Matchers}
 import org.slf4j.LoggerFactory
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
 import scala.language.postfixOps
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class DependencyGraphReadyCheckSpec extends FlatSpec with Matchers with DockerKitSpotify {
+class DependencyGraphReadyCheckSpec extends AnyFlatSpec with Matchers with DockerKitSpotify {
 
   override val StartContainersTimeout = 45 seconds
 

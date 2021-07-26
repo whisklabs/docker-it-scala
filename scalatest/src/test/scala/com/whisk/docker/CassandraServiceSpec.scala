@@ -5,10 +5,11 @@ import com.github.dockerjava.netty.NettyDockerCmdExecFactory
 import com.whisk.docker.impl.dockerjava.{Docker, DockerJavaExecutorFactory}
 import com.whisk.docker.scalatest.DockerTestKit
 import org.scalatest.time.{Second, Seconds, Span}
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
 class CassandraServiceSpec
-    extends FlatSpec
+    extends AnyFlatSpec
     with Matchers
     with DockerCassandraService
     with DockerTestKit {

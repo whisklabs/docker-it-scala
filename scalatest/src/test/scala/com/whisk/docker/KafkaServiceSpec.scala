@@ -4,9 +4,11 @@ import com.whisk.docker.impl.spotify.DockerKitSpotify
 import com.whisk.docker.scalatest.DockerTestKit
 import org.scalatest._
 import org.scalatest.time._
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
 class KafkaServiceSpec
-    extends FlatSpec
+    extends AnyFlatSpec
     with Matchers
     with DockerKafkaService
     with DockerTestKit

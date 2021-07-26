@@ -90,7 +90,7 @@ lazy val scalatest =
     .settings(
       name := "docker-testkit-scalatest",
       libraryDependencies ++=
-        Seq("org.scalatest" %% "scalatest" % "3.0.8",
+        Seq("org.scalatest" %% "scalatest" % "3.2.9",
             "ch.qos.logback" % "logback-classic" % "1.2.1" % "test",
             "org.postgresql" % "postgresql" % "9.4.1210" % "test")
     )
@@ -116,7 +116,7 @@ lazy val config =
       libraryDependencies ++=
         Seq(
           "com.iheart" %% "ficus" % "1.4.7",
-          "org.scalatest" %% "scalatest" % "3.0.8" % "test"
+          "org.scalatest" %% "scalatest" % "3.2.9" % "test"
         )
     )
     .dependsOn(core, testkitDockerJavaImpl)
