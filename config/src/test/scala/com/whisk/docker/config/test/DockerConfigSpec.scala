@@ -20,6 +20,7 @@ class DockerConfigSpec extends AnyFlatSpec with Matchers with DockerKitConfig {
       .withPorts(9042 -> None)
       .withReadyChecker(DockerReadyChecker.LogLineContains("Starting listening for CQL clients on"))
       .withVolumes(volumes)
+      .withHostConfig(HostConfig())
 
     configureDockerContainer("docker.cassandra") shouldBe cassandraExpected
 
@@ -28,6 +29,7 @@ class DockerConfigSpec extends AnyFlatSpec with Matchers with DockerKitConfig {
       .withEnv(s"POSTGRES_USER=nph", s"POSTGRES_PASSWORD=suitup")
       .withReadyChecker(
         DockerReadyChecker.LogLineContains("database system is ready to accept connections"))
+      .withHostConfig(HostConfig())
 
     configureDockerContainer("docker.postgres") shouldBe postgresExpected
 
@@ -35,6 +37,7 @@ class DockerConfigSpec extends AnyFlatSpec with Matchers with DockerKitConfig {
       .withPorts(27017 -> None)
       .withReadyChecker(DockerReadyChecker.LogLineContains("waiting for connections on port"))
       .withCommand("mongod", "--nojournal", "--smallfiles", "--syncdelay", "0")
+      .withHostConfig(HostConfig())
 
     configureDockerContainer("docker.mongodb") shouldBe mongodbExpected
 
