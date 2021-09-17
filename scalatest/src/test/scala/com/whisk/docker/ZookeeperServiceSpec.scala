@@ -14,7 +14,7 @@ class ZookeeperServiceSpec
     with DockerTestKit
     with DockerKitDockerJava {
 
-  implicit val pc = PatienceConfig(Span(20, Seconds), Span(1, Second))
+  implicit val pc: PatienceConfig = PatienceConfig(Span(20, Seconds), Span(1, Second))
 
   "zookeeper container" should "be ready" in {
     isContainerReady(zookeeperContainer).futureValue shouldBe true

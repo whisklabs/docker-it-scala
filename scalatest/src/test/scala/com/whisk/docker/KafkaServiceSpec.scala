@@ -14,7 +14,7 @@ class KafkaServiceSpec
     with DockerTestKit
     with DockerKitSpotify {
 
-  implicit val pc = PatienceConfig(Span(20, Seconds), Span(1, Second))
+  implicit val pc: PatienceConfig = PatienceConfig(Span(20, Seconds), Span(1, Second))
 
   "kafka container" should "be ready" in {
     isContainerReady(kafkaContainer).futureValue shouldBe true

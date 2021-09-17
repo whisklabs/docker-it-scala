@@ -14,7 +14,7 @@ class ElasticsearchServiceSpec
     with DockerTestKit
     with DockerKitDockerJava {
 
-  implicit val pc = PatienceConfig(Span(20, Seconds), Span(1, Second))
+  implicit val pc: PatienceConfig = PatienceConfig(Span(20, Seconds), Span(1, Second))
 
   "elasticsearch container" should "be ready" in {
     isContainerReady(elasticsearchContainer).futureValue shouldBe true

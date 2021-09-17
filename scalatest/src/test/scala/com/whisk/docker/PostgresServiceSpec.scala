@@ -13,7 +13,7 @@ class PostgresServiceSpec
     with DockerTestKit
     with DockerPostgresService {
 
-  implicit val pc = PatienceConfig(Span(20, Seconds), Span(1, Second))
+  implicit val pc: PatienceConfig = PatienceConfig(Span(20, Seconds), Span(1, Second))
 
   override implicit val dockerFactory: DockerFactory = new SpotifyDockerFactory(
     DefaultDockerClient.fromEnv().build())

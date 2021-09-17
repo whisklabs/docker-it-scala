@@ -11,7 +11,7 @@ import org.scalatest.matchers.should.Matchers
 
 class Neo4jServiceSpec extends AnyFlatSpec with Matchers with DockerTestKit with DockerNeo4jService {
 
-  implicit val pc = PatienceConfig(Span(20, Seconds), Span(1, Second))
+  implicit val pc: PatienceConfig = PatienceConfig(Span(20, Seconds), Span(1, Second))
 
   override implicit val dockerFactory: DockerFactory = new SpotifyDockerFactory(
     DefaultDockerClient.fromEnv().build())

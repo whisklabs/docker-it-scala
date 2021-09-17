@@ -198,7 +198,7 @@ class MyMongoSpec extends FlatSpec with Matchers with DockerMongodbService {
 class AllAtOnceSpec extends FlatSpec with Matchers with BeforeAndAfterAll with GivenWhenThen with ScalaFutures
     with DockerElasticsearchService with DockerCassandraService with DockerNeo4jService with DockerMongodbService {
 
-  implicit val pc = PatienceConfig(Span(20, Seconds), Span(1, Second))
+  implicit val pc: PatienceConfig = PatienceConfig(Span(20, Seconds), Span(1, Second))
 
   "all containers" should "be ready at the same time" in {
     dockerContainers.map(_.image).foreach(println)

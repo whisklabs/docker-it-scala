@@ -13,7 +13,7 @@ import org.scalatest.matchers.should.Matchers
 abstract class DockerContainerLinkingSpec extends AnyFlatSpec with Matchers with DockerTestKit {
 
   lazy val cmdExecutor = implicitly[DockerCommandExecutor]
-  implicit val pc = PatienceConfig(Span(20, Seconds), Span(1, Second))
+  implicit val pc: PatienceConfig = PatienceConfig(Span(20, Seconds), Span(1, Second))
 
   val pingName = "ping"
   val pongName = "pong"

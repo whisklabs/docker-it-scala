@@ -5,13 +5,15 @@ import org.specs2._
 import org.specs2.specification.core.Env
 import scala.concurrent._
 
+import org.specs2.concurrent.ExecutionEnv
+
 class MongodbServiceSpec(env: Env)
     extends Specification
     with DockerTestKitDockerJava
     with DockerTestKit
     with DockerMongodbService {
 
-  implicit val ee = env.executionEnv
+  implicit val ee: ExecutionEnv = env.executionEnv
 
   def is = s2"""
   The mongodb container should be ready $x1
