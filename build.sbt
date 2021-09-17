@@ -98,9 +98,12 @@ lazy val scalatest =
     .settings(
       name := "docker-testkit-scalatest",
       libraryDependencies ++=
-        Seq("org.scalatest" %% "scalatest" % "3.2.9",
-            "ch.qos.logback" % "logback-classic" % "1.2.1" % "test",
-            "org.postgresql" % "postgresql" % "9.4.1210" % "test")
+        Seq(
+          "org.scalatest" %% "scalatest" % "3.2.9",
+          "ch.qos.logback" % "logback-classic" % "1.2.1" % "test",
+          "org.postgresql" % "postgresql" % "9.4.1210" % "test",
+          "javax.activation" % "activation" % "1.1.1" % "test"
+        )
     )
     .dependsOn(core, testkitSpotifyImpl % "test", testkitDockerJavaImpl % "test", samples % "test")
 
@@ -114,7 +117,8 @@ lazy val specs2 =
           "org.specs2" %% "specs2-core" % (if (scalaVersion.value.startsWith("2.1")) "4.5.1"
                                            else "5.0.0-RC-11"),
           "ch.qos.logback" % "logback-classic" % "1.2.1" % "test",
-          "org.postgresql" % "postgresql" % "9.4.1210" % "test"
+          "org.postgresql" % "postgresql" % "9.4.1210" % "test",
+          "javax.activation" % "activation" % "1.1.1" % "test"
         )
     )
     .dependsOn(core, samples % "test", testkitDockerJavaImpl % "test")
@@ -125,6 +129,6 @@ lazy val config =
     .settings(
       name := "docker-testkit-config",
       libraryDependencies ++=
-        Seq("com.typesafe"         % "config"                   % "1.4.1", "org.scalatest" %% "scalatest" % "3.2.9" % "test")
+        Seq("com.typesafe" % "config" % "1.4.1", "org.scalatest" %% "scalatest" % "3.2.9" % "test")
     )
     .dependsOn(core, testkitDockerJavaImpl)

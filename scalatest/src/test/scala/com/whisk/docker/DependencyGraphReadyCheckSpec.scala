@@ -25,6 +25,7 @@ class DependencyGraphReadyCheckSpec extends AnyFlatSpec with Matchers with Docke
              "KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181",
              "KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092")
     .withLinks(ContainerLink(zookeeperContainer, "zookeeper"))
+    .withHostname("kafka")
     .withReadyChecker(DockerReadyChecker.LogLineContains("[Kafka Server 1], started"))
 
   val schemaRegistryContainer = DockerContainer("confluentinc/cp-schema-registry:3.1.2",
