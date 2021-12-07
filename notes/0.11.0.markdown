@@ -1,0 +1,9 @@
+#scala #docker #integration-testing
+
+## Highlights
+
+* add cross-compilation for scala [3](https://github.com/whisklabs/docker-it-scala/pull/146)
+* proper [timeouts handling](https://github.com/whisklabs/docker-it-scala/pull/133)
+* updated [sbt with plugins](https://github.com/whisklabs/docker-it-scala/pull/147)
+* create Github Action [CI](https://github.com/whisklabs/docker-it-scala/pull/147)
+* docs and small code improvements
