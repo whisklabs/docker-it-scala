@@ -1,7 +1,7 @@
-addSbtPlugin("org.xerial.sbt" % "sbt-sonatype" % "2.0")
+addSbtPlugin("org.xerial.sbt" % "sbt-sonatype" % "3.9.10")
 
-addSbtPlugin("com.jsuereth" % "sbt-pgp" % "1.1.0-M1")
+addSbtPlugin("com.github.sbt" % "sbt-pgp" % "2.1.2")
 
-addSbtPlugin("com.geirsson" % "sbt-scalafmt" % "1.2.0")
+addSbtPlugin("org.scalameta" % "sbt-scalafmt" % "2.4.5")
 
 addSbtPlugin("ch.epfl.scala" % "sbt-scalafix" % "0.9.18-1")

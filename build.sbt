@@ -1,10 +1,10 @@
 lazy val commonSettings = Seq(
   organization := "com.whisk",
   version := "0.9.9",
-  scalaVersion := "2.13.0",
+  scalaVersion := "2.13.6",
   crossScalaVersions := Seq("2.13.6", "2.12.15", "2.11.12", "3.0.2"),
   scalacOptions ++= Seq("-feature", "-deprecation"),
-  fork in Test := true,
+  Test / fork := true,
   licenses += ("MIT", url("http://opensource.org/licenses/MIT")),
   sonatypeProfileName := "com.whisk",
   publishMavenStyle := true,
@@ -81,7 +81,7 @@ lazy val testkitDockerJavaImpl =
     .settings(
       name := "docker-testkit-impl-docker-java",
       libraryDependencies ++=
-        Seq("com.github.docker-java" % "docker-java" % "3.0.13",
+        Seq("com.github.docker-java" % "docker-java" % "3.2.3",
             "com.google.code.findbugs" % "jsr305" % "3.0.1")
     )
     .dependsOn(core)
@@ -105,7 +105,7 @@ lazy val scalatest =
           "javax.activation" % "activation" % "1.1.1" % "test"
         )
     )
-    .dependsOn(core, testkitSpotifyImpl % "test", testkitDockerJavaImpl % "test", samples % "test")
+    .dependsOn(core, testkitSpotifyShadedImpl % "test", testkitDockerJavaImpl % "test", samples % "test")
 
 lazy val specs2 =
   project

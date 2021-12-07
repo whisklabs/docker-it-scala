@@ -1,7 +1,6 @@
 docker-it-scala
 =============
 
-[![Build Status](https://travis-ci.org/whisklabs/docker-it-scala.svg?branch=master)](https://travis-ci.org/whisklabs/docker-it-scala)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.whisk/docker-testkit-core_2.12/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.whisk/docker-testkit-core_2.12)
 [![Join the chat at https://gitter.im/whisklabs/docker-it-scala](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/whisklabs/docker-it-scala?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
@@ -154,6 +153,9 @@ trait DockerMongodbService extends DockerKitConfig {
 ### Fields
 
 - `image-name` required  (String)
+- `container-name` optional (String)
+- `command` optional (Array of Strings)
+- `entrypoint` optional (Array of Strings)
 - `environmental-variables` optional (Array of Strings)
 - `ready-checker` optional structure
   - `log-line` optional (String)
@@ -173,6 +175,8 @@ trait DockerMongodbService extends DockerKitConfig {
   - `container` required (String)
   - `host`      required (String)
   - `rw`        optional (Boolean - default:false)
+- `memory` optional (Long)
+- `memory-reservation` optional (Long)
 
 # Testkit
 
