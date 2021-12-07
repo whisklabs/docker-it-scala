@@ -18,6 +18,7 @@ class DockerConfigSpec extends FlatSpec with Matchers with DockerKitConfig {
       .withPorts(9042 -> None)
       .withReadyChecker(DockerReadyChecker.LogLineContains("Starting listening for CQL clients on"))
       .withVolumes(volumes)
+      .withHostConfig(HostConfig(None, None, None))
 
     configureDockerContainer("docker.cassandra") shouldBe cassandraExpected
 
@@ -25,7 +26,10 @@ class DockerConfigSpec extends FlatSpec with Matchers with DockerKitConfig {
       .withPorts((5432, None))
       .withEnv(s"POSTGRES_USER=nph", s"POSTGRES_PASSWORD=suitup")
       .withReadyChecker(
-        DockerReadyChecker.LogLineContains("database system is ready to accept connections"))
+        DockerReadyChecker.LogLineContains("database system is ready to accept connections")
+      )
+      .withHostConfig(HostConfig(None, None, None))
+
 
     configureDockerContainer("docker.postgres") shouldBe postgresExpected
 
@@ -33,6 +37,7 @@ class DockerConfigSpec extends FlatSpec with Matchers with DockerKitConfig {
       .withPorts(27017 -> None)
       .withReadyChecker(DockerReadyChecker.LogLineContains("waiting for connections on port"))
       .withCommand("mongod", "--nojournal", "--smallfiles", "--syncdelay", "0")
+      .withHostConfig(HostConfig(None, None, None))
 
     configureDockerContainer("docker.mongodb") shouldBe mongodbExpected
 
@@ -44,7 +49,8 @@ class DockerConfigSpec extends FlatSpec with Matchers with DockerKitConfig {
         DockerReadyChecker
           .HttpResponseCode(9200, "/")
           .within(100.millis)
-          .looped(20, 1250.millis))
+          .looped(20, 1250.millis)
+      )
 
     configureDockerContainer("docker.elasticsearch") shouldBe elasticExpected
   }
