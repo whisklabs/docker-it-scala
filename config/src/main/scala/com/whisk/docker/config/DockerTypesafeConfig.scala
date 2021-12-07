@@ -1,7 +1,13 @@
 package com.whisk.docker.config
 
 import com.whisk.docker.impl.dockerjava.DockerKitDockerJava
-import com.whisk.docker.{DockerContainer, DockerPortMapping, DockerReadyChecker, HostConfig, VolumeMapping}
+import com.whisk.docker.{
+  DockerContainer,
+  DockerPortMapping,
+  DockerReadyChecker,
+  HostConfig,
+  VolumeMapping
+}
 
 import scala.concurrent.duration._
 
@@ -22,9 +28,8 @@ object DockerTypesafeConfig extends DockerKitDockerJava {
                                            within: Option[Int],
                                            looped: Option[DockerConfigReadyCheckerLooped])
 
-  case class DockerConfigReadyChecker(
-      `log-line`: Option[String],
-      `http-response-code`: Option[DockerConfigHttpResponseReady]) {
+  case class DockerConfigReadyChecker(`log-line`: Option[String],
+                                      `http-response-code`: Option[DockerConfigHttpResponseReady]) {
 
     def httpResponseCodeReadyChecker(rr: DockerConfigHttpResponseReady) = {
       val codeChecker: DockerReadyChecker =
@@ -56,10 +61,10 @@ object DockerTypesafeConfig extends DockerKitDockerJava {
                           privileged: Boolean = false) {
 
     def toDockerContainer(): DockerContainer = {
-      val bindPorts = `port-maps`.fold(EmptyPortBindings) { _.values.map(_.asTuple).toMap } mapValues {
-        maybeHostPort =>
-          DockerPortMapping(maybeHostPort)
-      }
+      val bindPorts = `port-maps`.fold(EmptyPortBindings) { _.values.map(_.asTuple).toMap }.toSeq.map {
+        case (internalPort, maybeHostPort) =>
+          internalPort -> DockerPortMapping(maybeHostPort)
+      }.toMap
 
       val readyChecker = `ready-checker`.fold[DockerReadyChecker](AlwaysReady) { _.toReadyChecker }
 

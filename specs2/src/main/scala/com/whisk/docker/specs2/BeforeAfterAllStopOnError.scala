@@ -5,8 +5,8 @@ import org.specs2.specification.create.FragmentsFactory
 
 trait BeforeAfterAllStopOnError extends SpecificationStructure with FragmentsFactory {
 
-  def beforeAll()
-  def afterAll()
+  def beforeAll(): Unit
+  def afterAll(): Unit
 
   override def map(fs: => Fragments) =
     super

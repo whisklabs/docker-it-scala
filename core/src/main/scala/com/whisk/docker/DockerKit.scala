@@ -25,7 +25,7 @@ trait DockerKit {
     ExecutionContext.fromExecutor(
       Executors.newFixedThreadPool(Math.max(1, dockerContainers.length * 2)))
   }
-  implicit lazy val dockerExecutor = dockerFactory.createExecutor()
+  implicit lazy val dockerExecutor: DockerCommandExecutor = dockerFactory.createExecutor()
 
   lazy val containerManager = new DockerContainerManager(dockerContainers, dockerExecutor)
 

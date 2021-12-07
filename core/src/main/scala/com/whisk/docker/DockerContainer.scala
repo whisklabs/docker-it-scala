@@ -11,14 +11,11 @@ case class LogLineReceiver(withErr: Boolean, f: String => Unit)
 case class DockerPortMapping(hostPort: Option[Int] = None, address: String = "0.0.0.0")
 
 case class HostConfig(
-
     tmpfs: Option[Map[String, String]] = None,
-
     /**
       * the hard limit on memory usage (in bytes)
       */
     memory: Option[Long] = None,
-
     /**
       * the soft limit on memory usage (in bytes)
       */
@@ -28,7 +25,6 @@ case class HostConfig(
       * whether to run in privileged mode
       */
     privileged: Boolean = false
-
 
 )
 
@@ -55,7 +51,7 @@ case class DockerContainer(image: String,
   def withEntrypoint(entrypoint: String*) = copy(entrypoint = Some(entrypoint))
 
   def withPorts(ps: (Int, Option[Int])*) =
-    copy(bindPorts = ps.toMap.mapValues(hostPort => DockerPortMapping(hostPort)))
+    copy(bindPorts = ps.map { case (internalPort, hostPort) => internalPort -> DockerPortMapping(hostPort) }.toMap)
 
   def withPortMapping(ps: (Int, DockerPortMapping)*) = copy(bindPorts = ps.toMap)
 

@@ -11,10 +11,10 @@ class DockerContainerManager(containers: Seq[DockerContainer], executor: DockerC
     implicit ec: ExecutionContext) {
 
   private lazy val log = LoggerFactory.getLogger(this.getClass)
-  private implicit val dockerExecutor = executor
+  private implicit val dockerExecutor: DockerCommandExecutor = executor
 
   private val dockerStatesMap: Map[DockerContainer, DockerContainerState] =
-    containers.map(c => c -> new DockerContainerState(c))(collection.breakOut)
+    containers.map(c => c -> new DockerContainerState(c)).toMap
 
   val states = dockerStatesMap.values.toList
 
@@ -36,7 +36,8 @@ class DockerContainerManager(containers: Seq[DockerContainer], executor: DockerC
     }
   }
 
-  def initReadyAll(containerStartTimeout: Duration): Future[Seq[(DockerContainerState, Boolean)]] = {
+  def initReadyAll(
+      containerStartTimeout: Duration): Future[Seq[(DockerContainerState, Boolean)]] = {
     import DockerContainerManager._
 
     @tailrec

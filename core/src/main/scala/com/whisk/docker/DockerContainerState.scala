@@ -50,7 +50,7 @@ class DockerContainerState(spec: DockerContainer) {
       spec.logLineReceiver.foreach {
         case LogLineReceiver(withErr, f) => docker.withLogStreamLines(s, withErr)(f)
       }
-      runReadyCheck
+      runReadyCheck()
       this
     }
   }
@@ -79,13 +79,13 @@ class DockerContainerState(spec: DockerContainer) {
     id.flatMap(docker.inspectContainer)
 
   def getName()(implicit docker: DockerCommandExecutor, ec: ExecutionContext): Future[String] =
-    getRunningContainer.flatMap {
+    getRunningContainer().flatMap {
       case Some(res) => Future.successful(res.name)
       case None      => Future.failed(new RuntimeException(s"Container ${spec.image} is not running"))
     }
 
   def getIpAddresses()(implicit docker: DockerCommandExecutor,
-                       ec: ExecutionContext): Future[Seq[String]] = getRunningContainer.flatMap {
+                       ec: ExecutionContext): Future[Seq[String]] = getRunningContainer().flatMap {
     case Some(res) => Future.successful(res.ipAddresses)
     case None      => Future.failed(new RuntimeException(s"Container ${spec.image} is not running"))
   }

@@ -4,14 +4,14 @@ import java.util.concurrent.TimeUnit
 
 import com.github.dockerjava.api.DockerClient
 import com.github.dockerjava.api.exception.NotFoundException
-import com.github.dockerjava.api.model.{PortBinding => _, ContainerPort => _, _}
+import com.github.dockerjava.api.model.{ContainerPort => _, PortBinding => _, _}
 import com.github.dockerjava.core.command.{LogContainerResultCallback, PullImageResultCallback}
 import com.google.common.io.Closeables
 import com.whisk.docker._
-
 import scala.collection.JavaConverters._
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ExecutionContext, Future, Promise}
+import scala.reflect.ClassTag
 
 class DockerJavaExecutor(override val host: String, client: DockerClient)
     extends DockerCommandExecutor {
@@ -54,12 +54,12 @@ class DockerJavaExecutor(override val host: String, client: DockerClient)
       .createContainerCmd(spec.image)
       .withHostConfig(hostConfig)
       .withPortSpecs(spec.bindPorts
-            .map({
+        .map({
           case (guestPort, DockerPortMapping(Some(hostPort), address)) =>
             s"$address:$hostPort:$guestPort"
           case (guestPort, DockerPortMapping(None, address)) => s"$address::$guestPort"
         })
-            .toSeq: _*)
+        .toSeq: _*)
       .withExposedPorts(spec.bindPorts.keys.map(ExposedPort.tcp).toSeq: _*)
       .withTty(spec.tty)
       .withStdinOpen(spec.stdinOpen)
@@ -69,7 +69,9 @@ class DockerJavaExecutor(override val host: String, client: DockerClient)
       .withOption(spec.hostname) { case (config, hostName) => config.withHostName(hostName) }
       .withOption(spec.name) { case (config, name) => config.withName(name) }
       .withOption(spec.command) { case (config, c) => config.withCmd(c: _*) }
-      .withOption(spec.entrypoint) { case (config, entrypoint) => config.withEntrypoint(entrypoint: _*) }
+      .withOption(spec.entrypoint) {
+        case (config, entrypoint) => config.withEntrypoint(entrypoint: _*)
+      }
 
     Future(cmd.exec()).map { resp =>
       if (resp.getId != null && resp.getId != "") {
@@ -176,7 +178,7 @@ class DockerJavaExecutor(override val host: String, client: DockerClient)
         .listImagesCmd()
         .exec()
         .asScala
-        .flatMap(img => Option(img.getRepoTags).getOrElse(Array()))
+        .flatMap(img => Option(img.getRepoTags).getOrElse(Array.empty(ClassTag(classOf[String]))))
         .toSet)
   }
 
