@@ -53,15 +53,15 @@ class DependencyGraphReadyCheckSpec extends AnyFlatSpec with Matchers with Docke
     } catch {
       case e: RuntimeException => log.error("Test failed during readychecks", e)
     } finally {
-      Await.ready(containerManager.stopRmAll(), StopContainersTimeout)
+      Await.ready(containerManager.stopRmAll(StopContainersTimeout), StopContainersTimeout)
     }
   }
 
   override def startAllOrFail(): Unit = {
-    Await.result(containerManager.pullImages(), PullImagesTimeout)
+    Await.result(containerManager.pullImages(PullImagesTimeout), PullImagesTimeout)
     containerManager.initReadyAll(StartContainersTimeout).map(_.map(_._2).forall(identity))
     sys.addShutdownHook(
-      containerManager.stopRmAll()
+      containerManager.stopRmAll(StopContainersTimeout)
     )
   }
 }

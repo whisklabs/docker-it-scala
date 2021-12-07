@@ -14,14 +14,14 @@ import com.spotify.docker.client.{DockerClient, LogMessage}
 import com.whisk.docker._
 
 import scala.collection.JavaConverters._
-import scala.concurrent.duration.FiniteDuration
+import scala.concurrent.duration.{Duration, FiniteDuration}
 import scala.concurrent.{ExecutionContext, Future, Promise}
 
 class SpotifyDockerCommandExecutor(override val host: String, client: DockerClient)
     extends DockerCommandExecutor {
 
   override def createContainer(spec: DockerContainer)(
-      implicit ec: ExecutionContext): Future[String] = {
+      implicit ec: ExecutionContext, timeout: Duration): Future[String] = {
     val portBindings: Map[String, util.List[PortBinding]] = spec.bindPorts.map {
       case (guestPort, DockerPortMapping(Some(hostPort), address)) =>
         guestPort.toString -> Collections.singletonList(PortBinding.of(address, hostPort))
@@ -78,7 +78,7 @@ class SpotifyDockerCommandExecutor(override val host: String, client: DockerClie
       }
       .build()
 
-    val creation = Future(
+    val creation = PerishableFuture(
       spec.name.fold(client.createContainer(containerConfig))(
         client.createContainer(containerConfig, _))
     )
@@ -86,15 +86,15 @@ class SpotifyDockerCommandExecutor(override val host: String, client: DockerClie
     creation.map(_.id)
   }
 
-  override def startContainer(id: String)(implicit ec: ExecutionContext): Future[Unit] = {
-    Future(client.startContainer(id))
+  override def startContainer(id: String)(implicit ec: ExecutionContext, timeout: Duration): Future[Unit] = {
+    PerishableFuture(client.startContainer(id))
   }
 
   override def inspectContainer(id: String)(
-      implicit ec: ExecutionContext): Future[Option[InspectContainerResult]] = {
+      implicit ec: ExecutionContext, timeout: Duration): Future[Option[InspectContainerResult]] = {
 
     def inspect() =
-      Future(client.inspectContainer(id))
+      PerishableFuture(client.inspectContainer(id))
         .flatMap { info =>
           val networkPorts = Option(info.networkSettings().ports())
           networkPorts match {
@@ -139,13 +139,13 @@ class SpotifyDockerCommandExecutor(override val host: String, client: DockerClie
   }
 
   override def withLogStreamLines(id: String, withErr: Boolean)(
-      f: String => Unit)(implicit docker: DockerCommandExecutor, ec: ExecutionContext): Unit = {
+      f: String => Unit)(implicit docker: DockerCommandExecutor, ec: ExecutionContext, timeout: Duration): Unit = {
     val baseParams = List(AttachParameter.STDOUT, AttachParameter.STREAM, AttachParameter.LOGS)
     val logParams = if (withErr) AttachParameter.STDERR :: baseParams else baseParams
-    val streamF = Future(client.attachContainer(id, logParams: _*))
+    val streamF = PerishableFuture(client.attachContainer(id, logParams: _*))
 
     streamF.flatMap { stream =>
-      Future {
+      PerishableFuture {
         stream.forEachRemaining(new Consumer[LogMessage] {
           override def accept(t: LogMessage): Unit = {
             val str = StandardCharsets.US_ASCII.decode(t.content()).toString
@@ -158,16 +158,16 @@ class SpotifyDockerCommandExecutor(override val host: String, client: DockerClie
 
   override def withLogStreamLinesRequirement(id: String, withErr: Boolean)(f: (String) => Boolean)(
       implicit docker: DockerCommandExecutor,
-      ec: ExecutionContext): Future[Unit] = {
+      ec: ExecutionContext, timeout: Duration): Future[Unit] = {
 
     val baseParams = List(AttachParameter.STDOUT, AttachParameter.STREAM, AttachParameter.LOGS)
     val logParams = if (withErr) AttachParameter.STDERR :: baseParams else baseParams
 
-    val streamF = Future(client.attachContainer(id, logParams: _*))
+    val streamF = PerishableFuture(client.attachContainer(id, logParams: _*))
 
     streamF.flatMap { stream =>
       val p = Promise[Unit]()
-      Future {
+      PerishableFuture {
         stream.forEachRemaining(new Consumer[LogMessage] {
           override def accept(t: LogMessage): Unit = {
             val str = StandardCharsets.US_ASCII.decode(t.content()).toString
@@ -182,8 +182,8 @@ class SpotifyDockerCommandExecutor(override val host: String, client: DockerClie
     }
   }
 
-  override def listImages()(implicit ec: ExecutionContext): Future[Set[String]] = {
-    Future(
+  override def listImages()(implicit ec: ExecutionContext, timeout: Duration): Future[Set[String]] = {
+    PerishableFuture(
       client
         .listImages()
         .asScala
@@ -191,13 +191,13 @@ class SpotifyDockerCommandExecutor(override val host: String, client: DockerClie
         .toSet)
   }
 
-  override def pullImage(image: String)(implicit ec: ExecutionContext): Future[Unit] = {
-    Future(client.pull(image))
+  override def pullImage(image: String)(implicit ec: ExecutionContext, timeout: Duration): Future[Unit] = {
+    PerishableFuture(client.pull(image))
   }
 
   override def remove(id: String, force: Boolean, removeVolumes: Boolean)(
-      implicit ec: ExecutionContext): Future[Unit] = {
-    Future(
+      implicit ec: ExecutionContext, timeout: Duration): Future[Unit] = {
+    PerishableFuture(
       client.removeContainer(id,
                              RemoveContainerParam.forceKill(force),
                              RemoveContainerParam.removeVolumes(removeVolumes)))
