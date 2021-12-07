@@ -32,7 +32,7 @@ class DependencyGraphReadyCheckSpec extends FlatSpec with Matchers with DockerKi
              "SCHEMA_REGISTRY_KAFKASTORE_CONNECTION_URL=zookeeper:2181")
     .withLinks(ContainerLink(zookeeperContainer, "zookeeper"),
                ContainerLink(kafkaContainer, "kafka"))
-    .withReadyChecker(DockerReadyChecker.LogLineContains("Server started, listening for requests"))
+    .withReadyChecker(DockerReadyChecker.LogLineContains("Session establishment complete on server"))
 
   override def dockerContainers =
     schemaRegistryContainer :: kafkaContainer :: zookeeperContainer :: super.dockerContainers

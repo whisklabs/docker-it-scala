@@ -2,3 +2,4 @@ target/
 target-shaded/
 project/sbt-launch-*.jar
 .idea/
+.bsp/
