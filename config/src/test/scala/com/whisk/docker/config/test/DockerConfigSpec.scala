@@ -2,11 +2,12 @@ package com.whisk.docker.config.test
 
 import com.whisk.docker.{DockerContainer, DockerReadyChecker, HostConfig, VolumeMapping}
 import com.whisk.docker.config.DockerKitConfig
-import org.scalatest._
 
 import scala.concurrent.duration._
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class DockerConfigSpec extends FlatSpec with Matchers with DockerKitConfig {
+class DockerConfigSpec extends AnyFlatSpec with Matchers with DockerKitConfig {
 
   "Config-based configurations" should "produce same containers as code-based ones" in {
     val volumes = Seq(
@@ -26,10 +27,8 @@ class DockerConfigSpec extends FlatSpec with Matchers with DockerKitConfig {
       .withPorts((5432, None))
       .withEnv(s"POSTGRES_USER=nph", s"POSTGRES_PASSWORD=suitup")
       .withReadyChecker(
-        DockerReadyChecker.LogLineContains("database system is ready to accept connections")
-      )
+        DockerReadyChecker.LogLineContains("database system is ready to accept connections"))
       .withHostConfig(HostConfig(None, None, None))
-
 
     configureDockerContainer("docker.postgres") shouldBe postgresExpected
 

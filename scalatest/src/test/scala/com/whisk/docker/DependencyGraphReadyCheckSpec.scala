@@ -1,14 +1,15 @@
 package com.whisk.docker
 
 import com.whisk.docker.impl.spotify.DockerKitSpotify
-import org.scalatest.{FlatSpec, Matchers}
 import org.slf4j.LoggerFactory
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
 import scala.language.postfixOps
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class DependencyGraphReadyCheckSpec extends FlatSpec with Matchers with DockerKitSpotify {
+class DependencyGraphReadyCheckSpec extends AnyFlatSpec with Matchers with DockerKitSpotify {
 
   override val StartContainersTimeout = 45 seconds
 
@@ -24,6 +25,7 @@ class DependencyGraphReadyCheckSpec extends FlatSpec with Matchers with DockerKi
              "KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181",
              "KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092")
     .withLinks(ContainerLink(zookeeperContainer, "zookeeper"))
+    .withHostname("kafka")
     .withReadyChecker(DockerReadyChecker.LogLineContains("[Kafka Server 1], started"))
 
   val schemaRegistryContainer = DockerContainer("confluentinc/cp-schema-registry:3.1.2",

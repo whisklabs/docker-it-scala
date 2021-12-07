@@ -3,8 +3,10 @@ package com.whisk.docker
 import com.whisk.docker.DockerContainerManager._
 import com.whisk.docker.impl.dockerjava._
 import org.scalatest._
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
 
-class DockerContainerManagerSpec extends WordSpecLike with Matchers {
+class DockerContainerManagerSpec extends AnyWordSpecLike with Matchers {
 
   "The DockerContainerManager" should {
     "a list of containers with dependencies" should {

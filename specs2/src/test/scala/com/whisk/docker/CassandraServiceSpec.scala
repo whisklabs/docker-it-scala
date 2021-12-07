@@ -2,6 +2,7 @@ package com.whisk.docker
 
 import com.whisk.docker.specs2.DockerTestKit
 import org.specs2._
+import org.specs2.concurrent.ExecutionEnv
 import org.specs2.specification.core.Env
 
 class CassandraServiceSpec(env: Env)
@@ -10,7 +11,7 @@ class CassandraServiceSpec(env: Env)
     with DockerCassandraService
     with DockerTestKit {
 
-  implicit val ee = env.executionEnv
+  implicit val ee: ExecutionEnv = env.executionEnv
 
   def is =
     s2"""
