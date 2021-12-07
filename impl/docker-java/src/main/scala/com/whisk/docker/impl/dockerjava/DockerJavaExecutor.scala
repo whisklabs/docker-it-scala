@@ -8,10 +8,10 @@ import com.github.dockerjava.api.model.{ContainerPort => _, PortBinding => _, _}
 import com.github.dockerjava.core.command.{LogContainerResultCallback, PullImageResultCallback}
 import com.google.common.io.Closeables
 import com.whisk.docker._
-
 import scala.collection.JavaConverters._
 import scala.concurrent.duration.{Duration, FiniteDuration}
 import scala.concurrent.{ExecutionContext, Future, Promise}
+import scala.reflect.ClassTag
 
 class DockerJavaExecutor(override val host: String, client: DockerClient)
     extends DockerCommandExecutor {
@@ -45,6 +45,9 @@ class DockerJavaExecutor(override val host: String, client: DockerClient)
       }
       .withOption(spec.hostConfig.flatMap(_.memoryReservation)) {
         case (config, memoryReservation) => config.withMemoryReservation(memoryReservation)
+      }
+      .withOption(spec.hostConfig.map(_.privileged)) {
+        case (config, privileged) => config.withPrivileged(privileged)
       }
 
     val cmd = client
@@ -175,7 +178,7 @@ class DockerJavaExecutor(override val host: String, client: DockerClient)
         .listImagesCmd()
         .exec()
         .asScala
-        .flatMap(img => Option(img.getRepoTags).getOrElse(Array()))
+        .flatMap(img => Option(img.getRepoTags).getOrElse(Array.empty(ClassTag(classOf[String]))))
         .toSet)
   }
 

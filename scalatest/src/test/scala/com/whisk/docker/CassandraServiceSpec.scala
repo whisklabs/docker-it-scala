@@ -5,15 +5,16 @@ import com.github.dockerjava.netty.NettyDockerCmdExecFactory
 import com.whisk.docker.impl.dockerjava.{Docker, DockerJavaExecutorFactory}
 import com.whisk.docker.scalatest.DockerTestKit
 import org.scalatest.time.{Second, Seconds, Span}
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
 class CassandraServiceSpec
-    extends FlatSpec
+    extends AnyFlatSpec
     with Matchers
     with DockerCassandraService
     with DockerTestKit {
 
-  implicit val pc = PatienceConfig(Span(20, Seconds), Span(1, Second))
+  implicit val pc: PatienceConfig = PatienceConfig(Span(20, Seconds), Span(1, Second))
 
   override implicit val dockerFactory: DockerFactory = new DockerJavaExecutorFactory(
     new Docker(DefaultDockerClientConfig.createDefaultConfigBuilder().build(),

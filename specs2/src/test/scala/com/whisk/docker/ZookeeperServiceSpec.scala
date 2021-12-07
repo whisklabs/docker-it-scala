@@ -1,6 +1,7 @@
 package com.whisk.docker
 
 import org.specs2._
+import org.specs2.concurrent.ExecutionEnv
 import org.specs2.specification.core.Env
 
 class ZookeeperServiceSpec(env: Env)
@@ -8,7 +9,7 @@ class ZookeeperServiceSpec(env: Env)
     with DockerTestKitDockerJava
     with DockerZookeeperService {
 
-  implicit val ee = env.executionEnv
+  implicit val ee: ExecutionEnv = env.executionEnv
 
   def is = s2"""
   The Zookeeper container should be ready $x1

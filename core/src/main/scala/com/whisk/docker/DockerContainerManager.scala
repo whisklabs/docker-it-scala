@@ -11,7 +11,7 @@ class DockerContainerManager(containers: Seq[DockerContainer], executor: DockerC
     implicit ec: ExecutionContext) {
 
   private lazy val log = LoggerFactory.getLogger(this.getClass)
-  private implicit val dockerExecutor = executor
+  private implicit val dockerExecutor: DockerCommandExecutor = executor
 
   private val dockerStatesMap: Map[DockerContainer, DockerContainerState] =
     containers.map(c => c -> new DockerContainerState(c)).toMap

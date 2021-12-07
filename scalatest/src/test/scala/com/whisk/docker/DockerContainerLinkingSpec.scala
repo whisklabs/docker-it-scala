@@ -1,18 +1,19 @@
 package com.whisk.docker
 
 import org.scalatest._
-import concurrent.ScalaFutures
 import time._
 
 import impl.dockerjava._
 import impl.spotify._
 import scalatest.DockerTestKit
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 import scala.concurrent.duration.Duration
 
-abstract class DockerContainerLinkingSpec extends FlatSpec with Matchers with DockerTestKit {
+abstract class DockerContainerLinkingSpec extends AnyFlatSpec with Matchers with DockerTestKit {
 
   lazy val cmdExecutor = implicitly[DockerCommandExecutor]
-  implicit val pc = PatienceConfig(Span(20, Seconds), Span(1, Second))
+  implicit val pc: PatienceConfig = PatienceConfig(Span(20, Seconds), Span(1, Second))
   implicit val defaultOpsTimeout: Duration = Duration.Inf
 
   val pingName = "ping"
