@@ -4,7 +4,7 @@ lazy val commonSettings = Seq(
   scalaVersion := "2.13.5",
   crossScalaVersions := Seq("2.13.5", "2.12.8", "2.11.12"),
   scalacOptions ++= Seq("-feature", "-deprecation"),
-  fork in Test := true,
+  Test / fork := true,
   licenses += ("MIT", url("http://opensource.org/licenses/MIT")),
   sonatypeProfileName := "com.whisk",
   publishMavenStyle := true,
@@ -94,7 +94,7 @@ lazy val scalatest =
             "ch.qos.logback" % "logback-classic" % "1.2.1" % "test",
             "org.postgresql" % "postgresql" % "9.4.1210" % "test")
     )
-    .dependsOn(core, testkitSpotifyImpl % "test", testkitDockerJavaImpl % "test", samples % "test")
+    .dependsOn(core, testkitSpotifyShadedImpl % "test", testkitDockerJavaImpl % "test", samples % "test")
 
 lazy val specs2 =
   project
