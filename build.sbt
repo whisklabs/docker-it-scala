@@ -56,7 +56,7 @@ lazy val scalatest =
     .settings(
       name := "docker-testkit-scalatest",
       libraryDependencies ++= Seq(
-        "org.scalatest" %% "scalatest" % "3.1.2",
+        "org.scalatest" %% "scalatest" % "3.2.9",
         "ch.qos.logback" % "logback-classic" % "1.2.3" % "test"
       )
     )

@@ -8,11 +8,14 @@ class MultiContainerTest
     with DockerElasticsearchService
     with DockerMongodbService {
 
-  override val managedContainers = ContainerGroup.of(elasticsearchContainer, mongodbContainer)
+  override val managedContainers: ContainerGroup =
+    ContainerGroup.of(elasticsearchContainer, mongodbContainer)
 
   test("both containers should be ready") {
-    assert(elasticsearchContainer.state().isInstanceOf[ContainerState.Ready],
-           "elasticsearch container is ready")
+    assert(
+      elasticsearchContainer.state().isInstanceOf[ContainerState.Ready],
+      "elasticsearch container is ready"
+    )
     assert(elasticsearchContainer.mappedPortOpt(9200).nonEmpty, "elasticsearch port is exposed")
 
     assert(mongodbContainer.state().isInstanceOf[ContainerState.Ready], "mongodb is ready")

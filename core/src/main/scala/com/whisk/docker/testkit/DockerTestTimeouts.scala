@@ -10,5 +10,5 @@ case class DockerTestTimeouts(
 
 object DockerTestTimeouts {
 
-  val Default = DockerTestTimeouts()
+  val Default: DockerTestTimeouts = DockerTestTimeouts()
 }
