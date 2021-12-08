@@ -1,0 +1,9 @@
+#scala #docker #integration-testing
+
+## Highlights
+
+* add cross-compilation for scala [2.13.0](https://github.com/scala/scala/releases/tag/v2.13.0)
+* updated [sbt](https://github.com/sbt/sbt) to 1.2.8
+* updated [scalatest](https://github.com/scalatest/scalatest) to 3.0.8
+* updated [specs2-core](https://github.com/etorreborre/specs2) to 4.5.1
+* updated [ficus](https://github.com/iheartradio/ficus) to 1.4.7

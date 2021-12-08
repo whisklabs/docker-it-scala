@@ -1,7 +1,6 @@
 docker-it-scala
 =============
 
-[![Build Status](https://travis-ci.org/whisklabs/docker-it-scala.svg?branch=master)](https://travis-ci.org/whisklabs/docker-it-scala)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.whisk/docker-testkit-core_2.12/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.whisk/docker-testkit-core_2.12)
 [![Join the chat at https://gitter.im/whisklabs/docker-it-scala](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/whisklabs/docker-it-scala?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
@@ -23,16 +22,16 @@ There are separate artifacts available for these libraries:
 
 ```scala
 libraryDependencies ++= Seq(
-  "com.whisk" %% "docker-testkit-scalatest" % "0.9.5" % "test",
-  "com.whisk" %% "docker-testkit-impl-spotify" % "0.9.5" % "test")
+  "com.whisk" %% "docker-testkit-scalatest" % "0.9.9" % "test",
+  "com.whisk" %% "docker-testkit-impl-spotify" % "0.9.9" % "test")
 ```
 
 **docker-java**
 
 ```scala
 libraryDependencies ++= Seq(
-  "com.whisk" %% "docker-testkit-scalatest" % "0.9.5" % "test",
-  "com.whisk" %% "docker-testkit-impl-docker-java" % "0.9.5" % "test")
+  "com.whisk" %% "docker-testkit-scalatest" % "0.9.9" % "test",
+  "com.whisk" %% "docker-testkit-impl-docker-java" % "0.9.9" % "test")
 ```
 
 You don't necessarily have to use `scalatest` dependency as demonstrated above.
@@ -42,7 +41,7 @@ Have a look at [this specific trait](https://github.com/whisklabs/docker-it-scal
 
 ### Overriding execution environment
 
-If you need to have custom setup for you environment, you need to override `dockerFactory` field,  providing `DockerClient` instance
+If you need to have a custom environment setup, you need to override `dockerFactory` field,  providing `DockerClient` instance
 
 ```scala
 import com.spotify.docker.client.{DefaultDockerClient, DockerClient}
@@ -154,10 +153,14 @@ trait DockerMongodbService extends DockerKitConfig {
 ### Fields
 
 - `image-name` required  (String)
+- `container-name` optional (String)
+- `command` optional (Array of Strings)
+- `entrypoint` optional (Array of Strings)
 - `environmental-variables` optional (Array of Strings)
 - `ready-checker` optional structure
   - `log-line` optional (String)
   - `http-response-code`
+    - `code` optional (Int - defaults to `200`)
     - `port` required (Int)
 	- `path` optional (String - defaults to `/`)
 	- `within` optional (Int)
@@ -172,6 +175,8 @@ trait DockerMongodbService extends DockerKitConfig {
   - `container` required (String)
   - `host`      required (String)
   - `rw`        optional (Boolean - default:false)
+- `memory` optional (Long)
+- `memory-reservation` optional (Long)
 
 # Testkit
 
@@ -197,7 +202,7 @@ class MyMongoSpec extends FlatSpec with Matchers with DockerMongodbService {
 class AllAtOnceSpec extends FlatSpec with Matchers with BeforeAndAfterAll with GivenWhenThen with ScalaFutures
     with DockerElasticsearchService with DockerCassandraService with DockerNeo4jService with DockerMongodbService {
 
-  implicit val pc = PatienceConfig(Span(20, Seconds), Span(1, Second))
+  implicit val pc: PatienceConfig = PatienceConfig(Span(20, Seconds), Span(1, Second))
 
   "all containers" should "be ready at the same time" in {
     dockerContainers.map(_.image).foreach(println)

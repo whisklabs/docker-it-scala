@@ -3,3 +3,4 @@ target-shaded/
 project/sbt-launch-*.jar
 .idea/
 .DS_Store
+.bsp/
