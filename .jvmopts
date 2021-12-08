@@ -1,10 +1,4 @@
--Dfile.encoding=UTF8
--Xms1G
--Xmx4G
--XX:ReservedCodeCacheSize=250M
--XX:+TieredCompilation
--XX:-UseGCOverheadLimit
-# effectively adds GC to Perm space
--XX:+CMSClassUnloadingEnabled
-# must be enabled for CMSClassUnloadingEnabled to work
--XX:+UseConcMarkSweepGC
+-Xms512M
+-Xmx4096M
+-Xss2M
+-XX:MaxMetaspaceSize=1024M
