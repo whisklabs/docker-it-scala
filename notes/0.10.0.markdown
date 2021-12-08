@@ -1,0 +1,11 @@
+#scala #docker #integration-testing
+
+## Highlights
+
+* global inner refactoring, packages were changed
+* removed publishing of next artifacts: 
+  - docker-testkit-config
+  - docker-testkit-impl-spotify
+  - docker-testkit-impl-spotify-shaded
+  - docker-testkit-impl-docker-java
+* `"com.spotify" % "docker-client" % "8.16.0"` used as default backend
