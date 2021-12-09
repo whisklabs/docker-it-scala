@@ -1,6 +1,7 @@
 docker-it-scala
 =============
 
+[![CI](https://github.com/whisklabs/docker-it-scala/actions/workflows/ci.yaml/badge.svg)](https://github.com/whisklabs/docker-it-scala/actions/workflows/ci.yaml)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.whisk/docker-testkit-core_2.12/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.whisk/docker-testkit-core_2.12)
 [![Join the chat at https://gitter.im/whisklabs/docker-it-scala](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/whisklabs/docker-it-scala?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
@@ -22,16 +23,16 @@ There are separate artifacts available for these libraries:
 
 ```scala
 libraryDependencies ++= Seq(
-  "com.whisk" %% "docker-testkit-scalatest" % "0.9.9" % "test",
-  "com.whisk" %% "docker-testkit-impl-spotify" % "0.9.9" % "test")
+  "com.whisk" %% "docker-testkit-scalatest" % "0.11.0" % "test",
+  "com.whisk" %% "docker-testkit-impl-spotify" % "0.11.0" % "test")
 ```
 
 **docker-java**
 
 ```scala
 libraryDependencies ++= Seq(
-  "com.whisk" %% "docker-testkit-scalatest" % "0.9.9" % "test",
-  "com.whisk" %% "docker-testkit-impl-docker-java" % "0.9.9" % "test")
+  "com.whisk" %% "docker-testkit-scalatest" % "0.11.0" % "test",
+  "com.whisk" %% "docker-testkit-impl-docker-java" % "0.11.0" % "test")
 ```
 
 You don't necessarily have to use `scalatest` dependency as demonstrated above.
