@@ -11,53 +11,13 @@ You can read about reasoning behind it at [Finely Distributed](https://finelydis
 
 ## Setup
 
-docker-it-scala can work with two underlying libraries to communicate to docker engine through *REST API* or *unix socket*.
+docker-it-scala works with Spotify's docker-client to communicate to docker engine through *REST API* or *unix socket*.
 - [Spotify's docker-client](https://github.com/spotify/docker-client) (used in Whisk)
-- [docker-java](https://github.com/docker-java/docker-java)
-
-*Note: there is no specific recommendation to use one of them, over the other, but we hear people using Spotify's one more often, so you might get better support for it*.
-
-There are separate artifacts available for these libraries:
-
-**Spotify's docker-client**
 
 ```scala
 libraryDependencies ++= Seq(
-  "com.whisk" %% "docker-testkit-scalatest" % "0.11.0" % "test",
-  "com.whisk" %% "docker-testkit-impl-spotify" % "0.11.0" % "test")
+  "com.whisk" %% "docker-testkit-scalatest" % "0.11.0" % "test"
 ```
-
-**docker-java**
-
-```scala
-libraryDependencies ++= Seq(
-  "com.whisk" %% "docker-testkit-scalatest" % "0.11.0" % "test",
-  "com.whisk" %% "docker-testkit-impl-docker-java" % "0.11.0" % "test")
-```
-
-You don't necessarily have to use `scalatest` dependency as demonstrated above.
-You can create your custom bindings into your test environment, whether you use different initialisation technique or different framework.
-Have a look at [this specific trait](https://github.com/whisklabs/docker-it-scala/blob/master/scalatest/src/main/scala/com/whisk/docker/scalatest/DockerTestKit.scala)
-
-
-### Overriding execution environment
-
-If you need to have a custom environment setup, you need to override `dockerFactory` field,  providing `DockerClient` instance
-
-```scala
-import com.spotify.docker.client.{DefaultDockerClient, DockerClient}
-import com.whisk.docker.{DockerFactory, DockerKit}
-
-trait MyCustomDockerKitSpotify extends DockerKit {
-
-  private val client: DockerClient = DefaultDockerClient.fromEnv().build()
-
-  override implicit val dockerFactory: DockerFactory = new SpotifyDockerFactory(client)
-}
-
-```
-
-Check [docker-client](https://github.com/spotify/docker-client) library project for configuration options.
 
 ### Configuration
 
@@ -76,12 +36,11 @@ export DOCKER_HOST=unix:///var/run/docker.sock
 
 # Sample Services
 
-- [Cassandra](https://github.com/whisklabs/docker-it-scala/blob/master/samples/src/main/scala/com/whisk/docker/DockerCassandraService.scala)
-- [Elasticsearch](https://github.com/whisklabs/docker-it-scala/blob/master/samples/src/main/scala/com/whisk/docker/DockerElasticsearchService.scala)
-- [Kafka](https://github.com/whisklabs/docker-it-scala/blob/master/samples/src/main/scala/com/whisk/docker/DockerKafkaService.scala)
-- [Mongodb](https://github.com/whisklabs/docker-it-scala/blob/master/samples/src/main/scala/com/whisk/docker/DockerMongodbService.scala)
-- [Neo4j](https://github.com/whisklabs/docker-it-scala/blob/master/samples/src/main/scala/com/whisk/docker/DockerNeo4jService.scala)
-- [Postgres](https://github.com/whisklabs/docker-it-scala/blob/master/samples/src/main/scala/com/whisk/docker/DockerPostgresService.scala)
+- [Elasticsearch](https://github.com/whisklabs/docker-it-scala/blob/master/samples/src/main/scala/com/whisk/docker/testkit/DockerElasticsearchService.scala)
+- [Mongodb](https://github.com/whisklabs/docker-it-scala/blob/master/samples/src/main/scala/com/whisk/docker/testkit/DockerMongodbService.scala)
+- [MySQL](https://github.com/whisklabs/docker-it-scala/blob/master/samples/src/main/scala/com/whisk/docker/testkit/DockerMysqlService.scala)
+- [Postgres](https://github.com/whisklabs/docker-it-scala/blob/master/samples/src/main/scala/com/whisk/docker/testkit/DockerPostgresService.scala)
+- [Multi container test](https://github.com/whisklabs/docker-it-scala/blob/master/tests/src/test/scala/com/whisk/docker/testkit/test/MultiContainerTest.scala)
 
 # Defining Containers
 
@@ -92,63 +51,30 @@ Code based definitions and via `typesafe-config`.
 ## Code based definitions
 
 ```scala
-import com.whisk.docker.{DockerContainer, DockerKit, DockerReadyChecker}
+import com.whisk.docker.testkit.scalatest.DockerTestKitForAll
+import org.scalatest.Suite
 
-trait DockerMongodbService extends DockerKit {
+trait DockerMongodbService extends DockerTestKitForAll {
+  self: Suite =>
 
   val DefaultMongodbPort = 27017
 
-  val mongodbContainer = DockerContainer("mongo:3.0.6")
-    .withPorts(DefaultMongodbPort -> None)
+  val mongodbContainer = ContainerSpec("mongo:3.4.8")
+    .withExposedPorts(DefaultMongodbPort)
     .withReadyChecker(DockerReadyChecker.LogLineContains("waiting for connections on port"))
-    .withCommand("mongod", "--nojournal", "--smallfiles", "--syncdelay", "0")
+    .toContainer
 
-  abstract override def dockerContainers: List[DockerContainer] =
-    mongodbContainer :: super.dockerContainers
+  override val managedContainers: ManagedContainers = mongodbContainer.toManagedContainer
 }
 ```
 
-You can check [usage example](https://github.com/whisklabs/docker-it-scala/blob/master/scalatest/src/test/scala/com/whisk/docker/MongodbServiceSpec.scala)
-
-## Typesafe Configuration
-
-`docker-testkit-config` enables you to use a typesafe config to
-define your docker containers. Just put an `application.conf` file in
-your classpath.
-
-The container definitions are nested in the structure of name `docker`
-
-```conf
-docker {
-...
-...
-}
-```
-
-See
-[application.conf](https://github.com/whisklabs/docker-it-scala/blob/master/config/src/test/resources/application.conf)
-for more examples.
-
-Usage in code
-
-```scala
-trait DockerMongodbService extends DockerKitConfig {
-
-  val mongodbContainer = configureDockerContainer("docker.mongodb")
-
-  abstract override def dockerContainers: List[DockerContainer] =
-    mongodbContainer :: super.dockerContainers
-}
-
-```
+You can check [usage example](https://github.com/whisklabs/docker-it-scala/blob/master/tests/src/test/scala/com/whisk/docker/testkit/test/MongodbServiceTest.scala)
 
 ### Container Paths
 
-- Cassandra => `docker.cassandra`
 - Elasticsearch => `docker.elasticsearch`
-- Kafka => `docker.kafka`
 - Mongodb => `docker.mongo`
-- Neo4j => `docker.neo4j`
+- Neo4j => `docker.mysql`
 - Postgres => `docker.postgres`
 
 ### Fields
@@ -200,19 +126,23 @@ class MyMongoSpec extends FlatSpec with Matchers with DockerMongodbService {
 ### With Multiple containers:
 
 ```scala
-class AllAtOnceSpec extends FlatSpec with Matchers with BeforeAndAfterAll with GivenWhenThen with ScalaFutures
-    with DockerElasticsearchService with DockerCassandraService with DockerNeo4jService with DockerMongodbService {
+class MultiContainerTest
+  extends AnyFunSuite
+    with DockerElasticsearchService
+    with DockerMongodbService {
 
-  implicit val pc: PatienceConfig = PatienceConfig(Span(20, Seconds), Span(1, Second))
+  override val managedContainers: ContainerGroup =
+    ContainerGroup.of(elasticsearchContainer, mongodbContainer)
 
-  "all containers" should "be ready at the same time" in {
-    dockerContainers.map(_.image).foreach(println)
-    dockerContainers.forall(_.isReady().futureValue) shouldBe true
+  test("both containers should be ready") {
+    assert(
+      elasticsearchContainer.state().isInstanceOf[ContainerState.Ready],
+      "elasticsearch container is ready"
+    )
+    assert(elasticsearchContainer.mappedPortOpt(9200).nonEmpty, "elasticsearch port is exposed")
+
+    assert(mongodbContainer.state().isInstanceOf[ContainerState.Ready], "mongodb is ready")
+    assert(mongodbContainer.mappedPortOpt(27017).nonEmpty, "port 2017 is exposed")
   }
 }
 ```
-
-## Using in Specs2
-
-Examples can be found in
-[the specs2 module's tests](https://github.com/whisklabs/docker-it-scala/tree/master/specs2/src/test/scala/com/whisk/docker)
