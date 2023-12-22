@@ -40,8 +40,8 @@ export DOCKER_HOST=unix:///var/run/docker.sock
 - [Mongodb](https://github.com/whisklabs/docker-it-scala/blob/master/samples/src/main/scala/com/whisk/docker/testkit/DockerMongodbService.scala)
 - [MySQL](https://github.com/whisklabs/docker-it-scala/blob/master/samples/src/main/scala/com/whisk/docker/testkit/DockerMysqlService.scala)
 - [Postgres](https://github.com/whisklabs/docker-it-scala/blob/master/samples/src/main/scala/com/whisk/docker/testkit/DockerPostgresService.scala)
+- [Clickhouse](https://github.com/whisklabs/docker-it-scala/blob/master/samples/src/main/scala/com/whisk/docker/testkit/DockerClickhouseService.scala)
 - [Multi container test](https://github.com/whisklabs/docker-it-scala/blob/master/tests/src/test/scala/com/whisk/docker/testkit/test/MultiContainerTest.scala)
-
 # Defining Containers
 
 There are two ways to define a docker container.
@@ -76,7 +76,7 @@ You can check [usage example](https://github.com/whisklabs/docker-it-scala/blob/
 - Mongodb => `docker.mongo`
 - Neo4j => `docker.mysql`
 - Postgres => `docker.postgres`
-
+- Clickhouse => `docker.clickhouse`
 ### Fields
 
 - `image-name` required  (String)

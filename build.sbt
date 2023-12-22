@@ -75,7 +75,8 @@ lazy val tests =
       name := "docker-testkit-tests",
       libraryDependencies ++= Seq(
         "org.postgresql" % "postgresql" % "42.1.4" % "test",
-        "mysql" % "mysql-connector-java" % "5.1.44" % "test"
+        "mysql" % "mysql-connector-java" % "5.1.44" % "test",
+        "com.clickhouse" % "clickhouse-jdbc" % "0.5.0" % "test"
       )
     )
     .dependsOn(core, scalatest, samples % "test")
