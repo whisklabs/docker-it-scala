@@ -198,6 +198,8 @@ object DockerReadyChecker {
       "mysql"
     } else if (driverLower.contains("postgres")) {
       "postgresql"
+    } else if (driverLower.contains("clickhouse")) {
+      "clickhouse"
     } else {
       throw new IllegalArgumentException("unsupported database for ready check")
     }
